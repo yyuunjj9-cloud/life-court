@@ -27,23 +27,31 @@
 - 판결 수위 = 심각성(1~5) + 성향 보정(관대 −1 / 공정 0 / 엄벌 +1) → 무죄 → 훈방 조치 → 조건부 유죄 → 유죄 → 괘씸죄 가중 유죄
 - 죄명·주문·권고는 사건 유형별 템플릿 풀에서 선택되며, 판결 이유에는 사용자의 사연이 인용됨
 
-## 기술 스택
+## 아키텍처 — 3티어
 
-- **Next.js 16** (App Router, 정적 프리렌더) · **React 19** · **TypeScript**
-- **Tailwind CSS 4** + 커스텀 CSS(고풍 법정 테마, 외부 리소스 없음)
-- **html-to-image** — 판결문 이미지 저장
-- 상태 관리: React Context + sessionStorage(사연)/localStorage(사건번호 시퀀스)
+```
+frontend (Next.js)  ──HTTP──▶  backend (Express API)  ──SQL──▶  db (Postgres/Supabase)
+화면·연출·이미지 저장           판결/문서 생성, 사건번호 발급        사건 기록 보관
+```
 
-백엔드·데이터베이스 없는 **프론트엔드 단독 구조**입니다. 판결 생성이 규칙 기반이라 서버 연산이 필요 없고, 입력 내용을 외부에 저장하지 않는다는 안내 제2조에 따라 모든 데이터는 브라우저 안에만 머뭅니다.
+- **frontend** — Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 + 커스텀 법정 테마 · html-to-image(문서 이미지 저장). 문서는 API 응답을 표시만 합니다.
+- **backend** — Express 5 · TypeScript. 판결·고소장·내용증명·맞고소장 생성기와 사건번호 시퀀스가 모두 여기에 있습니다. `DATABASE_URL`이 없으면 인메모리 저장소로 동작해 DB 없이도 로컬 개발이 가능합니다.
+- **db** — Postgres(권장: Supabase) `cases` 테이블. 사연·선택값·생성된 문서(JSONB)를 보관합니다.
 
 ## 실행 방법
 
 ```bash
-npm install
-npm run dev        # 개발 서버 (기본 3000 포트)
-npm run build      # 프로덕션 빌드
-npm run start      # 프로덕션 서버
-npm run typecheck  # 타입 검사
+# 1) 의존성 설치
+cd frontend && npm install
+cd ../backend && npm install
+
+# 2) (선택) DB 연결 — 없으면 인메모리로 동작
+cp backend/.env.example backend/.env   # DATABASE_URL 입력
+psql "$DATABASE_URL" -f db/schema.sql
+
+# 3) 실행 (루트에서)
+npm run dev:backend    # API 서버 :4000
+npm run dev:frontend   # 웹 앱   :3000
 ```
 
 모바일에서는 전체 화면, 데스크톱에서는 중앙 폰 프레임으로 표시됩니다.
@@ -51,22 +59,21 @@ npm run typecheck  # 타입 검사
 ## 프로젝트 구조
 
 ```
-src/
-├─ app/                 # 화면 (App Router)
-│  ├─ page.tsx          #   랜딩
-│  ├─ intake/           #   접수: story(사연) → type(유형/관계) → tone(심각성/성향) → filing(대응 방식)
-│  ├─ complaint/        #   고소장·고발장
-│  ├─ demand/           #   내용증명
-│  ├─ trial/            #   심리 진행 연출
-│  ├─ verdict/          #   제1심 판결문
-│  ├─ appeal/           #   항소심 판결문
-│  ├─ countersuit/      #   맞고소장
-│  ├─ save/             #   문서 이미지 저장
-│  ├─ received/         #   접수 완료
-│  └─ notice/           #   안내(고지)
-├─ components/          # 공용 UI (상단 바, 진행 표시, 문서 뷰)
-├─ domain/              # 판결·문서 생성기 (순수 함수, 템플릿/규칙 기반)
-└─ store/               # 사건 상태 저장소 (Context + 브라우저 스토리지)
+frontend/               # ── 프레젠테이션 티어 (Next.js)
+├─ src/app/             # 화면: 랜딩 → intake(story/type/tone/filing) → complaint/demand
+│                       #       → trial → verdict → appeal → countersuit → save → received → notice
+├─ src/components/      # 공용 UI (상단 바, 진행 표시, 문서 뷰)
+├─ src/domain/          # 공용 타입·라벨 (생성 로직 없음)
+├─ src/lib/api.ts       # backend API 클라이언트
+└─ src/store/           # 사건 상태 (Context + sessionStorage 캐시)
+
+backend/                # ── 애플리케이션 티어 (Express API)
+├─ src/index.ts         # 엔드포인트: POST /api/cases, /appeal, /countersuit, /documents/demand
+├─ src/domain/          # 판결·문서 생성기 (템플릿/규칙 기반, 시드 난수)
+└─ src/storage.ts       # Postgres / 인메모리 저장소
+
+db/                     # ── 데이터 티어 (Postgres)
+└─ schema.sql           # cases 테이블
 
 mockups/                # 화면 목업 (PNG 10종)
 mobile.html             # 초기 정적 프로토타입 (구현의 원본 디자인)
@@ -75,6 +82,6 @@ mobile.html             # 초기 정적 프로토타입 (구현의 원본 디자
 ## 이용 안내
 
 1. 본 서비스는 오락 목적의 가상 콘텐츠이며, 실제 법률 자문·법률 판단 또는 실제 판결이 아닙니다.
-2. 입력하신 내용은 시스템(브라우저) 내에서만 사용되며, 외부에 저장되거나 공유되지 않습니다.
+2. 입력하신 내용은 판결 생성을 위해 서버로 전송되어 사건 기록으로 보관되며, 그 외의 용도로 사용되거나 제3자에게 공유되지 않습니다.
 3. 타인의 개인정보, 불법 행위, 혐오 표현 등 부적절한 내용은 입력할 수 없습니다.
 4. 모든 판결 결과는 템플릿/규칙 기반으로 생성되며, 실제 법령이나 판례와 무관합니다.

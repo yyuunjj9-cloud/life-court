@@ -1,9 +1,12 @@
 # dependencies
-/node_modules
+node_modules/
 
 # next.js build output
-/.next
-/out
+.next/
+out/
+
+# backend build output
+dist/
 
 # typescript
 *.tsbuildinfo
