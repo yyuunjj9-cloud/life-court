@@ -1,0 +1,1047 @@
+@import "tailwindcss";
+
+/* ============================================================
+   오늘의 생활법원 — 고풍 법정 + 역전재판 무드
+   모바일: 전체 화면 / 데스크톱: 중앙 폰 프레임
+   ============================================================ */
+
+:root {
+  --wood-deep: #241207;
+  --wood: #3b2113;
+  --wood-warm: #5c3620;
+  --gold: #c9a227;
+  --gold-bright: #e8c95c;
+  --gold-soft: #e3cf96;
+  --gold-dim: #8f7420;
+  --parchment: #f4e9d0;
+  --parchment-deep: #eadcbb;
+  --paper-line: #cbb98d;
+  --ink: #2b1d10;
+  --ink-soft: #5a4630;
+  --muted: #8a7657;
+  --objection-red: #b3261e;
+  --testimony: #9be29b;
+
+  --serif: "Nanum Myeongjo", "Noto Serif KR", "Batang", "바탕", serif;
+  --sans: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --mono: "Consolas", "Courier New", monospace;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+body {
+  font-family: var(--serif);
+  background: var(--wood-deep);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- 앱 프레임 ---------- */
+#app {
+  width: 100%;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, var(--parchment), var(--parchment-deep));
+  overflow: hidden;
+  position: relative;
+}
+@media (min-width: 640px) {
+  body {
+    display: grid;
+    place-items: center;
+    background:
+      repeating-linear-gradient(
+        93deg,
+        rgba(0, 0, 0, 0.22) 0 2px,
+        transparent 2px 7px,
+        rgba(255, 214, 140, 0.035) 7px 9px,
+        transparent 9px 15px
+      ),
+      linear-gradient(180deg, #31190b, var(--wood-deep));
+  }
+  #app {
+    width: 400px;
+    height: min(760px, 94dvh);
+    border-radius: 18px;
+    border: 2px solid var(--gold-dim);
+    outline: 1px solid rgba(201, 162, 39, 0.35);
+    outline-offset: 5px;
+    box-shadow: 0 26px 70px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* ---------- 상단 바 ---------- */
+.bar {
+  flex: 0 0 auto;
+  height: 54px;
+  background:
+    repeating-linear-gradient(
+      93deg,
+      rgba(0, 0, 0, 0.25) 0 2px,
+      transparent 2px 7px,
+      rgba(255, 214, 140, 0.04) 7px 9px,
+      transparent 9px 15px
+    ),
+    linear-gradient(180deg, var(--wood), var(--wood-deep));
+  border-bottom: 2px solid var(--gold);
+  color: var(--gold-soft);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 8px;
+  z-index: 5;
+}
+.bar .brand {
+  flex: 1;
+  text-align: center;
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+.bar .brand .em {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--gold-bright), var(--gold) 55%, var(--gold-dim));
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  color: var(--wood-deep);
+}
+.bar .ico {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--gold-soft);
+  font-size: 20px;
+  cursor: pointer;
+  font-family: var(--serif);
+  text-decoration: none;
+}
+.bar .ico.ghost {
+  visibility: hidden;
+}
+
+/* ---------- 화면 공통 ---------- */
+.scr {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+  overflow: auto;
+  position: relative;
+}
+.pad {
+  padding: 22px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.grow {
+  flex: 1 1 auto;
+  min-height: 14px;
+}
+
+/* ---------- 타이포 ---------- */
+h1.tt {
+  font-size: 21px;
+  line-height: 1.5;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-align: center;
+  margin: 0;
+  color: var(--ink);
+}
+p.sub {
+  margin: 10px 0 0;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+.lbl {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  margin: 0 0 14px;
+  color: var(--ink);
+}
+.lbl::before,
+.lbl::after {
+  content: "—";
+  color: var(--gold);
+  margin: 0 10px;
+  font-weight: 400;
+}
+
+/* ---------- 버튼 ---------- */
+.btn {
+  display: block;
+  width: 100%;
+  font-family: var(--serif);
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 15px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  border: 1px solid var(--gold-dim);
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+  color: var(--wood-deep);
+  box-shadow: 0 3px 0 var(--gold-dim);
+  transition: filter 0.12s;
+  text-align: center;
+  text-decoration: none;
+}
+.btn:hover {
+  filter: brightness(1.07);
+}
+.btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--gold-dim);
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: none;
+}
+.btn.dark {
+  background: linear-gradient(180deg, var(--wood-warm), var(--wood));
+  color: var(--gold-soft);
+  border-color: var(--wood-deep);
+  box-shadow: 0 3px 0 var(--wood-deep);
+}
+.btn.line {
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1px solid var(--paper-line);
+  box-shadow: none;
+}
+.btn.sm {
+  font-size: 12.5px;
+  padding: 12px 4px;
+  letter-spacing: 0.04em;
+}
+.btn-row {
+  display: flex;
+  gap: 8px;
+}
+.btn-row .btn {
+  flex: 1;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+/* ---------- 진행 표시: 금장 족자 매듭 ---------- */
+.steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 6px 20px;
+}
+.steps .knot {
+  width: 11px;
+  height: 11px;
+  transform: rotate(45deg);
+  border: 1px solid var(--gold-dim);
+  background: var(--parchment);
+  flex: 0 0 auto;
+}
+.steps .knot.on {
+  background: var(--gold);
+  border-color: var(--gold-dim);
+}
+.steps .knot.cur {
+  background: var(--objection-red);
+  border-color: #7c1812;
+  box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.18);
+}
+.steps .tie {
+  height: 1px;
+  background: var(--gold-dim);
+  opacity: 0.5;
+  flex: 1;
+}
+
+/* ============================================================
+   01 랜딩 — 어두운 법정
+   ============================================================ */
+.scr.dark {
+  background:
+    radial-gradient(90% 55% at 50% 0%, rgba(232, 201, 92, 0.16), transparent 62%),
+    repeating-linear-gradient(
+      93deg,
+      rgba(0, 0, 0, 0.22) 0 2px,
+      transparent 2px 7px,
+      rgba(255, 214, 140, 0.035) 7px 9px,
+      transparent 9px 15px
+    ),
+    linear-gradient(180deg, #31190b 0%, var(--wood-deep) 90%);
+  color: var(--parchment);
+}
+.scr.dark .pillar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 34px;
+  opacity: 0.55;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.5), transparent 30%, rgba(232, 201, 92, 0.12) 50%, transparent 70%, rgba(0, 0, 0, 0.5)),
+    repeating-linear-gradient(90deg, rgba(227, 207, 150, 0.12) 0 6px, rgba(0, 0, 0, 0.16) 6px 12px);
+}
+.scr.dark .pillar.l {
+  left: 8px;
+}
+.scr.dark .pillar.r {
+  right: 8px;
+}
+
+.hero-t {
+  font-size: 22px;
+  line-height: 1.55;
+  font-weight: 800;
+  text-align: center;
+  color: var(--parchment);
+  margin: 14px 0 0;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+}
+.hero-t .acc {
+  color: var(--gold-bright);
+}
+.hero-s {
+  margin: 12px 0 0;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.85;
+  color: var(--gold-soft);
+  opacity: 0.85;
+}
+.kicker {
+  align-self: center;
+  font-size: 10.5px;
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  color: var(--gold);
+  border-top: 1px solid rgba(201, 162, 39, 0.55);
+  border-bottom: 1px solid rgba(201, 162, 39, 0.55);
+  padding: 6px 4px;
+  margin-top: 6px;
+}
+.seal {
+  width: 104px;
+  height: 104px;
+  margin: 0 auto;
+  border-radius: 50%;
+  position: relative;
+  background: radial-gradient(circle at 34% 28%, var(--gold-bright) 0%, var(--gold) 52%, var(--gold-dim) 100%);
+  border: 4px double rgba(244, 233, 208, 0.8);
+  box-shadow: 0 0 34px rgba(201, 162, 39, 0.5), inset 0 0 14px rgba(60, 40, 6, 0.55);
+  display: grid;
+  place-items: center;
+}
+.seal::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  border: 1px dashed rgba(60, 40, 6, 0.55);
+}
+.seal .g {
+  font-size: 40px;
+  line-height: 1;
+}
+.disclaim {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  line-height: 1.8;
+  text-align: center;
+  color: rgba(227, 207, 150, 0.62);
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  background: rgba(0, 0, 0, 0.28);
+  padding: 10px 12px;
+  border-radius: 3px;
+  margin-top: 12px;
+}
+
+/* "이의 있음!" 버스트 */
+.objection {
+  position: absolute;
+  top: 31%;
+  right: 12px;
+  transform: rotate(8deg);
+  z-index: 6;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
+  animation: slam 0.5s cubic-bezier(0.2, 2.6, 0.4, 1) 0.35s both;
+  pointer-events: none;
+}
+@keyframes slam {
+  from {
+    transform: rotate(8deg) scale(3);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(8deg) scale(1);
+    opacity: 1;
+  }
+}
+.objection .burst,
+.verdict-flash .burst {
+  background: #fff;
+  color: var(--objection-red);
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  clip-path: polygon(
+    2% 20%, 10% 12%, 8% 0%, 20% 10%, 30% 2%, 36% 12%, 48% 0%, 54% 13%,
+    66% 3%, 70% 14%, 82% 6%, 84% 18%, 98% 14%, 92% 30%, 100% 38%, 92% 48%,
+    100% 62%, 90% 68%, 96% 84%, 84% 82%, 84% 98%, 72% 88%, 62% 100%, 56% 88%,
+    44% 98%, 40% 86%, 28% 96%, 26% 84%, 12% 90%, 16% 74%, 2% 72%, 10% 58%,
+    0% 48%, 8% 38%
+  );
+}
+.objection .burst {
+  font-size: 15px;
+  padding: 11px 18px;
+}
+
+/* ============================================================
+   02 입력
+   ============================================================ */
+.field {
+  margin-top: 16px;
+  border: 1px solid var(--gold-dim);
+  outline: 1px solid rgba(201, 162, 39, 0.35);
+  outline-offset: 3px;
+  background: #fbf4e3;
+  padding: 13px 13px 9px;
+  display: flex;
+  flex-direction: column;
+  min-height: 150px;
+}
+.field textarea {
+  flex: 1;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  resize: none;
+  background: transparent;
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.9;
+  color: var(--ink);
+}
+.field textarea::placeholder {
+  color: #b5a47e;
+}
+.count {
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--muted);
+  padding-top: 4px;
+}
+.help {
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--muted);
+  margin: 8px 2px 0;
+}
+.help.err {
+  color: var(--objection-red);
+  font-weight: 700;
+}
+
+/* ============================================================
+   03 유형/관계 — 증거품 카드
+   ============================================================ */
+.g3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+}
+.ev {
+  border: 1px solid var(--gold-dim);
+  background: #fbf4e3;
+  padding: 13px 4px 11px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  font-family: var(--serif);
+  border-radius: 2px;
+  position: relative;
+  transition: transform 0.1s;
+}
+.ev .gl {
+  font-size: 24px;
+  line-height: 1;
+}
+.ev .lb {
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.ev[aria-pressed="true"] {
+  background: linear-gradient(180deg, #fdf6df, #f5e8c4);
+  border-color: var(--objection-red);
+  box-shadow: 0 0 0 1px var(--objection-red) inset, 0 4px 10px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+.ev[aria-pressed="true"]::after {
+  content: "証";
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--objection-red);
+  color: #fff;
+  font-size: 11px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid #fbf4e3;
+  transform: rotate(10deg);
+}
+.g3.two {
+  grid-template-columns: repeat(2, 1fr);
+  width: 67%;
+  margin: 9px auto 0;
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.pill {
+  border: 1px solid var(--paper-line);
+  background: #fbf4e3;
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-family: var(--serif);
+  font-size: 12px;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.pill[aria-pressed="true"] {
+  border-color: var(--objection-red);
+  background: var(--objection-red);
+  color: #fbf4e3;
+  font-weight: 700;
+}
+
+/* ============================================================
+   04 심각성/성향
+   ============================================================ */
+.sev {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 7px;
+}
+.sv {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: var(--serif);
+}
+.sv .num {
+  width: 100%;
+  aspect-ratio: 1/1;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--gold-dim);
+  background: #fbf4e3;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink);
+  border-radius: 2px;
+}
+.sv .cp {
+  font-family: var(--sans);
+  font-size: 9px;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--muted);
+  white-space: pre-line;
+}
+.sv[aria-pressed="true"] .num {
+  background: linear-gradient(180deg, var(--wood-warm), var(--wood));
+  border-color: var(--wood-deep);
+  color: var(--gold-bright);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+}
+.sv[aria-pressed="true"] .cp {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+/* ============================================================
+   05 심리 진행 — 증언 콘솔
+   ============================================================ */
+.console {
+  background: #0e1a12;
+  border: 2px solid var(--gold-dim);
+  outline: 1px solid rgba(201, 162, 39, 0.35);
+  outline-offset: 4px;
+  border-radius: 3px;
+  padding: 18px 16px 20px;
+  margin-top: 22px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+}
+.console .head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(155, 226, 155, 0.28);
+  padding-bottom: 11px;
+  margin-bottom: 15px;
+}
+.console .head .t {
+  color: var(--testimony);
+  font-size: 13px;
+  letter-spacing: 0.35em;
+  text-indent: 0.35em;
+  font-weight: 700;
+}
+.console .head .rec {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: rgba(155, 226, 155, 0.6);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.console .head .rec i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--objection-red);
+  animation: blink 1.1s steps(1) infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0.15;
+  }
+}
+.console ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.console li {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--testimony);
+  text-shadow: 0 0 7px rgba(155, 226, 155, 0.35);
+}
+.console .mk {
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  border: 1px solid var(--testimony);
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+}
+.console li.dim {
+  color: rgba(155, 226, 155, 0.35);
+  text-shadow: none;
+}
+.console li.dim .mk {
+  border-color: rgba(155, 226, 155, 0.3);
+  color: transparent;
+}
+.gavel-wait {
+  margin-top: auto;
+  padding-top: 16px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--gold-soft);
+  letter-spacing: 0.06em;
+}
+.gavel-wait .g {
+  display: inline-block;
+  animation: bang 1.6s ease-in-out infinite;
+  transform-origin: 80% 80%;
+}
+@keyframes bang {
+  0%,
+  55%,
+  100% {
+    transform: rotate(0);
+  }
+  70% {
+    transform: rotate(-28deg);
+  }
+  80% {
+    transform: rotate(6deg);
+  }
+}
+
+/* ============================================================
+   06/07 판결문
+   ============================================================ */
+.vdoc {
+  background:
+    radial-gradient(140% 90% at 50% 0%, rgba(255, 255, 255, 0.55), transparent 40%),
+    linear-gradient(180deg, #fbf4e3, var(--parchment-deep));
+  border: 2px solid var(--gold-dim);
+  outline: 1px solid rgba(201, 162, 39, 0.4);
+  outline-offset: 4px;
+  padding: 18px 16px;
+  position: relative;
+}
+.vdoc .vt {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.45em;
+  text-indent: 0.45em;
+  margin: 0 0 4px;
+}
+.vdoc .vt.appeal {
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+}
+.vdoc .vs {
+  text-align: center;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.18em;
+  margin: 0 0 14px;
+}
+.vmeta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  font-family: var(--sans);
+  font-size: 11px;
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--paper-line);
+  padding: 11px 2px;
+}
+.vmeta .k {
+  color: var(--muted);
+  font-family: var(--serif);
+  letter-spacing: 0.06em;
+}
+.vmeta .v {
+  color: var(--ink);
+}
+.vmeta .v.crime {
+  color: var(--objection-red);
+  font-weight: 700;
+}
+.vsec {
+  padding: 12px 2px;
+  border-bottom: 1px solid var(--paper-line);
+}
+.vsec .k {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.28em;
+  margin: 0 0 7px;
+  color: var(--ink);
+}
+.vsec .t {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.9;
+  color: var(--ink-soft);
+  word-break: keep-all;
+}
+.vfinal {
+  padding: 16px 2px 4px;
+  text-align: center;
+  position: relative;
+}
+.vfinal .w {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-indent: 0.12em;
+  color: var(--objection-red);
+  margin: 0 0 7px;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
+}
+.vfinal .n {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 10.5px;
+  color: var(--ink-soft);
+}
+.stamp {
+  position: absolute;
+  right: 2px;
+  top: -8px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 2.5px solid var(--objection-red);
+  color: var(--objection-red);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  text-align: center;
+  transform: rotate(-13deg);
+  opacity: 0.82;
+}
+.stamp::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 1px dashed rgba(179, 38, 30, 0.5);
+}
+.vsign {
+  text-align: center;
+  font-size: 11px;
+  line-height: 2;
+  color: var(--ink-soft);
+  margin-top: 10px;
+  position: relative;
+}
+.center-order {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--objection-red);
+  letter-spacing: 0.06em;
+  margin: 4px 0 8px;
+}
+
+/* 판결 선고 버스트 (06 진입 시) */
+.verdict-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  background: rgba(20, 10, 3, 0.55);
+  animation: flashout 0.9s ease 1.1s both;
+  pointer-events: none;
+}
+@keyframes flashout {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+.verdict-flash .burst {
+  font-size: 26px;
+  padding: 20px 34px;
+  transform: rotate(-4deg);
+  animation: slam2 0.45s cubic-bezier(0.2, 2.6, 0.4, 1) both;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.6));
+}
+@keyframes slam2 {
+  from {
+    transform: rotate(-4deg) scale(3.4);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(-4deg) scale(1);
+    opacity: 1;
+  }
+}
+
+/* ============================================================
+   08 저장
+   ============================================================ */
+.thumbwrap {
+  margin: 14px auto 0;
+  width: 82%;
+  border: 1px solid var(--gold-dim);
+  background: #fbf4e3;
+  padding: 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  transform: rotate(-0.8deg);
+  max-height: 300px;
+  overflow: hidden;
+}
+.thumbwrap .vdoc {
+  zoom: 0.62;
+}
+.fmt {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 11px;
+}
+.fmt .opt {
+  border: 1px solid var(--paper-line);
+  background: #fbf4e3;
+  padding: 12px 8px;
+  font-family: var(--serif);
+  font-size: 12px;
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.fmt .opt .chk {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--paper-line);
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  color: transparent;
+  background: #fff;
+}
+.fmt .opt[aria-pressed="true"] {
+  border-color: var(--wood);
+  font-weight: 700;
+  color: var(--ink);
+}
+.fmt .opt[aria-pressed="true"] .chk {
+  background: var(--wood);
+  border-color: var(--wood);
+  color: var(--gold-bright);
+}
+
+/* 저장용 오프스크린 원본 판결문 */
+.capture-stage {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 400px;
+  padding: 24px 20px;
+  background: linear-gradient(180deg, var(--parchment), var(--parchment-deep));
+}
+
+/* ============================================================
+   09 접수 완료
+   ============================================================ */
+.laurel {
+  width: 96px;
+  height: 70px;
+  margin: 0 auto;
+  position: relative;
+  display: grid;
+  place-items: center;
+  font-size: 38px;
+}
+.laurel::before,
+.laurel::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  width: 30px;
+  height: 56px;
+  border: 2px solid var(--gold);
+  border-radius: 60% 0 60% 0;
+  opacity: 0.8;
+}
+.laurel::before {
+  left: 0;
+  transform: rotate(-16deg);
+}
+.laurel::after {
+  right: 0;
+  transform: rotate(16deg) scaleX(-1);
+}
+.caseno {
+  border: 1px solid var(--gold-dim);
+  outline: 1px solid rgba(201, 162, 39, 0.35);
+  outline-offset: 3px;
+  background: #fbf4e3;
+  padding: 16px 10px;
+  text-align: center;
+  margin-top: 22px;
+}
+.caseno .k {
+  font-size: 10.5px;
+  color: var(--muted);
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  display: block;
+  margin-bottom: 8px;
+}
+.caseno .v {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+}
+
+/* ============================================================
+   10 안내
+   ============================================================ */
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.note {
+  background: #fbf4e3;
+  border: 1px solid var(--paper-line);
+  border-left: 4px solid var(--gold);
+  padding: 13px 13px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border-radius: 2px;
+}
+.note .art {
+  flex: 0 0 auto;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: var(--gold-dim);
+  font-weight: 800;
+  border: 1px solid var(--paper-line);
+  padding: 4px 7px;
+  white-space: nowrap;
+}
+.note p {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.8;
+  color: var(--ink-soft);
+  word-break: keep-all;
+}

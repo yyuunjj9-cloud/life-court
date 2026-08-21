@@ -1,0 +1,1067 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>오늘의 생활법원</title>
+<style>
+/* ============================================================
+   오늘의 생활법원 — mockups/01~10 을 그대로 옮긴 정적 구현
+   외부 리소스 없음(폰트/이미지/스크립트 전부 내장)
+   ============================================================ */
+
+:root{
+  --navy:#16233F;
+  --navy-deep:#0D1830;
+  --ink:#1B2A4A;
+  --cream:#F6F0E2;
+  --cream-2:#EFE6D2;
+  --parchment:#FBF7EC;
+  --gold:#C8A34A;
+  --gold-dim:#A98A38;
+  --gold-soft:#E4D3A6;
+  --muted:#8C8371;
+  --line:#DCCFB2;
+  --stamp:#B0392E;
+
+  --serif:'Nanum Myeongjo','Noto Serif KR','Batang','바탕',serif;
+  --sans:'Pretendard','Apple SD Gothic Neo','Malgun Gothic','맑은 고딕',
+         system-ui,-apple-system,sans-serif;
+
+  --phone-w:332px;
+  --phone-h:600px;
+  --radius:20px;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--sans);
+  background:#EDE6D8;
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+
+/* ---------- 모드 전환 (단일 화면 / 전체 보기) ---------- */
+
+#stage{
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:28px 16px 96px;
+}
+body.gallery #stage{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(var(--phone-w),1fr));
+  gap:34px 22px;
+  max-width:1500px;
+  margin:0 auto;
+}
+
+.tile{display:none;flex-direction:column;align-items:center;gap:10px}
+.tile.active{display:flex}
+body.gallery .tile{display:flex}
+
+.cap{
+  display:none;
+  font-family:var(--serif);
+  font-size:13px;
+  letter-spacing:.02em;
+  color:#3A3A3A;
+}
+body.gallery .cap{display:block}
+
+/* ---------- 폰 프레임 ---------- */
+
+.phone{
+  width:var(--phone-w);
+  height:var(--phone-h);
+  border-radius:var(--radius);
+  overflow:hidden;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  background:var(--cream);
+  box-shadow:0 10px 30px rgba(20,25,45,.16);
+}
+
+/* ---------- 상단 바 ---------- */
+
+.bar{
+  flex:0 0 auto;
+  height:42px;
+  background:var(--navy);
+  color:#F1E9D6;
+  display:flex;
+  align-items:center;
+  padding:0 12px;
+  gap:8px;
+  position:relative;
+  z-index:3;
+}
+.bar .brand{
+  flex:1;
+  text-align:center;
+  font-family:var(--serif);
+  font-size:14px;
+  letter-spacing:.04em;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
+.bar .brand .col{font-size:13px;color:var(--gold-soft)}
+.bar .ico{
+  width:22px;height:22px;
+  display:grid;place-items:center;
+  font-size:15px;line-height:1;
+  color:#EFE6D0;
+  background:none;border:0;padding:0;
+  cursor:pointer;
+}
+.bar .ico.ghost{visibility:hidden}
+
+/* ---------- 본문 공통 ---------- */
+
+.body{
+  flex:1 1 auto;
+  min-height:0;
+  overflow:auto;
+  padding:18px 18px 16px;
+  display:flex;
+  flex-direction:column;
+  scrollbar-width:thin;
+}
+.body::-webkit-scrollbar{width:5px}
+.body::-webkit-scrollbar-thumb{background:rgba(0,0,0,.14);border-radius:3px}
+
+h1.title{
+  font-family:var(--serif);
+  font-size:22px;
+  line-height:1.42;
+  margin:0;
+  text-align:center;
+  color:var(--ink);
+  letter-spacing:-.01em;
+}
+p.sub{
+  margin:8px 0 0;
+  text-align:center;
+  font-size:11.5px;
+  line-height:1.7;
+  color:var(--muted);
+}
+.section-label{
+  font-family:var(--serif);
+  font-size:15px;
+  text-align:center;
+  color:var(--ink);
+  margin:0 0 12px;
+}
+
+/* ---------- 버튼 ---------- */
+
+.btn{
+  display:block;width:100%;
+  border:0;border-radius:6px;
+  padding:13px 10px;
+  font-family:var(--serif);
+  font-size:15px;
+  letter-spacing:.06em;
+  cursor:pointer;
+  background:var(--navy);
+  color:#F3EBD8;
+  transition:filter .15s;
+}
+.btn:hover{filter:brightness(1.15)}
+.btn.ghost{
+  background:transparent;
+  color:var(--ink);
+  border:1px solid var(--line);
+}
+.btn.ghost:hover{background:rgba(0,0,0,.03);filter:none}
+.btn.sm{font-size:12.5px;padding:11px 6px;letter-spacing:.02em}
+.btn-row{display:flex;gap:8px}
+.btn-row .btn{flex:1}
+.spacer{flex:1 1 auto;min-height:14px}
+
+/* ============================================================
+   01. 랜딩
+   ============================================================ */
+
+.scene-dark{
+  background:
+    radial-gradient(120% 70% at 50% 8%, rgba(40,58,96,.55), transparent 60%),
+    linear-gradient(180deg,#1A2B4E 0%,#0D1830 100%);
+  background-color:var(--navy-deep);
+}
+/* 법원 건물 실루엣 (원본 사진 대체) */
+.pillars{
+  position:absolute;inset:0;
+  pointer-events:none;
+  opacity:.5;
+}
+.pillars::before{
+  content:"";position:absolute;
+  left:0;right:0;bottom:0;height:62%;
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(214,196,158,.30) 0 12px,
+      rgba(120,104,74,.14) 12px 26px);
+  -webkit-mask-image:linear-gradient(180deg,transparent 0%,#000 26%,#000 78%,transparent 100%);
+          mask-image:linear-gradient(180deg,transparent 0%,#000 26%,#000 78%,transparent 100%);
+}
+.pillars::after{
+  content:"";position:absolute;
+  left:-6%;right:-6%;bottom:56%;
+  height:56px;
+  background:linear-gradient(180deg,rgba(226,210,174,.34),rgba(140,120,86,.16));
+  clip-path:polygon(50% 0%,100% 100%,0% 100%);
+}
+
+.hero{position:relative;z-index:2;display:flex;flex-direction:column;height:100%}
+.hero h1{
+  font-family:var(--serif);
+  font-size:23px;line-height:1.45;
+  text-align:center;margin:6px 0 0;
+  color:#F7F0DF;
+  text-shadow:0 2px 10px rgba(0,0,0,.5);
+}
+.hero .sub{color:#CFC5AC;margin-top:10px;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+
+/* 금색 인장 */
+.seal{
+  width:96px;height:96px;border-radius:50%;
+  margin:0 auto;
+  display:grid;place-items:center;
+  background:
+    radial-gradient(circle at 34% 28%, #F0DCA4 0%, #DCC080 22%, #C8A34A 56%, #8C6E27 100%);
+  background-color:#C8A34A;
+  border:3px solid rgba(247,232,190,.75);
+  box-shadow:0 0 26px rgba(200,163,74,.45),inset 0 0 12px rgba(90,66,18,.5);
+  position:relative;
+}
+.seal .scales{font-size:34px;line-height:1;color:#4A3712}
+.seal .nm{
+  position:absolute;bottom:13px;left:0;right:0;
+  text-align:center;
+  font-family:var(--serif);
+  font-size:7px;letter-spacing:.16em;color:#503A12;
+}
+
+.notice-box{
+  border:1px solid rgba(222,207,178,.55);
+  background:rgba(246,240,226,.90);
+  border-radius:4px;
+  padding:11px 12px;
+  text-align:center;
+  font-size:10px;line-height:1.75;
+  color:#5C5344;
+}
+
+/* ============================================================
+   진행 표시 (02~04)
+   ============================================================ */
+
+.steps{
+  display:flex;align-items:center;justify-content:center;
+  gap:0;margin:2px 0 18px;padding:0 6px;
+}
+.steps .dot{
+  width:9px;height:9px;border-radius:50%;
+  background:var(--gold-soft);
+  flex:0 0 auto;
+}
+.steps .dot.on{background:var(--gold);box-shadow:0 0 0 2px rgba(200,163,74,.22)}
+.steps .dot.cur{background:var(--navy);width:11px;height:11px}
+.steps .seg{height:1px;background:var(--gold-soft);flex:1 1 auto}
+
+/* ---------- 02 입력 ---------- */
+
+.field{
+  margin-top:16px;
+  border:1px solid var(--line);
+  border-radius:5px;
+  background:var(--parchment);
+  padding:12px 12px 8px;
+  display:flex;flex-direction:column;
+  min-height:132px;
+}
+.field textarea{
+  flex:1;width:100%;border:0;outline:0;resize:none;
+  background:transparent;
+  font-family:var(--sans);
+  font-size:12px;line-height:1.85;
+  color:var(--ink);
+}
+.field textarea::placeholder{color:#B3A88F}
+.count{text-align:right;font-size:10px;color:var(--muted);padding-top:4px}
+.help{font-size:10px;color:var(--muted);margin:7px 2px 0}
+
+/* ---------- 03 유형/관계 ---------- */
+
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.card-opt{
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:var(--parchment);
+  padding:12px 4px 10px;
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  cursor:pointer;
+  transition:border-color .15s,box-shadow .15s;
+}
+.card-opt .gl{font-size:23px;line-height:1}
+.card-opt .lb{font-size:10.5px;color:#5C5344}
+.card-opt[aria-pressed="true"]{
+  border-color:var(--gold);
+  box-shadow:0 0 0 1px var(--gold) inset;
+  background:#FBF3DF;
+}
+.grid3.narrow{grid-template-columns:repeat(3,1fr);width:66.5%;margin:9px auto 0}
+
+.pills{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
+.pill{
+  border:1px solid var(--line);
+  background:var(--parchment);
+  border-radius:999px;
+  padding:7px 16px;
+  font-size:11px;color:#5C5344;
+  cursor:pointer;
+}
+.pill[aria-pressed="true"]{
+  border-color:var(--gold);
+  background:#FBF3DF;
+  color:var(--gold-dim);
+  font-weight:600;
+}
+
+/* ---------- 04 심각성/성향 ---------- */
+
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.sv{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+.sv .num{
+  width:100%;aspect-ratio:1/1;
+  display:grid;place-items:center;
+  border:1px solid var(--line);
+  border-radius:5px;
+  background:var(--parchment);
+  font-family:var(--serif);
+  font-size:17px;color:var(--ink);
+}
+.sv .cap2{font-size:8.5px;line-height:1.35;text-align:center;color:var(--muted);white-space:pre-line}
+.sv[aria-pressed="true"] .num{background:var(--navy);border-color:var(--navy);color:#F3EBD8}
+.sv[aria-pressed="true"] .cap2{color:#5C5344}
+
+/* ============================================================
+   05. 심리 진행
+   ============================================================ */
+
+.courtroom{
+  position:absolute;inset:0;pointer-events:none;opacity:.55;
+}
+.courtroom::before{
+  content:"";position:absolute;left:50%;top:16%;
+  width:150px;height:150px;transform:translateX(-50%);
+  background:radial-gradient(circle,rgba(214,178,96,.42),transparent 68%);
+}
+.courtroom::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:56%;
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(196,160,92,.16) 0 22px,
+      rgba(60,44,20,.22) 22px 44px);
+  -webkit-mask-image:linear-gradient(180deg,transparent,#000 40%);
+          mask-image:linear-gradient(180deg,transparent,#000 40%);
+}
+.trial-h{
+  position:relative;z-index:2;
+  font-family:var(--serif);
+  font-size:21px;text-align:center;color:#F5EDDA;
+  margin:10px 0 0;
+  text-shadow:0 2px 10px rgba(0,0,0,.55);
+}
+.log{
+  position:relative;z-index:2;
+  margin-top:20px;
+  background:var(--parchment);
+  border:1px solid var(--gold);
+  outline:1px solid rgba(200,163,74,.35);
+  outline-offset:3px;
+  border-radius:3px;
+  padding:14px 13px;
+  display:flex;flex-direction:column;gap:12px;
+}
+.log li{
+  list-style:none;
+  display:flex;align-items:center;gap:9px;
+  font-size:11.5px;color:var(--ink);
+}
+.log ul{margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.log .mk{
+  flex:0 0 auto;width:13px;height:13px;border-radius:50%;
+  border:1.5px solid var(--navy);
+  display:grid;place-items:center;
+  font-size:7px;color:#F3EBD8;background:var(--navy);
+}
+.log li.todo{color:#B3A88F}
+.log li.todo .mk{background:transparent;border-color:#CFC3A6;color:transparent}
+.log li.cur .chev{margin-left:auto;color:var(--navy);font-size:12px}
+.wait{
+  position:relative;z-index:2;
+  margin-top:auto;padding-top:16px;
+  text-align:center;font-size:11.5px;color:#DCD2BB;
+}
+
+/* ============================================================
+   06 / 07. 판결문
+   ============================================================ */
+
+.doc{
+  background:var(--parchment);
+  border:1px solid var(--gold);
+  outline:1px solid rgba(200,163,74,.4);
+  outline-offset:4px;
+  border-radius:2px;
+  padding:16px 15px;
+  position:relative;
+}
+.doc .doc-title{
+  font-family:var(--serif);
+  font-size:19px;
+  text-align:center;
+  letter-spacing:.3em;
+  margin:2px 0 15px;
+  color:var(--ink);
+}
+.meta{display:flex;flex-direction:column;gap:7px;font-size:10.5px}
+.meta .r{display:flex;gap:10px}
+.meta .k{flex:0 0 54px;color:var(--muted)}
+.meta .v{flex:1;color:var(--ink)}
+.meta .v.hl{color:var(--gold-dim);font-weight:700}
+.rule{height:1px;background:var(--line);margin:13px 0}
+.blk{display:flex;gap:10px;margin-bottom:12px}
+.blk .k{
+  flex:0 0 62px;font-size:10.5px;color:var(--muted);
+  font-family:var(--serif);letter-spacing:.02em;
+}
+.blk .t{flex:1;font-size:10.5px;line-height:1.85;color:#3E3A30;word-break:keep-all}
+
+.final{
+  border-top:1px solid var(--line);
+  padding-top:12px;
+  display:flex;gap:10px;align-items:flex-start;
+}
+.final .k{flex:0 0 62px;font-size:10.5px;color:var(--muted);font-family:var(--serif)}
+.final .box{flex:1;position:relative}
+.verdict-word{
+  font-family:var(--serif);
+  font-size:24px;
+  color:var(--stamp);
+  letter-spacing:.06em;
+  margin:0 0 6px;
+}
+.verdict-note{font-size:9.5px;line-height:1.7;color:#5C5344;margin:0}
+.stamp{
+  position:absolute;right:-2px;top:-8px;
+  width:50px;height:50px;border-radius:50%;
+  border:2px solid var(--stamp);
+  color:var(--stamp);
+  display:grid;place-items:center;
+  font-family:var(--serif);
+  font-size:9px;line-height:1.2;letter-spacing:.02em;
+  transform:rotate(-14deg);
+  opacity:.85;
+  text-align:center;
+}
+.sign{
+  text-align:center;font-family:var(--serif);
+  font-size:10.5px;line-height:1.9;color:#5C5344;
+  margin-top:14px;position:relative;
+}
+.center-order{
+  text-align:center;
+  font-family:var(--serif);
+  font-size:20px;
+  color:var(--stamp);
+  margin:4px 0 8px;
+  letter-spacing:.04em;
+}
+
+/* ============================================================
+   08. 저장
+   ============================================================ */
+
+.thumb{
+  margin:0 auto;
+  width:74%;
+  border:1px solid var(--gold);
+  background:var(--parchment);
+  border-radius:2px;
+  padding:9px 9px;
+  transform-origin:top center;
+}
+.thumb .doc-title{font-size:11px;letter-spacing:.28em;margin:0 0 8px}
+.thumb .meta{gap:3px;font-size:6px}
+.thumb .meta .k{flex-basis:32px}
+.thumb .rule{margin:7px 0}
+.thumb .blk{gap:6px;margin-bottom:6px}
+.thumb .blk .k{flex-basis:34px;font-size:6px}
+.thumb .blk .t{font-size:6px;line-height:1.7}
+
+.fmt{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px}
+.fmt .opt{
+  border:1px solid var(--line);
+  background:var(--parchment);
+  border-radius:5px;
+  padding:12px 8px;
+  font-size:11.5px;color:#5C5344;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  cursor:pointer;
+}
+.fmt .opt .chk{
+  width:13px;height:13px;border-radius:2px;
+  border:1px solid var(--line);
+  display:grid;place-items:center;
+  font-size:9px;color:transparent;background:#fff;
+}
+.fmt .opt[aria-pressed="true"]{border-color:var(--navy)}
+.fmt .opt[aria-pressed="true"] .chk{background:var(--navy);border-color:var(--navy);color:#fff}
+
+/* ============================================================
+   09. 접수 완료
+   ============================================================ */
+
+.emblem{
+  width:78px;height:60px;margin:0 auto;
+  display:grid;place-items:center;
+  font-size:34px;line-height:1;
+  position:relative;
+}
+.emblem::before,.emblem::after{
+  content:"";position:absolute;top:6px;
+  width:26px;height:46px;
+  border:2px solid var(--gold);
+  border-radius:60% 0 60% 0;
+  opacity:.75;
+}
+.emblem::before{left:-2px;transform:rotate(-16deg)}
+.emblem::after{right:-2px;transform:rotate(16deg) scaleX(-1)}
+
+.caseno{
+  border:1px solid var(--line);
+  background:var(--parchment);
+  border-radius:4px;
+  padding:13px 10px;
+  text-align:center;
+}
+.caseno .k{font-size:10px;color:var(--muted);display:block;margin-bottom:7px}
+.caseno .v{font-family:var(--serif);font-size:21px;color:var(--ink);letter-spacing:.02em}
+
+/* ============================================================
+   10. 안내
+   ============================================================ */
+
+.notes{display:flex;flex-direction:column;gap:9px}
+.note{
+  border:1px solid var(--line);
+  background:var(--parchment);
+  border-radius:5px;
+  padding:12px 12px;
+  display:flex;gap:11px;align-items:center;
+}
+.note .ic{
+  flex:0 0 auto;width:30px;height:30px;border-radius:50%;
+  border:1px solid var(--line);
+  display:grid;place-items:center;font-size:14px;
+  background:#fff;
+}
+.note .tx{font-size:10px;line-height:1.75;color:#4A4438;word-break:keep-all}
+
+/* ============================================================
+   하단 컨트롤 바 (프로토타입 전용 — 화면 디자인 아님)
+   ============================================================ */
+
+#dock{
+  position:fixed;left:50%;bottom:14px;transform:translateX(-50%);
+  z-index:50;
+  display:flex;align-items:center;gap:6px;
+  background:rgba(22,35,63,.94);
+  color:#EFE6D0;
+  border-radius:999px;
+  padding:6px 8px;
+  box-shadow:0 6px 20px rgba(0,0,0,.28);
+  font-size:11.5px;
+  font-family:var(--sans);
+}
+#dock button{
+  background:transparent;border:0;color:inherit;
+  font:inherit;cursor:pointer;
+  padding:5px 10px;border-radius:999px;
+}
+#dock button:hover{background:rgba(255,255,255,.12)}
+#dock .now{min-width:44px;text-align:center;opacity:.8;font-variant-numeric:tabular-nums}
+#dock .sep{width:1px;height:16px;background:rgba(255,255,255,.22)}
+#dock button.on{background:var(--gold);color:#2A2007}
+
+@media print{#dock{display:none}}
+</style>
+</head>
+<body>
+
+<div id="stage">
+
+  <!-- ==================== 01. 랜딩 ==================== -->
+  <div class="tile active" data-i="1">
+    <div class="cap">01. 랜딩</div>
+    <div class="phone scene-dark">
+      <div class="pillars"></div>
+      <div class="bar">
+        <span class="ico ghost">‹</span>
+        <span class="brand"><span class="col">🏛</span>오늘의 생활법원</span>
+        <button class="ico" type="button">☰</button>
+      </div>
+      <div class="body hero">
+        <h1>당신의 사소한 억울함을<br>엄숙하게 심리합니다.</h1>
+        <p class="sub">점심 메뉴부터 읽씹 사건까지<br>생활법원이 공정하지 않게 심리합니다.</p>
+        <div class="spacer"></div>
+        <div class="seal">
+          <span class="scales">⚖</span>
+          <span class="nm">생활법원</span>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn" type="button" data-go="2">사건 접수하기</button>
+        <div class="notice-box" style="margin-top:12px">
+          본 서비스는 오락 목적의 가상 콘텐츠이며<br>
+          실제 법률 자문, 법률 판단 또는 실제 판결이 아닙니다.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 02. 내용 입력 ==================== -->
+  <div class="tile" data-i="2">
+    <div class="cap">02. 사건 접수 - 내용 입력</div>
+    <div class="phone">
+      <div class="bar">
+        <button class="ico" type="button" data-go="1">‹</button>
+        <span class="brand"><span class="col">🏛</span>오늘의 생활법원</span>
+        <span class="ico ghost">☰</span>
+      </div>
+      <div class="body">
+        <div class="steps">
+          <span class="dot on"></span><span class="seg"></span>
+          <span class="dot"></span><span class="seg"></span>
+          <span class="dot"></span><span class="seg"></span>
+          <span class="dot"></span><span class="seg"></span>
+          <span class="dot"></span>
+        </div>
+        <h1 class="title">사건 내용을 입력해 주세요</h1>
+        <p class="sub">여러분의 사소한 사건을 들려주세요.</p>
+        <div class="field">
+          <textarea id="caseText" maxlength="300"
+            placeholder="예: 회의 시작 2분 전에&#10;자료 검토를 요청받았습니다."></textarea>
+          <div class="count"><span id="cnt">0</span> / 300</div>
+        </div>
+        <div class="help">10~300자 이내로 입력해주세요.</div>
+        <div class="spacer"></div>
+        <button class="btn" type="button" data-go="3">다음</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 03. 유형 / 관계 ==================== -->
+  <div class="tile" data-i="3">
+    <div class="cap">03. 사건 접수 - 유형/관계 선택</div>
+    <div class="phone">
+      <div class="bar">
+        <button class="ico" type="button" data-go="2">‹</button>
+        <span class="brand"><span class="col">🏛</span>오늘의 생활법원</span>
+        <span class="ico ghost">☰</span>
+      </div>
+      <div class="body">
+        <div class="steps">
+          <span class="dot cur"></span><span class="seg"></span>
+          <span class="dot on"></span><span class="seg"></span>
+          <span class="dot"></span><span class="seg"></span>
+          <span class="dot"></span><span class="seg"></span>
+          <span class="dot"></span>
+        </div>
+        <p class="section-label">사건 유형을 선택해주세요</p>
+        <div class="grid3" data-group="type">
+          <button class="card-opt" type="button" aria-pressed="true">
+            <span class="gl">💼</span><span class="lb">회사생활</span></button>
+          <button class="card-opt" type="button" aria-pressed="false">
+            <span class="gl">👥</span><span class="lb">인간관계</span></button>
+          <button class="card-opt" type="button" aria-pressed="false">
+            <span class="gl">🍴</span><span class="lb">식사</span></button>
+        </div>
+        <div class="grid3 narrow" data-group="type">
+          <button class="card-opt" type="button" aria-pressed="false"
+            style="grid-column:1/2"><span class="gl">💬</span><span class="lb">메신저</span></button>
+          <button class="card-opt" type="button" aria-pressed="false"
+            style="grid-column:2/3"><span class="gl">🏠</span><span class="lb">일상</span></button>
+        </div>
+
+        <p class="section-label" style="margin-top:20px">피고와의 관계를 선택해주세요</p>
+        <div class="pills" data-group="rel">
+          <button class="pill" type="button" aria-pressed="false">본인</button>
+          <button class="pill" type="button" aria-pressed="true">동료</button>
+          <button class="pill" type="button" aria-pressed="false">친구</button>
+          <button class="pill" type="button" aria-pressed="false">상사</button>
+        </div>
+        <div class="pills" style="margin-top:7px" data-group="rel">
+          <button class="pill" type="button" aria-pressed="false">익명 인물</button>
+        </div>
+
+        <div class="spacer"></div>
+        <button class="btn" type="button" data-go="4">다음</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 04. 심각성 / 성향 ==================== -->
+  <div class="tile" data-i="4">
+    <div class="cap">04. 사건 접수 - 심각성/성향 선택</div>
+    <div class="phone">
+      <div class="bar">
+        <button class="ico" type="button" data-go="3">‹</button>
+        <span class="brand"><span class="col">🏛</span>오늘의 생활법원</span>
+        <span class="ico ghost">☰</span>
+      </div>
+      <div class="body">
+        <div class="steps">
+          <span class="dot on"></span><span class="seg"></span>
+          <span class="dot on"></span><span class="seg"></span>
+          <span class="dot on"></span><span class="seg"></span>
+          <span class="dot cur"></span><span class="seg"></span>
+          <span class="dot"></span>
+        </div>
+        <p class="section-label">사건의 심각성을 선택해주세요</p>
+        <div class="scale" data-group="sev">
+          <button class="sv" type="button" aria-pressed="false">
+            <span class="num">1</span><span class="cap2">사소함</span></button>
+          <button class="sv" type="button" aria-pressed="false">
+            <span class="num">2</span><span class="cap2">약간&#10;괘씸함</span></button>
+          <button class="sv" type="button" aria-pressed="true">
+            <span class="num">3</span><span class="cap2">정식&#10;심리 필요</span></button>
+          <button class="sv" type="button" aria-pressed="false">
+            <span class="num">4</span><span class="cap2">중대&#10;사건</span></button>
+          <button class="sv" type="button" aria-pressed="false">
+            <span class="num">5</span><span class="cap2">국가적&#10;위기</span></button>
+        </div>
+
+        <p class="section-label" style="margin-top:22px">원하는 판결 성향을 선택해주세요</p>
+        <div class="grid3" data-group="tone">
+          <button class="card-opt" type="button" aria-pressed="false">
+            <span class="gl">⚖️</span><span class="lb">관대함</span></button>
+          <button class="card-opt" type="button" aria-pressed="true">
+            <span class="gl">⚖️</span><span class="lb">공정함</span></button>
+          <button class="card-opt" type="button" aria-pressed="false">
+            <span class="gl">🔨</span><span class="lb">엄벌주의</span></button>
+        </div>
+
+        <div class="spacer"></div>
+        <button class="btn" type="button" data-go="5">사건 접수하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 05. 심리 진행 ==================== -->
+  <div class="tile" data-i="5">
+    <div class="cap">05. 심리 진행</div>
+    <div class="phone scene-dark">
+      <div class="courtroom"></div>
+      <div class="bar">
+        <span class="ico ghost">‹</span>
+        <span class="brand"><span class="col">🏛</span>오늘의 생활법원</span>
+        <span class="ico ghost">☰</span>
+      </div>
+      <div class="body">
+        <h1 class="trial-h">심리 진행 중입니다</h1>
+        <div class="log">
+          <ul id="trialList">
+            <li class="done"><span class="mk">✓</span>사건 기록을 검토하는 중...</li>
+            <li class="done"><span class="mk">✓</span>증거 능력을 과도하게 판단하는 중...</li>
+            <li class="cur"><span class="mk">●</span>유사 생활사건을 검토하는 중...<span class="chev">›</span></li>
+            <li class="todo"><span class="mk">·</span>사회 통념을 지나치게 반영하는 중...</li>
+            <li class="todo"><span class="mk">·</span>재판부가 진지하게 고민하는 중...</li>
+            <li class="todo"><span class="mk">·</span>판결문 작성 중...</li>
+          </ul>
+        </div>
+        <div class="wait">잠시만 기다려주세요. 🔨</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 06. 판결 결과 ==================== -->
+  <div class="tile" data-i="6">
+    <div class="cap">06. 판결 결과</div>
+    <div class="phone">
+      <div class="bar">
+        <span class="ico ghost">‹</span>
+        <span class="brand"><span class="col">🏛</span>오늘의 생활법원</span>
+        <span class="ico ghost">☰</span>
+      </div>
+      <div class="body">
+        <div class="doc" id="verdictDoc">
+          <div class="doc-title">판 결 문</div>
+          <div class="meta">
+            <div class="r"><span class="k">사건번호</span><span class="v">2026 생활 제042호</span></div>
+            <div class="r"><span class="k">사건명</span><span class="v">점심 메뉴 결정 지연 사건</span></div>
+            <div class="r"><span class="k">피고</span><span class="v">익명의 직장인</span></div>
+            <div class="r"><span class="k">가상 죄명</span><span class="v hl">과도한 우유부단죄</span></div>
+          </div>
+          <div class="rule"></div>
+          <div class="blk">
+            <span class="k">주문</span>
+            <span class="t">피고인은 금일 오후 1시까지 제육볶음 또는 비빔밥 중 하나를 최종 선택할 것.</span>
+          </div>
+          <div class="blk">
+            <span class="k">판결 이유</span>
+            <span class="t">피고인은 “아무거나 괜찮다”는 진술을 번복하면서도 제안된 모든 메뉴에 소극적 반응을 보였다. 이로 인해 동료들의 점심 결정권이 침해되었으며 의사결정의 자유가 상당 시간 침해되었다.</span>
+          </div>
+          <div class="blk">
+            <span class="k">생활 개선 권고</span>
+            <span class="t">향후 메뉴 결정이 어려울 경우 가장 먼저 언급된 메뉴를 선택하거나 랜덤 선택 기능을 활용할 것을 권고한다.</span>
+          </div>
+          <div class="final">
+            <span class="k">최종 판결</span>
+            <div class="box">
+              <p class="verdict-word">조건부 유죄</p>
+              <p class="verdict-note">단, 음료 1잔 제공 시 형의 집행을 유예한다.</p>
+              <span class="stamp">생활<br>법원</span>
+            </div>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="btn-row" style="margin-top:14px">
+          <button class="btn sm" type="button" data-go="7">항소하기</button>
+          <button class="btn sm" type="button" data-go="8">판결문 저장</button>
+          <button class="btn sm" type="button" data-go="9">새 사건 접수</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 07. 항소 결과 ==================== -->
+  <div class="tile" data-i="7">
+    <div class="cap">07. 항소 결과</div>
+    <div class="phone">
+      <div class="bar">
+        <span class="ico ghost">‹</span>
+        <span class="brand"><span class="col">🏛</span>오늘의 생활법원</span>
+        <span class="ico ghost">☰</span>
+      </div>
+      <div class="body">
+        <div class="doc">
+          <div class="doc-title">항소심 판결문</div>
+          <div class="meta">
+            <div class="r"><span class="k">사건번호</span><span class="v">2026 생활 제042호</span></div>
+            <div class="r"><span class="k">사건명</span><span class="v">점심 메뉴 결정 지연 사건</span></div>
+            <div class="r"><span class="k">피고</span><span class="v">익명의 직장인</span></div>
+          </div>
+          <div class="rule"></div>
+          <div class="blk" style="display:block">
+            <div class="k" style="margin-bottom:8px">항소심 주문</div>
+            <p class="center-order">원심 파기. 무죄.</p>
+            <div class="t" style="text-align:center">다만, 향후 메뉴 결정 시 적극적인 의견 제시에 임할 것을 권고한다.</div>
+          </div>
+          <div class="rule"></div>
+          <div class="blk" style="display:block">
+            <div class="k" style="margin-bottom:8px">항소심 판결 이유</div>
+            <div class="t">원심은 피고인의 우유부단함을 과도하게 해석하였다. 점심 메뉴 결정은 개인의 취향과 컨디션에 따라 변동될 수 있는 영역으로, 이를 형사적으로 책임지게 하는 것은 생활의 자유를 위축할 우려가 있다.</div>
+          </div>
+          <div class="sign">
+            2026년 05월 23일<br>생활법원 항소심 재판부
+            <span class="stamp" style="right:6px;top:2px">생활<br>법원</span>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="btn-row" style="margin-top:14px">
+          <button class="btn sm" type="button" data-go="8">판결문 저장</button>
+          <button class="btn sm" type="button" data-go="9">새 사건 접수</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 08. 판결문 저장 ==================== -->
+  <div class="tile" data-i="8">
+    <div class="cap">08. 판결문 저장</div>
+    <div class="phone">
+      <div class="bar">
+        <button class="ico" type="button" data-go="6">‹</button>
+        <span class="brand"><span class="col">🏛</span>오늘의 생활법원</span>
+        <span class="ico ghost">☰</span>
+      </div>
+      <div class="body">
+        <h1 class="title" style="font-size:19px;margin-bottom:14px">판결문 저장</h1>
+
+        <div class="thumb">
+          <div class="doc-title">판 결 문</div>
+          <div class="meta">
+            <div class="r"><span class="k">사건번호</span><span class="v">2026 생활 제042호</span></div>
+            <div class="r"><span class="k">사건명</span><span class="v">점심 메뉴 결정 지연 사건</span></div>
+            <div class="r"><span class="k">피고</span><span class="v">익명의 직장인</span></div>
+            <div class="r"><span class="k">가상 죄명</span><span class="v hl">과도한 우유부단죄</span></div>
+          </div>
+          <div class="rule"></div>
+          <div class="blk"><span class="k">주문</span>
+            <span class="t">피고인은 금일 오후 1시까지 제육볶음 또는 비빔밥 중 하나를 최종 선택할 것.</span></div>
+          <div class="blk"><span class="k">판결 이유</span>
+            <span class="t">피고인은 “아무거나 괜찮다”는 진술을 번복하면서도 제안된 모든 메뉴에 소극적 반응을 보였다. 이로 인해 동료들의 점심 결정권이 침해되었으며 의사결정의 자유가 상당 시간 침해되었다.</span></div>
+          <div class="blk"><span class="k">생활 개선 권고</span>
+            <span class="t">향후 메뉴 결정이 어려울 경우 가장 먼저 언급된 메뉴를 선택할 것을 권고한다.</span></div>
+        </div>
+
+        <p class="help" style="text-align:left;margin:16px 2px 0;font-size:11.5px;color:#5C5344">
+          저장할 형식을 선택해주세요
+        </p>
+        <div class="fmt" data-group="fmt">
+          <button class="opt" type="button" aria-pressed="true">
+            <span class="chk">✓</span>이미지 (PNG)</button>
+          <button class="opt" type="button" aria-pressed="false">
+            <span class="chk">✓</span>이미지 (JPG)</button>
+        </div>
+
+        <div class="spacer"></div>
+        <button class="btn" type="button" style="margin-bottom:8px">저장하기</button>
+        <button class="btn ghost" type="button" data-go="6">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 09. 새 사건 접수 완료 ==================== -->
+  <div class="tile" data-i="9">
+    <div class="cap">09. 새 사건 접수 완료</div>
+    <div class="phone">
+      <div class="bar">
+        <span class="ico ghost">‹</span>
+        <span class="brand"><span class="col">🏛</span>오늘의 생활법원</span>
+        <span class="ico ghost">☰</span>
+      </div>
+      <div class="body" style="padding-top:34px">
+        <div class="emblem">🔨</div>
+        <h1 class="title" style="margin-top:20px">새로운 사건이 접수되었습니다!</h1>
+        <div class="caseno" style="margin-top:22px">
+          <span class="k">사건번호</span>
+          <span class="v">2026 생활 제043호</span>
+        </div>
+        <p class="sub" style="margin-top:18px">재판부가 성실히 심리하겠습니다.</p>
+        <div class="spacer"></div>
+        <button class="btn" type="button" style="margin-bottom:8px" data-go="6">사건 내용 확인하기</button>
+        <button class="btn ghost" type="button" data-go="2">새 사건 접수하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 10. 안내 ==================== -->
+  <div class="tile" data-i="10">
+    <div class="cap">10. 안내(고지) 페이지</div>
+    <div class="phone">
+      <div class="bar">
+        <span class="ico ghost">‹</span>
+        <span class="brand"><span class="col">🏛</span>오늘의 생활법원</span>
+        <span class="ico ghost">☰</span>
+      </div>
+      <div class="body">
+        <h1 class="title" style="margin:6px 0 18px">안내 사항</h1>
+        <div class="notes">
+          <div class="note">
+            <span class="ic">⚖️</span>
+            <span class="tx">본 서비스는 오락 목적의 가상 콘텐츠이며,<br>실제 법률 자문, 법률 판단 또는<br>실제 판결이 아닙니다.</span>
+          </div>
+          <div class="note">
+            <span class="ic">📋</span>
+            <span class="tx">입력하신 내용은 시스템 내에서만 사용되며,<br>외부에 저장되거나 공유되지 않습니다.</span>
+          </div>
+          <div class="note">
+            <span class="ic">⚠️</span>
+            <span class="tx">타인의 개인정보, 불법 행위, 혐오 표현 등<br>부적절한 내용은 입력할 수 없습니다.</span>
+          </div>
+          <div class="note">
+            <span class="ic">✓</span>
+            <span class="tx">모든 판결 결과는 템플릿/규칙 기반으로 생성되며,<br>실제 법령이나 판례와 무관합니다.</span>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn" type="button" data-go="1">확인하고 계속하기</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 프로토타입 조작용 하단 바 (디자인 대상 아님) -->
+<div id="dock">
+  <button type="button" id="prev">‹ 이전</button>
+  <span class="now" id="now">01 / 10</span>
+  <button type="button" id="next">다음 ›</button>
+  <span class="sep"></span>
+  <button type="button" id="galleryBtn">전체 보기</button>
+</div>
+
+<script>
+(function(){
+  var tiles  = Array.prototype.slice.call(document.querySelectorAll('.tile'));
+  var nowEl  = document.getElementById('now');
+  var cur    = 1;
+
+  function pad(n){ return (n < 10 ? '0' : '') + n; }
+
+  function show(n){
+    cur = Math.min(tiles.length, Math.max(1, n));
+    tiles.forEach(function(t){
+      t.classList.toggle('active', Number(t.dataset.i) === cur);
+    });
+    nowEl.textContent = pad(cur) + ' / ' + pad(tiles.length);
+    if (!document.body.classList.contains('gallery')) window.scrollTo(0, 0);
+  }
+
+  /* 화면 내 버튼 이동 */
+  document.addEventListener('click', function(e){
+    var el = e.target.closest('[data-go]');
+    if (!el) return;
+    if (document.body.classList.contains('gallery')) return;
+    show(Number(el.dataset.go));
+  });
+
+  /* 선택형 컨트롤 (유형/관계/심각성/성향/저장형식) */
+  document.addEventListener('click', function(e){
+    var el = e.target.closest('[aria-pressed]');
+    if (!el) return;
+    var wrap = el.closest('[data-group]');
+    if (!wrap) return;
+    var group = wrap.dataset.group;
+    var scope = el.closest('.phone');
+    scope.querySelectorAll('[data-group="' + group + '"] [aria-pressed]')
+         .forEach(function(b){ b.setAttribute('aria-pressed', 'false'); });
+    el.setAttribute('aria-pressed', 'true');
+  });
+
+  /* 02 글자 수 */
+  var ta = document.getElementById('caseText');
+  var cnt = document.getElementById('cnt');
+  if (ta) ta.addEventListener('input', function(){ cnt.textContent = ta.value.length; });
+
+  /* 하단 바 */
+  document.getElementById('prev').onclick = function(){ show(cur - 1); };
+  document.getElementById('next').onclick = function(){ show(cur + 1); };
+  document.getElementById('galleryBtn').onclick = function(){
+    var on = document.body.classList.toggle('gallery');
+    this.classList.toggle('on', on);
+    if (!on) show(cur);
+  };
+
+  document.addEventListener('keydown', function(e){
+    if (document.body.classList.contains('gallery')) return;
+    if (e.key === 'ArrowLeft')  show(cur - 1);
+    if (e.key === 'ArrowRight') show(cur + 1);
+  });
+
+  show(1);
+})();
+</script>
+</body>
+</html>

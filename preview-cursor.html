@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>미리보기 — DESIGN-cursor.md 적용안</title>
+<style>
+/* ============================================================
+   DESIGN-cursor.md 를 "오늘의 생활법원"에 적용했을 때의 미리보기
+   ※ 이 파일은 미리보기 전용. index.html 은 건드리지 않음.
+   ============================================================ */
+
+:root{
+  /* colors — DESIGN-cursor.md 그대로 */
+  --primary:#f54e00;
+  --primary-active:#d04200;
+  --ink:#26251e;
+  --body:#5a5852;
+  --muted:#807d72;
+  --muted-soft:#a09c92;
+  --hairline:#e6e5e0;
+  --hairline-soft:#efeee8;
+  --hairline-strong:#cfcdc4;
+  --canvas:#f7f7f4;
+  --canvas-soft:#fafaf7;
+  --surface-card:#ffffff;
+  --surface-strong:#e6e5e0;
+  --on-primary:#ffffff;
+  --tl-thinking:#dfa88f;
+  --tl-grep:#9fc9a2;
+  --tl-read:#9fbbe0;
+  --tl-edit:#c0a8dd;
+  --tl-done:#c08532;
+  --error:#cf2d56;
+  --success:#1f8a65;
+
+  /* type — CursorGothic 미보유 → 문서가 지정한 대체(Inter/system-ui) */
+  --sans:'Inter',system-ui,'Helvetica Neue',Helvetica,Arial,sans-serif;
+  --mono:'JetBrains Mono','Fira Code',Consolas,'Courier New',monospace;
+
+  /* rounded */
+  --r-xs:4px; --r-sm:6px; --r-md:8px; --r-lg:12px; --r-xl:16px; --r-pill:9999px;
+
+  --phone-w:332px;
+  --phone-h:600px;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--sans);
+  background:var(--canvas);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ---------- 미리보기 페이지 헤더 ---------- */
+.pagehead{
+  max-width:1200px;margin:0 auto;
+  padding:48px 24px 8px;
+}
+.badge{
+  display:inline-block;
+  background:var(--surface-strong);color:var(--ink);
+  font-size:11px;font-weight:600;line-height:1.4;letter-spacing:.88px;
+  text-transform:uppercase;
+  border-radius:var(--r-pill);padding:4px 10px;
+  margin-bottom:20px;
+}
+.pagehead h1{
+  font-size:36px;font-weight:400;line-height:1.2;letter-spacing:-.72px;
+  margin:0 0 12px;color:var(--ink);
+}
+.pagehead p{
+  font-size:16px;line-height:1.5;color:var(--body);margin:0;max-width:62ch;
+}
+.pagehead .rule{height:1px;background:var(--hairline);margin:32px 0 0}
+
+/* ---------- 그리드 ---------- */
+#stage{
+  max-width:1200px;margin:0 auto;
+  padding:32px 24px 80px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(var(--phone-w),1fr));
+  gap:32px 24px;
+}
+.tile{display:flex;flex-direction:column;gap:10px}
+.cap{
+  font-size:11px;font-weight:600;line-height:1.4;letter-spacing:.88px;
+  text-transform:uppercase;color:var(--muted);
+}
+
+/* ---------- 폰 ---------- */
+.phone{
+  width:100%;max-width:var(--phone-w);
+  height:var(--phone-h);
+  border-radius:var(--r-lg);
+  border:1px solid var(--hairline);
+  background:var(--canvas);
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  /* 그림자 없음 — hairline-only depth */
+}
+.phone.invert{background:var(--ink);border-color:var(--ink)}
+
+/* ---------- top-nav ---------- */
+.nav{
+  flex:0 0 auto;height:52px;
+  background:var(--canvas);
+  border-bottom:1px solid var(--hairline);
+  display:flex;align-items:center;padding:0 16px;gap:10px;
+}
+.phone.invert .nav{background:var(--ink);border-bottom-color:rgba(255,255,255,.12)}
+.nav .mark{
+  font-size:14px;font-weight:500;line-height:1.4;
+  color:var(--ink);letter-spacing:-.1px;
+}
+.nav .mark b{color:var(--primary);font-weight:500}
+.phone.invert .nav .mark{color:var(--canvas)}
+.nav .sp{flex:1}
+.nav .lnk{
+  font-size:14px;font-weight:500;color:var(--body);
+  background:none;border:0;cursor:pointer;padding:0;
+}
+.phone.invert .nav .lnk{color:var(--muted-soft)}
+
+/* ---------- body ---------- */
+.body{
+  flex:1 1 auto;min-height:0;overflow:auto;
+  padding:24px 20px 20px;
+  display:flex;flex-direction:column;
+}
+.body::-webkit-scrollbar{width:5px}
+.body::-webkit-scrollbar-thumb{background:var(--hairline-strong);border-radius:3px}
+.sp{flex:1 1 auto;min-height:16px}
+
+/* ---------- type tokens ---------- */
+.d-mega{font-size:32px;font-weight:400;line-height:1.1;letter-spacing:-.96px;margin:0;color:var(--ink)}
+.d-lg{font-size:26px;font-weight:400;line-height:1.2;letter-spacing:-.52px;margin:0;color:var(--ink)}
+.d-md{font-size:22px;font-weight:400;line-height:1.25;letter-spacing:-.33px;margin:0;color:var(--ink)}
+.d-sm{font-size:18px;font-weight:400;line-height:1.3;letter-spacing:-.11px;margin:0;color:var(--ink)}
+.t-md{font-size:15px;font-weight:600;line-height:1.4;margin:0;color:var(--ink)}
+.t-sm{font-size:13px;font-weight:600;line-height:1.4;margin:0;color:var(--ink)}
+.b-md{font-size:14px;font-weight:400;line-height:1.5;color:var(--body);margin:0}
+.b-sm{font-size:13px;font-weight:400;line-height:1.5;color:var(--body);margin:0}
+.cap-u{
+  font-size:11px;font-weight:600;line-height:1.4;letter-spacing:.88px;
+  text-transform:uppercase;color:var(--muted);margin:0;
+}
+.code{font-family:var(--mono);font-size:12px;line-height:1.5;color:var(--body)}
+.invert .d-mega,.invert .d-lg,.invert .d-md,.invert .d-sm{color:var(--canvas)}
+.invert .b-md,.invert .b-sm{color:var(--muted-soft)}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:flex;align-items:center;justify-content:center;
+  width:100%;height:40px;padding:10px 18px;
+  font-family:var(--sans);font-size:14px;font-weight:500;line-height:1;
+  border:0;border-radius:var(--r-md);cursor:pointer;
+  background:var(--primary);color:var(--on-primary);
+  transition:background .12s;
+}
+.btn:active{background:var(--primary-active)}
+.btn.dl{height:44px;padding:12px 20px;background:var(--ink);color:var(--canvas)}
+.btn.sec{
+  background:var(--surface-card);color:var(--ink);
+  border:1px solid var(--hairline-strong);height:40px;padding:9px 17px;
+}
+.btn.txt{background:transparent;color:var(--ink);height:auto;padding:8px 0}
+.invert .btn.sec{background:transparent;color:var(--canvas);border-color:rgba(255,255,255,.28)}
+.invert .btn.txt{color:var(--canvas)}
+.btn-row{display:flex;gap:8px}
+.btn-row .btn{flex:1;padding:10px 8px;font-size:13px}
+.stack{display:flex;flex-direction:column;gap:8px}
+
+/* ---------- cards ---------- */
+.card{
+  background:var(--surface-card);
+  border:1px solid var(--hairline);
+  border-radius:var(--r-lg);
+  padding:20px;
+}
+.pane{
+  background:var(--canvas-soft);
+  border:1px solid var(--hairline-soft);
+  border-radius:var(--r-md);
+  padding:16px;
+}
+.badge-pill{
+  display:inline-block;
+  background:var(--surface-strong);color:var(--ink);
+  font-size:11px;font-weight:600;line-height:1.4;letter-spacing:.88px;
+  text-transform:uppercase;border-radius:var(--r-pill);padding:4px 10px;
+}
+
+/* ---------- steps (진행 표시) ---------- */
+.steps{display:flex;gap:4px;margin-bottom:24px}
+.steps i{flex:1;height:2px;border-radius:var(--r-pill);background:var(--hairline)}
+.steps i.on{background:var(--ink)}
+
+/* ---------- text input ---------- */
+.input{
+  background:var(--surface-card);
+  border:1px solid var(--hairline-strong);
+  border-radius:var(--r-md);
+  padding:12px 16px;
+  min-height:132px;
+  display:flex;flex-direction:column;
+}
+.input textarea{
+  flex:1;border:0;outline:0;resize:none;background:transparent;
+  font-family:var(--sans);font-size:14px;line-height:1.5;color:var(--ink);
+}
+.input textarea::placeholder{color:var(--muted-soft)}
+.meta-row{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:8px;
+}
+.meta-row .b-sm{font-size:13px;color:var(--muted)}
+.counter{font-family:var(--mono);font-size:12px;color:var(--muted)}
+
+/* ---------- selectable grids ---------- */
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.opt{
+  background:var(--surface-card);
+  border:1px solid var(--hairline);
+  border-radius:var(--r-md);
+  padding:14px 6px;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  cursor:pointer;font-family:var(--sans);
+}
+.opt .gl{font-size:20px;line-height:1;filter:grayscale(1) opacity(.85)}
+.opt .lb{font-size:13px;font-weight:400;color:var(--body)}
+.opt[aria-pressed="true"]{border-color:var(--ink)}
+.opt[aria-pressed="true"] .lb{color:var(--ink);font-weight:600}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  background:var(--surface-card);
+  border:1px solid var(--hairline);
+  border-radius:var(--r-pill);
+  padding:8px 16px;
+  font-family:var(--sans);font-size:13px;color:var(--body);
+  cursor:pointer;
+}
+.chip[aria-pressed="true"]{border-color:var(--ink);color:var(--ink);font-weight:600}
+
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.sv{display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;
+    background:none;border:0;padding:0;font-family:var(--sans)}
+.sv .n{
+  width:100%;aspect-ratio:1/1;display:grid;place-items:center;
+  background:var(--surface-card);
+  border:1px solid var(--hairline);
+  border-radius:var(--r-md);
+  font-family:var(--mono);font-size:14px;color:var(--body);
+}
+.sv .c{font-size:11px;line-height:1.35;text-align:center;color:var(--muted);white-space:pre-line}
+.sv[aria-pressed="true"] .n{background:var(--ink);border-color:var(--ink);color:var(--canvas)}
+.sv[aria-pressed="true"] .c{color:var(--ink)}
+
+/* ---------- AI timeline (문서의 시그니처 — 심리 진행 화면) ---------- */
+.timeline{display:flex;flex-direction:column;gap:14px}
+.tl-row{display:flex;align-items:center;gap:10px}
+.tl-pill{
+  flex:0 0 auto;
+  font-size:11px;font-weight:600;line-height:1.4;letter-spacing:.88px;
+  text-transform:uppercase;
+  border-radius:var(--r-pill);padding:4px 10px;
+  color:var(--ink);
+}
+.tl-pill.thinking{background:var(--tl-thinking)}
+.tl-pill.grep{background:var(--tl-grep)}
+.tl-pill.read{background:var(--tl-read)}
+.tl-pill.edit{background:var(--tl-edit)}
+.tl-pill.done{background:var(--tl-done);color:var(--on-primary)}
+.tl-pill.wait{background:transparent;border:1px solid var(--hairline-strong);color:var(--muted-soft)}
+.tl-row .tx{font-size:13px;line-height:1.5;color:var(--body)}
+.tl-row.pending .tx{color:var(--muted-soft)}
+.invert .tl-row .tx{color:var(--canvas-soft)}
+.invert .tl-row.pending .tx{color:var(--muted)}
+
+/* ---------- 판결문 (문서 카드) ---------- */
+.doc .doc-head{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding-bottom:16px;border-bottom:1px solid var(--hairline);
+}
+.doc .kv{display:flex;flex-direction:column;gap:6px;padding:16px 0;
+         border-bottom:1px solid var(--hairline-soft)}
+.doc .kv .r{display:flex;gap:12px;align-items:baseline}
+.doc .kv .k{
+  flex:0 0 76px;font-size:11px;font-weight:600;letter-spacing:.88px;
+  text-transform:uppercase;color:var(--muted);
+}
+.doc .kv .v{flex:1;font-size:13px;line-height:1.5;color:var(--ink)}
+.doc .kv .v.mono{font-family:var(--mono);font-size:12px}
+.doc .sec{padding:16px 0;border-bottom:1px solid var(--hairline-soft)}
+.doc .sec:last-of-type{border-bottom:0}
+.doc .sec .k{
+  font-size:11px;font-weight:600;letter-spacing:.88px;text-transform:uppercase;
+  color:var(--muted);display:block;margin-bottom:8px;
+}
+.doc .sec .t{font-size:13px;line-height:1.6;color:var(--body);word-break:keep-all;margin:0}
+.final-band{
+  margin-top:16px;
+  background:var(--ink);
+  border-radius:var(--r-md);
+  padding:20px;
+}
+.final-band .k{
+  font-size:11px;font-weight:600;letter-spacing:.88px;text-transform:uppercase;
+  color:var(--muted-soft);display:block;margin-bottom:10px;
+}
+.final-band .v{
+  font-size:26px;font-weight:400;line-height:1.2;letter-spacing:-.52px;
+  color:var(--canvas);margin:0 0 8px;
+}
+.final-band .n{font-size:13px;line-height:1.5;color:var(--muted-soft);margin:0}
+
+/* ---------- 저장 화면 ---------- */
+.thumb{
+  background:var(--canvas-soft);
+  border:1px solid var(--hairline);
+  border-radius:var(--r-md);
+  padding:14px;
+}
+.thumb .tt{font-size:11px;font-weight:600;letter-spacing:.88px;text-transform:uppercase;
+           color:var(--muted);margin:0 0 10px}
+.thumb .ln{height:1px;background:var(--hairline);margin:8px 0}
+.thumb .l1{height:6px;border-radius:2px;background:var(--hairline);margin-bottom:6px}
+.thumb .l1.s{width:60%}
+.thumb .l1.m{width:82%}
+.fmt{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fmt .f{
+  background:var(--surface-card);
+  border:1px solid var(--hairline);
+  border-radius:var(--r-md);
+  padding:12px;
+  display:flex;align-items:center;gap:8px;
+  cursor:pointer;font-family:var(--sans);
+  font-size:13px;color:var(--body);
+}
+.fmt .f .bx{
+  width:16px;height:16px;border-radius:var(--r-xs);
+  border:1px solid var(--hairline-strong);
+  display:grid;place-items:center;font-size:10px;color:transparent;
+  background:var(--surface-card);flex:0 0 auto;
+}
+.fmt .f[aria-pressed="true"]{border-color:var(--ink)}
+.fmt .f[aria-pressed="true"] .bx{background:var(--ink);border-color:var(--ink);color:#fff}
+.fmt .f[aria-pressed="true"]{color:var(--ink);font-weight:600}
+
+/* ---------- 접수완료 ---------- */
+.caseno{
+  background:var(--surface-card);
+  border:1px solid var(--hairline);
+  border-radius:var(--r-lg);
+  padding:20px;text-align:center;
+}
+.caseno .k{
+  font-size:11px;font-weight:600;letter-spacing:.88px;text-transform:uppercase;
+  color:var(--muted);display:block;margin-bottom:10px;
+}
+.caseno .v{font-family:var(--mono);font-size:20px;color:var(--ink);letter-spacing:-.3px}
+.tick{
+  width:44px;height:44px;border-radius:var(--r-pill);
+  background:var(--success);color:#fff;
+  display:grid;place-items:center;font-size:20px;
+  margin:0 auto;
+}
+
+/* ---------- 안내 ---------- */
+.notes{display:flex;flex-direction:column;gap:8px}
+.note{
+  background:var(--surface-card);
+  border:1px solid var(--hairline);
+  border-radius:var(--r-lg);
+  padding:16px;
+  display:flex;gap:12px;align-items:flex-start;
+}
+.note .n{
+  flex:0 0 auto;font-family:var(--mono);font-size:12px;color:var(--muted-soft);
+  padding-top:1px;
+}
+.note .t{font-size:13px;line-height:1.6;color:var(--body);word-break:keep-all;margin:0}
+
+/* ---------- 하단 비교 안내 ---------- */
+.foot{
+  max-width:1200px;margin:0 auto;padding:0 24px 96px;
+}
+.foot .rule{height:1px;background:var(--hairline);margin-bottom:32px}
+.foot h2{font-size:22px;font-weight:400;line-height:1.25;letter-spacing:-.33px;margin:0 0 20px}
+.cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.cmp .c{
+  background:var(--surface-card);border:1px solid var(--hairline);
+  border-radius:var(--r-lg);padding:24px;
+}
+.cmp .c h3{font-size:15px;font-weight:600;margin:0 0 10px;color:var(--ink)}
+.cmp .c p{font-size:13px;line-height:1.6;color:var(--body);margin:0}
+.cmp .c .sw{display:flex;gap:6px;margin-top:14px}
+.cmp .c .sw i{width:22px;height:22px;border-radius:var(--r-xs);border:1px solid var(--hairline)}
+</style>
+</head>
+<body>
+
+<div class="pagehead">
+  <span class="badge">Preview · 미적용</span>
+  <h1>DESIGN-cursor.md 를 적용하면 이렇게 됩니다</h1>
+  <p>
+    <code style="font-family:var(--mono);font-size:14px">index.html</code> 은 그대로 두고 만든 미리보기입니다.
+    Cursor 디자인 시스템의 크림 캔버스(#f7f7f4)·웜 잉크(#26251e)·오렌지 CTA(#f54e00)·헤어라인 전용 뎁스·
+    산세리프 400 웨이트를 10개 화면에 그대로 적용했습니다. 목업의 네이비/골드/양피지 법정 톤은 사라집니다.
+  </p>
+  <div class="rule"></div>
+</div>
+
+<div id="stage">
+
+  <!-- 01 -->
+  <div class="tile">
+    <div class="cap">01. 랜딩</div>
+    <div class="phone invert">
+      <div class="nav">
+        <span class="mark"><b>⌘</b> 생활법원</span>
+        <span class="sp"></span>
+        <button class="lnk" type="button">메뉴</button>
+      </div>
+      <div class="body">
+        <div class="sp" style="max-height:20px"></div>
+        <span class="badge-pill" style="align-self:flex-start;background:rgba(255,255,255,.10);color:var(--canvas)">
+          Life Court</span>
+        <h1 class="d-mega" style="margin-top:20px">당신의 사소한<br>억울함을 엄숙하게<br>심리합니다.</h1>
+        <p class="b-md" style="margin-top:16px">점심 메뉴부터 읽씹 사건까지, 생활법원이 공정하지 않게 심리합니다.</p>
+        <div class="sp"></div>
+        <div class="pane" style="background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.12);margin-bottom:20px">
+          <div class="code" style="color:var(--muted-soft)">
+            <span style="color:var(--tl-read)">case</span> 2026-생활-042<br>
+            <span style="color:var(--tl-done)">status</span> 접수 대기
+          </div>
+        </div>
+        <div class="stack">
+          <button class="btn" type="button">사건 접수하기</button>
+          <button class="btn txt" type="button">안내 사항 보기</button>
+        </div>
+        <p class="b-sm" style="margin-top:16px;font-size:12px">
+          본 서비스는 오락 목적의 가상 콘텐츠이며, 실제 법률 자문·판단·판결이 아닙니다.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 -->
+  <div class="tile">
+    <div class="cap">02. 사건 접수 · 내용 입력</div>
+    <div class="phone">
+      <div class="nav">
+        <button class="lnk" type="button">←</button>
+        <span class="mark"><b>⌘</b> 생활법원</span>
+        <span class="sp"></span>
+      </div>
+      <div class="body">
+        <div class="steps"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+        <p class="cap-u">Step 01 / 05</p>
+        <h2 class="d-md" style="margin-top:10px">사건 내용을<br>입력해 주세요</h2>
+        <p class="b-md" style="margin-top:10px">여러분의 사소한 사건을 들려주세요.</p>
+        <div class="input" style="margin-top:20px">
+          <textarea maxlength="300" placeholder="예: 회의 시작 2분 전에 자료 검토를 요청받았습니다."></textarea>
+        </div>
+        <div class="meta-row">
+          <span class="b-sm">10–300자 이내</span>
+          <span class="counter">0 / 300</span>
+        </div>
+        <div class="sp"></div>
+        <button class="btn" type="button">다음</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 03 -->
+  <div class="tile">
+    <div class="cap">03. 사건 접수 · 유형/관계</div>
+    <div class="phone">
+      <div class="nav">
+        <button class="lnk" type="button">←</button>
+        <span class="mark"><b>⌘</b> 생활법원</span>
+        <span class="sp"></span>
+      </div>
+      <div class="body">
+        <div class="steps"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+        <p class="cap-u">Step 02 / 05</p>
+        <h2 class="d-sm" style="margin-top:10px">사건 유형을 선택해주세요</h2>
+        <div class="g3" style="margin-top:16px">
+          <button class="opt" type="button" aria-pressed="true"><span class="gl">💼</span><span class="lb">회사생활</span></button>
+          <button class="opt" type="button" aria-pressed="false"><span class="gl">👥</span><span class="lb">인간관계</span></button>
+          <button class="opt" type="button" aria-pressed="false"><span class="gl">🍴</span><span class="lb">식사</span></button>
+          <button class="opt" type="button" aria-pressed="false"><span class="gl">💬</span><span class="lb">메신저</span></button>
+          <button class="opt" type="button" aria-pressed="false"><span class="gl">🏠</span><span class="lb">일상</span></button>
+        </div>
+        <h2 class="d-sm" style="margin-top:24px">피고와의 관계</h2>
+        <div class="chips" style="margin-top:14px">
+          <button class="chip" type="button" aria-pressed="false">본인</button>
+          <button class="chip" type="button" aria-pressed="true">동료</button>
+          <button class="chip" type="button" aria-pressed="false">친구</button>
+          <button class="chip" type="button" aria-pressed="false">상사</button>
+          <button class="chip" type="button" aria-pressed="false">익명 인물</button>
+        </div>
+        <div class="sp"></div>
+        <button class="btn" type="button">다음</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 04 -->
+  <div class="tile">
+    <div class="cap">04. 사건 접수 · 심각성/성향</div>
+    <div class="phone">
+      <div class="nav">
+        <button class="lnk" type="button">←</button>
+        <span class="mark"><b>⌘</b> 생활법원</span>
+        <span class="sp"></span>
+      </div>
+      <div class="body">
+        <div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+        <p class="cap-u">Step 04 / 05</p>
+        <h2 class="d-sm" style="margin-top:10px">사건의 심각성</h2>
+        <div class="g5" style="margin-top:16px">
+          <button class="sv" type="button" aria-pressed="false"><span class="n">1</span><span class="c">사소함</span></button>
+          <button class="sv" type="button" aria-pressed="false"><span class="n">2</span><span class="c">약간&#10;괘씸함</span></button>
+          <button class="sv" type="button" aria-pressed="true"><span class="n">3</span><span class="c">정식&#10;심리</span></button>
+          <button class="sv" type="button" aria-pressed="false"><span class="n">4</span><span class="c">중대&#10;사건</span></button>
+          <button class="sv" type="button" aria-pressed="false"><span class="n">5</span><span class="c">국가적&#10;위기</span></button>
+        </div>
+        <h2 class="d-sm" style="margin-top:26px">판결 성향</h2>
+        <div class="g3" style="margin-top:14px">
+          <button class="opt" type="button" aria-pressed="false"><span class="gl">🕊️</span><span class="lb">관대함</span></button>
+          <button class="opt" type="button" aria-pressed="true"><span class="gl">⚖️</span><span class="lb">공정함</span></button>
+          <button class="opt" type="button" aria-pressed="false"><span class="gl">🔨</span><span class="lb">엄벌주의</span></button>
+        </div>
+        <div class="sp"></div>
+        <button class="btn" type="button">사건 접수하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05 -->
+  <div class="tile">
+    <div class="cap">05. 심리 진행 — timeline 팔레트 적용 지점</div>
+    <div class="phone invert">
+      <div class="nav">
+        <span class="mark"><b>⌘</b> 생활법원</span>
+        <span class="sp"></span>
+      </div>
+      <div class="body">
+        <p class="cap-u" style="color:var(--muted-soft)">In progress</p>
+        <h2 class="d-md" style="margin-top:10px">심리 진행 중입니다</h2>
+        <div class="pane" style="background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.12);margin-top:22px">
+          <div class="timeline">
+            <div class="tl-row"><span class="tl-pill read">Read</span><span class="tx">사건 기록을 검토</span></div>
+            <div class="tl-row"><span class="tl-pill thinking">Thinking</span><span class="tx">증거 능력을 과도하게 판단</span></div>
+            <div class="tl-row"><span class="tl-pill grep">Grep</span><span class="tx">유사 생활사건을 검토</span></div>
+            <div class="tl-row pending"><span class="tl-pill wait">Queued</span><span class="tx">사회 통념을 지나치게 반영</span></div>
+            <div class="tl-row pending"><span class="tl-pill wait">Queued</span><span class="tx">재판부가 진지하게 고민</span></div>
+            <div class="tl-row pending"><span class="tl-pill wait">Queued</span><span class="tx">판결문 작성</span></div>
+          </div>
+        </div>
+        <div class="sp"></div>
+        <p class="b-sm">잠시만 기다려주세요.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 06 -->
+  <div class="tile">
+    <div class="cap">06. 판결 결과</div>
+    <div class="phone">
+      <div class="nav">
+        <span class="mark"><b>⌘</b> 생활법원</span>
+        <span class="sp"></span>
+        <button class="lnk" type="button">닫기</button>
+      </div>
+      <div class="body">
+        <div class="card doc">
+          <div class="doc-head">
+            <span class="badge-pill">판결문</span>
+            <span class="code">2026-생활-042</span>
+          </div>
+          <div class="kv">
+            <div class="r"><span class="k">사건명</span><span class="v">점심 메뉴 결정 지연 사건</span></div>
+            <div class="r"><span class="k">피고</span><span class="v">익명의 직장인</span></div>
+            <div class="r"><span class="k">죄명</span><span class="v">과도한 우유부단죄</span></div>
+          </div>
+          <div class="sec">
+            <span class="k">주문</span>
+            <p class="t">피고인은 금일 오후 1시까지 제육볶음 또는 비빔밥 중 하나를 최종 선택할 것.</p>
+          </div>
+          <div class="sec">
+            <span class="k">판결 이유</span>
+            <p class="t">피고인은 “아무거나 괜찮다”는 진술을 번복하면서도 제안된 모든 메뉴에 소극적 반응을 보였다. 이로 인해 동료들의 점심 결정권이 침해되었다.</p>
+          </div>
+          <div class="sec">
+            <span class="k">개선 권고</span>
+            <p class="t">향후 메뉴 결정이 어려울 경우 가장 먼저 언급된 메뉴를 선택할 것을 권고한다.</p>
+          </div>
+          <div class="final-band">
+            <span class="k">최종 판결</span>
+            <p class="v">조건부 유죄</p>
+            <p class="n">단, 음료 1잔 제공 시 형의 집행을 유예한다.</p>
+          </div>
+        </div>
+        <div class="sp"></div>
+        <div class="btn-row" style="margin-top:16px">
+          <button class="btn sec" type="button">항소</button>
+          <button class="btn sec" type="button">저장</button>
+          <button class="btn" type="button">새 사건</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 07 -->
+  <div class="tile">
+    <div class="cap">07. 항소 결과</div>
+    <div class="phone">
+      <div class="nav">
+        <span class="mark"><b>⌘</b> 생활법원</span>
+        <span class="sp"></span>
+        <button class="lnk" type="button">닫기</button>
+      </div>
+      <div class="body">
+        <div class="card doc">
+          <div class="doc-head">
+            <span class="badge-pill">항소심</span>
+            <span class="code">2026-생활-042</span>
+          </div>
+          <div class="kv">
+            <div class="r"><span class="k">사건명</span><span class="v">점심 메뉴 결정 지연 사건</span></div>
+            <div class="r"><span class="k">피고</span><span class="v">익명의 직장인</span></div>
+          </div>
+          <div class="final-band" style="margin:16px 0">
+            <span class="k">항소심 주문</span>
+            <p class="v">원심 파기. 무죄.</p>
+            <p class="n">다만, 향후 메뉴 결정 시 적극적인 의견 제시에 임할 것을 권고한다.</p>
+          </div>
+          <div class="sec">
+            <span class="k">판결 이유</span>
+            <p class="t">원심은 피고인의 우유부단함을 과도하게 해석하였다. 점심 메뉴 결정은 개인의 취향과 컨디션에 따라 변동될 수 있는 영역으로, 이를 형사적으로 책임지게 하는 것은 생활의 자유를 위축할 우려가 있다.</p>
+          </div>
+          <div class="sec">
+            <span class="k">선고</span>
+            <p class="t"><span class="code">2026-05-23</span> · 생활법원 항소심 재판부</p>
+          </div>
+        </div>
+        <div class="sp"></div>
+        <div class="btn-row" style="margin-top:16px">
+          <button class="btn sec" type="button">판결문 저장</button>
+          <button class="btn" type="button">새 사건 접수</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 08 -->
+  <div class="tile">
+    <div class="cap">08. 판결문 저장</div>
+    <div class="phone">
+      <div class="nav">
+        <button class="lnk" type="button">←</button>
+        <span class="mark"><b>⌘</b> 생활법원</span>
+        <span class="sp"></span>
+      </div>
+      <div class="body">
+        <h2 class="d-sm">판결문 저장</h2>
+        <div class="thumb" style="margin-top:18px">
+          <p class="tt">Preview</p>
+          <div class="l1 m"></div><div class="l1 s"></div>
+          <div class="ln"></div>
+          <div class="l1"></div><div class="l1 m"></div><div class="l1 s"></div>
+          <div class="ln"></div>
+          <div class="l1 m"></div><div class="l1"></div>
+        </div>
+        <p class="cap-u" style="margin-top:22px">저장 형식</p>
+        <div class="fmt" style="margin-top:10px">
+          <button class="f" type="button" aria-pressed="true"><span class="bx">✓</span>PNG</button>
+          <button class="f" type="button" aria-pressed="false"><span class="bx">✓</span>JPG</button>
+        </div>
+        <div class="sp"></div>
+        <div class="stack">
+          <button class="btn" type="button">저장하기</button>
+          <button class="btn sec" type="button">취소</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 09 -->
+  <div class="tile">
+    <div class="cap">09. 새 사건 접수 완료</div>
+    <div class="phone">
+      <div class="nav">
+        <span class="mark"><b>⌘</b> 생활법원</span>
+        <span class="sp"></span>
+      </div>
+      <div class="body">
+        <div class="sp"></div>
+        <div class="tick">✓</div>
+        <h2 class="d-md" style="margin-top:22px;text-align:center">새로운 사건이<br>접수되었습니다</h2>
+        <div class="caseno" style="margin-top:24px">
+          <span class="k">사건번호</span>
+          <span class="v">2026-생활-043</span>
+        </div>
+        <p class="b-md" style="margin-top:16px;text-align:center">재판부가 성실히 심리하겠습니다.</p>
+        <div class="sp"></div>
+        <div class="stack">
+          <button class="btn" type="button">사건 내용 확인하기</button>
+          <button class="btn sec" type="button">새 사건 접수하기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10 -->
+  <div class="tile">
+    <div class="cap">10. 안내(고지)</div>
+    <div class="phone">
+      <div class="nav">
+        <span class="mark"><b>⌘</b> 생활법원</span>
+        <span class="sp"></span>
+      </div>
+      <div class="body">
+        <p class="cap-u">Notice</p>
+        <h2 class="d-sm" style="margin:10px 0 18px">안내 사항</h2>
+        <div class="notes">
+          <div class="note"><span class="n">01</span>
+            <p class="t">본 서비스는 오락 목적의 가상 콘텐츠이며, 실제 법률 자문·법률 판단 또는 실제 판결이 아닙니다.</p></div>
+          <div class="note"><span class="n">02</span>
+            <p class="t">입력하신 내용은 시스템 내에서만 사용되며, 외부에 저장되거나 공유되지 않습니다.</p></div>
+          <div class="note"><span class="n">03</span>
+            <p class="t">타인의 개인정보, 불법 행위, 혐오 표현 등 부적절한 내용은 입력할 수 없습니다.</p></div>
+          <div class="note"><span class="n">04</span>
+            <p class="t">모든 판결 결과는 템플릿/규칙 기반으로 생성되며, 실제 법령이나 판례와 무관합니다.</p></div>
+        </div>
+        <div class="sp"></div>
+        <button class="btn" type="button">확인하고 계속하기</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="foot">
+  <div class="rule"></div>
+  <h2>적용 시 바뀌는 것</h2>
+  <div class="cmp">
+    <div class="c">
+      <h3>사라지는 것</h3>
+      <p>네이비 헤더바, 금색 인장·테두리, 양피지 질감, 명조 세로쓰기 톤, 붉은 직인, 법원 건물/법정 배경, 도트형 스텝 인디케이터.</p>
+      <div class="sw">
+        <i style="background:#16233F"></i><i style="background:#C8A34A"></i>
+        <i style="background:#FBF7EC"></i><i style="background:#B0392E"></i>
+      </div>
+    </div>
+    <div class="c">
+      <h3>들어오는 것</h3>
+      <p>크림 캔버스 + 웜 잉크, 오렌지 CTA(8px 라운드), 흰 카드 + 1px 헤어라인, 그림자 제거, 산세리프 400 + 음수 자간, 코드 표면은 모노스페이스.</p>
+      <div class="sw">
+        <i style="background:#f7f7f4"></i><i style="background:#26251e"></i>
+        <i style="background:#f54e00"></i><i style="background:#ffffff"></i>
+      </div>
+    </div>
+    <div class="c">
+      <h3>가장 잘 맞는 지점</h3>
+      <p>05 심리 진행 화면. 문서가 "in-product agent timeline 전용"으로 규정한 파스텔 타임라인 팔레트(Thinking/Read/Grep/Edit/Done)가 심리 단계 목록과 정확히 대응합니다.</p>
+      <div class="sw">
+        <i style="background:#dfa88f"></i><i style="background:#9fc9a2"></i>
+        <i style="background:#9fbbe0"></i><i style="background:#c0a8dd"></i><i style="background:#c08532"></i>
+      </div>
+    </div>
+    <div class="c">
+      <h3>충돌 지점</h3>
+      <p>"오렌지는 CTA·워드마크 전용"이라 <b>조건부 유죄</b> 같은 판결 강조에 브랜드 컬러를 쓸 수 없습니다. 위 미리보기는 잉크 반전 밴드로 처리했습니다. 또 80px 섹션 리듬은 332px 폰 화면에 그대로 못 들어가 24–32px로 축소했습니다.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('click', function(e){
+  var el = e.target.closest('[aria-pressed]');
+  if (!el) return;
+  var wrap = el.parentElement;
+  wrap.querySelectorAll('[aria-pressed]').forEach(function(b){ b.setAttribute('aria-pressed','false'); });
+  el.setAttribute('aria-pressed','true');
+});
+</script>
+</body>
+</html>

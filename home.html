@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오늘의 생활법원 — 당신의 사소한 억울함을 엄숙하게 심리합니다</title>
+<style>
+/* ============================================================
+   오늘의 생활법원 — 홈페이지 (데스크톱 우선, 반응형)
+   고풍 법정 + 역전재판 무드: 짙은 목재, 금장, 양피지, 직인,
+   "이의 있음!" 버스트, 증언 콘솔, 속도선 연출
+   외부 리소스 없음
+   ============================================================ */
+
+:root{
+  /* 법정 목재 */
+  --wood-deep:#241207;
+  --wood:#3B2113;
+  --wood-warm:#5C3620;
+  --wood-light:#7A4E2D;
+  /* 금장 */
+  --gold:#C9A227;
+  --gold-bright:#E8C95C;
+  --gold-soft:#E3CF96;
+  --gold-dim:#8F7420;
+  /* 양피지 */
+  --parchment:#F4E9D0;
+  --parchment-deep:#EADCBB;
+  --paper-line:#CBB98D;
+  /* 잉크/의미색 */
+  --ink:#2B1D10;
+  --ink-soft:#5A4630;
+  --muted:#8A7657;
+  --objection-red:#B3261E;
+  --defense-blue:#1E4B8F;
+  --testimony:#9BE29B;
+  --navy:#182848;
+
+  --serif:'Nanum Myeongjo','Noto Serif KR','Batang','바탕',serif;
+  --sans:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --mono:'Consolas','Courier New',monospace;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:var(--serif);
+  background:var(--wood-deep);
+  color:var(--parchment);
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+img{max-width:100%}
+a{color:inherit;text-decoration:none}
+
+.wrap{max-width:1160px;margin:0 auto;padding:0 28px}
+
+/* ---------- 목재 질감 ---------- */
+.woodgrain{
+  background:
+    repeating-linear-gradient(93deg,
+      rgba(0,0,0,.22) 0 2px, transparent 2px 7px,
+      rgba(255,214,140,.035) 7px 9px, transparent 9px 15px),
+    linear-gradient(180deg,var(--wood) 0%,var(--wood-deep) 100%);
+}
+
+/* ---------- 금장 괘선 ---------- */
+.gold-rule{
+  height:3px;border:0;margin:0;
+  background:linear-gradient(90deg,transparent,var(--gold) 18%,var(--gold-bright) 50%,var(--gold) 82%,transparent);
+}
+.gold-rule.thin{height:1px;opacity:.6}
+
+/* ============================================================
+   상단 바
+   ============================================================ */
+header{
+  position:sticky;top:0;z-index:40;
+  background:linear-gradient(180deg,rgba(24,12,4,.97),rgba(36,18,7,.93));
+  border-bottom:1px solid rgba(201,162,39,.45);
+  backdrop-filter:blur(4px);
+}
+.nav{
+  display:flex;align-items:center;gap:26px;
+  height:64px;
+}
+.brand{
+  display:flex;align-items:center;gap:10px;
+  font-size:19px;letter-spacing:.06em;color:var(--gold-soft);
+  font-weight:700;
+}
+.brand .emblem{
+  width:32px;height:32px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,var(--gold-bright),var(--gold) 55%,var(--gold-dim));
+  display:grid;place-items:center;
+  color:var(--wood-deep);font-size:17px;
+  box-shadow:0 0 10px rgba(201,162,39,.5);
+}
+.nav-links{display:flex;gap:22px;margin-left:auto;font-family:var(--sans)}
+.nav-links a{
+  font-size:14px;color:var(--gold-soft);opacity:.85;
+  padding:6px 2px;border-bottom:2px solid transparent;
+}
+.nav-links a:hover{opacity:1;border-bottom-color:var(--gold)}
+.nav .cta{
+  margin-left:8px;
+  font-family:var(--serif);font-size:14px;letter-spacing:.08em;
+  color:var(--wood-deep);
+  background:linear-gradient(180deg,var(--gold-bright),var(--gold));
+  border:1px solid var(--gold-dim);
+  padding:9px 20px;border-radius:3px;
+  box-shadow:0 2px 0 var(--gold-dim);
+  cursor:pointer;font-weight:700;
+}
+.nav .cta:hover{filter:brightness(1.08)}
+#menuBtn{display:none;background:none;border:0;color:var(--gold-soft);font-size:22px;cursor:pointer;margin-left:auto}
+
+/* ============================================================
+   히어로 — 법정 정면
+   ============================================================ */
+.hero{
+  position:relative;
+  padding:96px 0 110px;
+  text-align:center;
+  overflow:hidden;
+  background:
+    radial-gradient(90% 60% at 50% 0%, rgba(232,201,92,.14), transparent 60%),
+    repeating-linear-gradient(93deg,
+      rgba(0,0,0,.22) 0 2px, transparent 2px 7px,
+      rgba(255,214,140,.035) 7px 9px, transparent 9px 15px),
+    linear-gradient(180deg,#31190B 0%,var(--wood-deep) 88%);
+}
+/* 법정 기둥 */
+.hero::before,.hero::after{
+  content:"";position:absolute;top:0;bottom:0;width:74px;
+  background:
+    linear-gradient(90deg,rgba(0,0,0,.5),transparent 30%,rgba(232,201,92,.10) 50%,transparent 70%,rgba(0,0,0,.5)),
+    repeating-linear-gradient(90deg,rgba(227,207,150,.10) 0 9px,rgba(0,0,0,.14) 9px 18px);
+  opacity:.8;
+}
+.hero::before{left:4%}
+.hero::after{right:4%}
+
+.hero .kicker{
+  display:inline-block;
+  font-size:13px;letter-spacing:.5em;text-indent:.5em;
+  color:var(--gold);
+  border-top:1px solid rgba(201,162,39,.55);
+  border-bottom:1px solid rgba(201,162,39,.55);
+  padding:8px 6px;
+  margin-bottom:30px;
+}
+.hero h1{
+  margin:0;
+  font-size:clamp(30px,5vw,58px);
+  line-height:1.35;
+  letter-spacing:.02em;
+  color:var(--parchment);
+  text-shadow:0 3px 18px rgba(0,0,0,.7);
+  font-weight:800;
+}
+.hero h1 .accent{color:var(--gold-bright)}
+.hero .sub{
+  margin:26px auto 0;max-width:560px;
+  font-family:var(--sans);
+  font-size:clamp(14px,1.6vw,17px);line-height:1.9;
+  color:var(--gold-soft);opacity:.9;
+}
+
+/* 재판봉 인장 */
+.hero .seal{
+  width:120px;height:120px;margin:44px auto 0;
+  border-radius:50%;
+  position:relative;
+  background:radial-gradient(circle at 34% 28%,var(--gold-bright) 0%,var(--gold) 52%,var(--gold-dim) 100%);
+  border:4px double rgba(244,233,208,.8);
+  box-shadow:0 0 42px rgba(201,162,39,.5), inset 0 0 16px rgba(60,40,6,.55);
+  display:grid;place-items:center;
+}
+.hero .seal .g{font-size:46px;line-height:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))}
+.hero .seal .rim{
+  position:absolute;inset:9px;border-radius:50%;
+  border:1px dashed rgba(60,40,6,.55);
+}
+
+.hero .btns{margin-top:48px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn-l{
+  font-family:var(--serif);font-size:17px;letter-spacing:.1em;font-weight:700;
+  padding:16px 44px;border-radius:3px;cursor:pointer;
+  border:1px solid var(--gold-dim);
+  background:linear-gradient(180deg,var(--gold-bright),var(--gold));
+  color:var(--wood-deep);
+  box-shadow:0 3px 0 var(--gold-dim),0 10px 26px rgba(0,0,0,.45);
+}
+.btn-l:hover{filter:brightness(1.08)}
+.btn-l.ghost{
+  background:rgba(0,0,0,.25);color:var(--gold-soft);
+  border:1px solid rgba(201,162,39,.6);
+  box-shadow:none;
+}
+.hero .disclaim{
+  margin:52px auto 0;max-width:520px;
+  font-family:var(--sans);font-size:12px;line-height:1.8;
+  color:rgba(227,207,150,.62);
+  border:1px solid rgba(201,162,39,.3);
+  background:rgba(0,0,0,.28);
+  padding:12px 18px;border-radius:3px;
+}
+
+/* ============================================================
+   "이의 있음!" 버스트 (역전재판 시그니처)
+   ============================================================ */
+.objection{
+  position:absolute;
+  top:120px;right:min(11%,150px);
+  transform:rotate(8deg);
+  z-index:5;
+  filter:drop-shadow(0 8px 18px rgba(0,0,0,.55));
+  animation:slam .5s cubic-bezier(.2,2.6,.4,1) .4s both;
+  pointer-events:none;
+}
+@keyframes slam{
+  from{transform:rotate(8deg) scale(3);opacity:0}
+  to{transform:rotate(8deg) scale(1);opacity:1}
+}
+.objection .burst{
+  background:#fff;
+  color:var(--objection-red);
+  font-size:clamp(17px,2.4vw,26px);
+  font-weight:900;letter-spacing:.06em;
+  padding:16px 28px;
+  clip-path:polygon(
+    2% 20%, 10% 12%, 8% 0%, 20% 10%, 30% 2%, 36% 12%, 48% 0%, 54% 13%,
+    66% 3%, 70% 14%, 82% 6%, 84% 18%, 98% 14%, 92% 30%, 100% 38%, 92% 48%,
+    100% 62%, 90% 68%, 96% 84%, 84% 82%, 84% 98%, 72% 88%, 62% 100%, 56% 88%,
+    44% 98%, 40% 86%, 28% 96%, 26% 84%, 12% 90%, 16% 74%, 2% 72%, 10% 58%,
+    0% 48%, 8% 38%);
+  -webkit-text-stroke:1px var(--objection-red);
+}
+@media (max-width:760px){.objection{top:84px;right:4%}}
+
+/* 속도선 디바이더 */
+.speedlines{
+  height:64px;
+  background:
+    repeating-linear-gradient(101deg,
+      transparent 0 26px,
+      rgba(232,201,92,.16) 26px 30px,
+      transparent 30px 60px,
+      rgba(244,233,208,.07) 60px 63px);
+  border-top:1px solid rgba(201,162,39,.4);
+  border-bottom:1px solid rgba(201,162,39,.4);
+}
+
+/* ============================================================
+   섹션 공통
+   ============================================================ */
+section{padding:88px 0}
+.sec-kicker{
+  text-align:center;
+  font-size:12px;letter-spacing:.5em;text-indent:.5em;
+  color:var(--gold);margin:0 0 14px;
+}
+.sec-title{
+  text-align:center;
+  font-size:clamp(24px,3.2vw,36px);
+  font-weight:800;letter-spacing:.03em;
+  color:var(--parchment);
+  margin:0 0 18px;
+}
+.sec-sub{
+  text-align:center;font-family:var(--sans);
+  font-size:15px;line-height:1.8;color:var(--gold-soft);opacity:.8;
+  max-width:620px;margin:0 auto 54px;
+}
+
+/* ============================================================
+   3단 카드 — 접수/심리/판결
+   ============================================================ */
+.feats{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+@media (max-width:900px){.feats{grid-template-columns:1fr}}
+.feat{
+  background:linear-gradient(180deg,var(--parchment),var(--parchment-deep));
+  color:var(--ink);
+  border:1px solid var(--gold-dim);
+  outline:1px solid rgba(201,162,39,.4);
+  outline-offset:4px;
+  border-radius:3px;
+  padding:34px 28px 30px;
+  text-align:center;
+  position:relative;
+}
+.feat .no{
+  position:absolute;top:-16px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(180deg,var(--gold-bright),var(--gold));
+  color:var(--wood-deep);
+  width:34px;height:34px;border-radius:50%;
+  display:grid;place-items:center;
+  font-size:14px;font-weight:800;
+  border:2px solid var(--parchment);
+  box-shadow:0 3px 8px rgba(0,0,0,.35);
+}
+.feat .g{font-size:38px;line-height:1;margin:8px 0 16px}
+.feat h3{margin:0 0 12px;font-size:20px;font-weight:800;letter-spacing:.05em}
+.feat p{
+  margin:0;font-family:var(--sans);
+  font-size:13.5px;line-height:1.85;color:var(--ink-soft);
+  word-break:keep-all;
+}
+
+/* ============================================================
+   심리 절차 — 증언 콘솔 (역전재판 증언 화면)
+   ============================================================ */
+.court-console{
+  background:#0E1A12;
+  border:2px solid var(--gold-dim);
+  outline:1px solid rgba(201,162,39,.35);
+  outline-offset:5px;
+  border-radius:4px;
+  padding:30px clamp(18px,4vw,44px) 34px;
+  max-width:760px;margin:0 auto;
+  box-shadow:0 18px 48px rgba(0,0,0,.5);
+}
+.court-console .head{
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(155,226,155,.28);
+  padding-bottom:14px;margin-bottom:20px;
+}
+.court-console .head .t{
+  color:var(--testimony);
+  font-size:16px;letter-spacing:.35em;text-indent:.35em;font-weight:700;
+}
+.court-console .head .rec{
+  font-family:var(--mono);font-size:11px;color:rgba(155,226,155,.6);
+  display:flex;align-items:center;gap:7px;
+}
+.court-console .head .rec i{
+  width:8px;height:8px;border-radius:50%;background:var(--objection-red);
+  animation:blink 1.1s steps(1) infinite;
+}
+@keyframes blink{50%{opacity:.15}}
+.tsteps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:15px}
+.tsteps li{
+  display:flex;gap:14px;align-items:center;
+  font-family:var(--mono);
+  font-size:clamp(12px,1.5vw,14.5px);
+  color:var(--testimony);
+  text-shadow:0 0 8px rgba(155,226,155,.35);
+}
+.tsteps .mk{
+  flex:0 0 auto;width:20px;height:20px;
+  border:1px solid var(--testimony);
+  display:grid;place-items:center;font-size:11px;
+}
+.tsteps li.dim{color:rgba(155,226,155,.35);text-shadow:none}
+.tsteps li.dim .mk{border-color:rgba(155,226,155,.3);color:transparent}
+.court-console .caret{
+  margin-top:22px;text-align:right;
+  color:var(--testimony);font-family:var(--mono);font-size:13px;
+  animation:blink 1s steps(1) infinite;
+}
+
+/* ============================================================
+   판결문 샘플 — 양피지
+   ============================================================ */
+.verdict-wrap{max-width:660px;margin:0 auto;position:relative}
+.verdict-doc{
+  background:
+    radial-gradient(140% 100% at 50% 0%,rgba(255,255,255,.5),transparent 40%),
+    linear-gradient(180deg,var(--parchment),var(--parchment-deep));
+  color:var(--ink);
+  border:2px solid var(--gold-dim);
+  outline:1px solid rgba(201,162,39,.45);
+  outline-offset:6px;
+  padding:clamp(24px,4vw,46px);
+  box-shadow:0 22px 54px rgba(0,0,0,.55);
+  transform:rotate(-.6deg);
+}
+.verdict-doc .vd-title{
+  text-align:center;
+  font-size:clamp(22px,3vw,30px);
+  letter-spacing:.5em;text-indent:.5em;
+  font-weight:800;margin:0 0 8px;
+}
+.verdict-doc .vd-sub{
+  text-align:center;font-size:12px;color:var(--muted);
+  letter-spacing:.2em;margin:0 0 24px;
+}
+.vd-meta{
+  display:grid;grid-template-columns:auto 1fr;gap:8px 18px;
+  font-family:var(--sans);font-size:13px;
+  border-top:2px solid var(--ink);
+  border-bottom:1px solid var(--paper-line);
+  padding:16px 4px;
+}
+.vd-meta .k{color:var(--muted);letter-spacing:.1em;font-family:var(--serif)}
+.vd-meta .v{color:var(--ink)}
+.vd-meta .v.crime{color:var(--objection-red);font-weight:700}
+.vd-sec{padding:18px 4px;border-bottom:1px solid var(--paper-line)}
+.vd-sec .k{font-size:14px;font-weight:800;letter-spacing:.3em;margin:0 0 10px}
+.vd-sec .t{
+  margin:0;font-family:var(--sans);
+  font-size:13.5px;line-height:2;color:var(--ink-soft);word-break:keep-all;
+}
+.vd-final{
+  padding:26px 4px 6px;text-align:center;position:relative;
+}
+.vd-final .w{
+  font-size:clamp(30px,4.4vw,42px);
+  font-weight:900;letter-spacing:.14em;text-indent:.14em;
+  color:var(--objection-red);
+  margin:0 0 10px;
+  text-shadow:1px 1px 0 rgba(0,0,0,.12);
+}
+.vd-final .n{margin:0;font-family:var(--sans);font-size:12.5px;color:var(--ink-soft)}
+.stamp{
+  position:absolute;right:6%;top:-6px;
+  width:84px;height:84px;border-radius:50%;
+  border:3px solid var(--objection-red);
+  color:var(--objection-red);
+  display:grid;place-items:center;
+  font-size:15px;line-height:1.35;letter-spacing:.1em;
+  font-weight:800;text-align:center;
+  transform:rotate(-13deg);
+  opacity:.82;
+  box-shadow:inset 0 0 0 2px rgba(179,38,30,.35);
+}
+.stamp::after{
+  content:"";position:absolute;inset:6px;border-radius:50%;
+  border:1px dashed rgba(179,38,30,.5);
+}
+
+/* ============================================================
+   안내 4조
+   ============================================================ */
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:880px;margin:0 auto}
+@media (max-width:760px){.rules{grid-template-columns:1fr}}
+.rule-card{
+  display:flex;gap:16px;align-items:flex-start;
+  background:rgba(0,0,0,.30);
+  border:1px solid rgba(201,162,39,.4);
+  border-left:4px solid var(--gold);
+  padding:20px;border-radius:3px;
+}
+.rule-card .art{
+  flex:0 0 auto;
+  font-size:12px;letter-spacing:.12em;
+  color:var(--gold);font-weight:700;
+  border:1px solid rgba(201,162,39,.5);
+  padding:5px 9px;white-space:nowrap;
+}
+.rule-card p{
+  margin:0;font-family:var(--sans);
+  font-size:13px;line-height:1.85;
+  color:var(--gold-soft);opacity:.92;word-break:keep-all;
+}
+
+/* ============================================================
+   CTA 밴드 / 푸터
+   ============================================================ */
+.cta-band{
+  text-align:center;
+  padding:96px 0;
+  background:
+    radial-gradient(70% 100% at 50% 100%, rgba(232,201,92,.12), transparent 70%),
+    repeating-linear-gradient(93deg,
+      rgba(0,0,0,.22) 0 2px, transparent 2px 7px,
+      rgba(255,214,140,.035) 7px 9px, transparent 9px 15px),
+    linear-gradient(180deg,var(--wood-deep),#31190B);
+}
+.cta-band h2{
+  font-size:clamp(24px,3.4vw,38px);font-weight:800;
+  color:var(--parchment);margin:0 0 14px;letter-spacing:.03em;
+}
+.cta-band p{
+  font-family:var(--sans);color:var(--gold-soft);opacity:.85;
+  font-size:15px;margin:0 0 40px;
+}
+footer{
+  border-top:1px solid rgba(201,162,39,.4);
+  padding:40px 0 48px;
+  text-align:center;
+}
+footer .fb{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  color:var(--gold-soft);font-size:15px;letter-spacing:.1em;margin-bottom:14px;
+}
+footer p{
+  margin:0;font-family:var(--sans);
+  font-size:11.5px;line-height:1.9;color:rgba(227,207,150,.55);
+}
+
+/* ============================================================
+   모바일
+   ============================================================ */
+@media (max-width:760px){
+  .nav-links,.nav .cta{display:none}
+  #menuBtn{display:block}
+  .nav.open .nav-links{
+    display:flex;flex-direction:column;
+    position:absolute;top:64px;left:0;right:0;
+    background:rgba(24,12,4,.98);
+    border-bottom:1px solid rgba(201,162,39,.45);
+    padding:18px 28px 22px;gap:16px;margin:0;
+  }
+  .hero{padding:64px 0 80px}
+  .hero::before,.hero::after{display:none}
+  section{padding:64px 0}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <nav class="nav" id="nav">
+      <a class="brand" href="#top">
+        <span class="emblem">⚖</span>오늘의 생활법원
+      </a>
+      <div class="nav-links">
+        <a href="#about">법원 소개</a>
+        <a href="#procedure">심리 절차</a>
+        <a href="#sample">판결문 예시</a>
+        <a href="#rules">이용 안내</a>
+      </div>
+      <button class="cta" type="button" onclick="location.href='mobile.html'">사건 접수하기</button>
+      <button id="menuBtn" type="button" aria-label="메뉴">☰</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ==================== 히어로 ==================== -->
+<div class="hero" id="top">
+  <div class="objection"><div class="burst">이의 있음!</div></div>
+  <div class="wrap">
+    <span class="kicker">大 생활법원 개정</span>
+    <h1>당신의 <span class="accent">사소한 억울함</span>을<br>엄숙하게 심리합니다.</h1>
+    <p class="sub">점심 메뉴 결정 지연부터 메신저 읽씹 사건까지 —<br>
+    본 재판부는 세상 모든 사소한 사건을 지나치게 진지하게 심리합니다.</p>
+    <div class="seal">
+      <span class="rim"></span>
+      <span class="g">⚖</span>
+    </div>
+    <div class="btns">
+      <button class="btn-l" type="button" onclick="location.href='mobile.html'">사건 접수하기</button>
+      <button class="btn-l ghost" type="button" onclick="location.href='#procedure'">심리 절차 보기</button>
+    </div>
+    <div class="disclaim">
+      본 서비스는 오락 목적의 가상 콘텐츠이며, 실제 법률 자문·법률 판단 또는 실제 판결이 아닙니다.
+    </div>
+  </div>
+</div>
+
+<hr class="gold-rule">
+<div class="speedlines"></div>
+<hr class="gold-rule thin">
+
+<!-- ==================== 소개 3단 ==================== -->
+<section id="about" class="woodgrain">
+  <div class="wrap">
+    <p class="sec-kicker">재판 절차 안내</p>
+    <h2 class="sec-title">세 단계면 판결이 내려집니다</h2>
+    <p class="sec-sub">억울함은 사소할수록 정식 재판이 필요한 법. 재판부는 언제나 과잉 심리할 준비가 되어 있습니다.</p>
+    <div class="feats">
+      <div class="feat">
+        <span class="no">一</span>
+        <div class="g">📜</div>
+        <h3>사건 접수</h3>
+        <p>사건의 전말을 10~300자로 진술하십시오. 사건 유형·피고와의 관계·심각성(1~5)·원하는 판결 성향까지 접수합니다.</p>
+      </div>
+      <div class="feat">
+        <span class="no">二</span>
+        <div class="g">🔍</div>
+        <h3>과잉 심리</h3>
+        <p>재판부가 증거 능력을 과도하게 판단하고, 유사 생활사건을 검토하며, 사회 통념을 지나치게 반영합니다.</p>
+      </div>
+      <div class="feat">
+        <span class="no">三</span>
+        <div class="g">🔨</div>
+        <h3>엄숙한 판결</h3>
+        <p>가상 죄명과 주문, 생활 개선 권고가 담긴 정식 판결문이 선고됩니다. 불복 시 항소하여 원심을 뒤집으십시오.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="gold-rule thin">
+
+<!-- ==================== 심리 절차 (증언 콘솔) ==================== -->
+<section id="procedure">
+  <div class="wrap">
+    <p class="sec-kicker">법정 실황</p>
+    <h2 class="sec-title">심리는 이렇게 진행됩니다</h2>
+    <p class="sec-sub">접수된 사건은 아래 6단계 심리를 거칩니다. 재판부는 항상 진지합니다. 지나치게.</p>
+    <div class="court-console">
+      <div class="head">
+        <span class="t">심 리 기 록</span>
+        <span class="rec"><i></i>LIVE</span>
+      </div>
+      <ul class="tsteps" id="tsteps">
+        <li><span class="mk">✓</span>사건 기록을 검토하는 중...</li>
+        <li><span class="mk">✓</span>증거 능력을 과도하게 판단하는 중...</li>
+        <li><span class="mk">▶</span>유사 생활사건을 검토하는 중...</li>
+        <li class="dim"><span class="mk"></span>사회 통념을 지나치게 반영하는 중...</li>
+        <li class="dim"><span class="mk"></span>재판부가 진지하게 고민하는 중...</li>
+        <li class="dim"><span class="mk"></span>판결문 작성 중...</li>
+      </ul>
+      <div class="caret">▼</div>
+    </div>
+  </div>
+</section>
+
+<hr class="gold-rule thin">
+<div class="speedlines"></div>
+<hr class="gold-rule thin">
+
+<!-- ==================== 판결문 샘플 ==================== -->
+<section id="sample" class="woodgrain">
+  <div class="wrap">
+    <p class="sec-kicker">선고 예시</p>
+    <h2 class="sec-title">이런 판결문을 받게 됩니다</h2>
+    <p class="sec-sub">제042호 사건 — 점심 메뉴 결정 지연 사건의 실제* 판결문입니다. (*실제 아님)</p>
+    <div class="verdict-wrap">
+      <div class="verdict-doc">
+        <p class="vd-title">판 결 문</p>
+        <p class="vd-sub">오늘의 생활법원 제1심 재판부</p>
+        <div class="vd-meta">
+          <span class="k">사건번호</span><span class="v">2026 생활 제042호</span>
+          <span class="k">사 건 명</span><span class="v">점심 메뉴 결정 지연 사건</span>
+          <span class="k">피　　고</span><span class="v">익명의 직장인</span>
+          <span class="k">가상 죄명</span><span class="v crime">과도한 우유부단죄</span>
+        </div>
+        <div class="vd-sec">
+          <p class="k">주 문</p>
+          <p class="t">피고인은 금일 오후 1시까지 제육볶음 또는 비빔밥 중 하나를 최종 선택할 것.</p>
+        </div>
+        <div class="vd-sec">
+          <p class="k">판 결 이 유</p>
+          <p class="t">피고인은 “아무거나 괜찮다”는 진술을 번복하면서도 제안된 모든 메뉴에 소극적 반응을 보였다. 이로 인해 동료들의 점심 결정권이 침해되었으며 의사결정의 자유가 상당 시간 침해되었다.</p>
+        </div>
+        <div class="vd-sec">
+          <p class="k">생 활 개 선 권 고</p>
+          <p class="t">향후 메뉴 결정이 어려울 경우 가장 먼저 언급된 메뉴를 선택하거나 랜덤 선택 기능을 활용할 것을 권고한다.</p>
+        </div>
+        <div class="vd-final">
+          <span class="stamp">생활<br>법원<br>지인</span>
+          <p class="w">조건부 유죄</p>
+          <p class="n">단, 음료 1잔 제공 시 형의 집행을 유예한다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="gold-rule thin">
+
+<!-- ==================== 이용 안내 ==================== -->
+<section id="rules">
+  <div class="wrap">
+    <p class="sec-kicker">법원 규칙</p>
+    <h2 class="sec-title">이용 안내</h2>
+    <p class="sec-sub">본 법원은 다음 네 조항을 엄숙히 고지합니다.</p>
+    <div class="rules">
+      <div class="rule-card"><span class="art">제1조</span>
+        <p>본 서비스는 오락 목적의 가상 콘텐츠이며, 실제 법률 자문·법률 판단 또는 실제 판결이 아닙니다.</p></div>
+      <div class="rule-card"><span class="art">제2조</span>
+        <p>입력하신 내용은 시스템 내에서만 사용되며, 외부에 저장되거나 공유되지 않습니다.</p></div>
+      <div class="rule-card"><span class="art">제3조</span>
+        <p>타인의 개인정보, 불법 행위, 혐오 표현 등 부적절한 내용은 입력할 수 없습니다.</p></div>
+      <div class="rule-card"><span class="art">제4조</span>
+        <p>모든 판결 결과는 템플릿/규칙 기반으로 생성되며, 실제 법령이나 판례와 무관합니다.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== CTA ==================== -->
+<div class="cta-band">
+  <div class="wrap">
+    <h2>자, 법정으로 가시죠.</h2>
+    <p>당신의 억울함, 오늘 안에 선고해 드립니다.</p>
+    <button class="btn-l" type="button" onclick="location.href='mobile.html'">지금 사건 접수하기</button>
+  </div>
+</div>
+
+<hr class="gold-rule">
+
+<footer class="woodgrain">
+  <div class="wrap">
+    <div class="fb"><span>⚖</span>오늘의 생활법원</div>
+    <p>본 서비스는 오락 목적의 가상 콘텐츠입니다 · 실제 법률 자문·판단·판결이 아닙니다<br>
+    입력 내용은 외부에 저장·공유되지 않습니다</p>
+  </div>
+</footer>
+
+<script>
+/* 모바일 메뉴 */
+document.getElementById('menuBtn').addEventListener('click', function(){
+  document.getElementById('nav').classList.toggle('open');
+});
+
+/* 증언 콘솔 — 심리 단계가 순차 진행되는 연출 */
+(function(){
+  var items = document.querySelectorAll('#tsteps li');
+  var cur = 2;
+  setInterval(function(){
+    cur = (cur + 1) % items.length;
+    items.forEach(function(li, i){
+      li.classList.toggle('dim', i > cur);
+      var mk = li.querySelector('.mk');
+      mk.textContent = i < cur ? '✓' : (i === cur ? '▶' : '');
+    });
+  }, 1600);
+})();
+</script>
+</body>
+</html>
