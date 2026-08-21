@@ -1,42 +1,69 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { api, subscribeConnection, type ConnState } from "@/lib/api";
+
+const MAX_WAIT_SEC = 60;
 
 /**
- * 무료 티어 콜드스타트 대응: 진입 즉시 health를 호출해 잠든 백엔드(Render free)를 깨우고,
- * 응답이 늦으면 안내 배너를 띄운다. 404/5xx는 라우팅 전파 중일 수 있어 재시도한다.
+ * 서버 연결 상태 배너.
+ * - 진입 즉시 health를 호출해 잠든 백엔드(Render free)를 깨운다.
+ * - 재시도가 진행되는 동안 경과 시간과 진행 바를 보여준다.
+ * - 최종 실패 시 원인과 함께 다시 시도 버튼을 보여준다.
  */
 export function WakeBanner() {
-  const [waking, setWaking] = useState(false);
+  const [conn, setConn] = useState<ConnState>({ phase: "idle", startedAt: 0, attempt: 0 });
+  const [nowMs, setNowMs] = useState(0);
 
+  useEffect(() => subscribeConnection(setConn), []);
+
+  // 연결 중일 때만 250ms 간격으로 경과 시간 갱신
   useEffect(() => {
-    let cancelled = false;
-    const slowTimer = setTimeout(() => {
-      if (!cancelled) setWaking(true);
-    }, 2500);
+    if (conn.phase !== "connecting") return;
+    const t = setInterval(() => setNowMs(Date.now()), 250);
+    return () => clearInterval(t);
+  }, [conn.phase]);
 
-    (async () => {
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          await api.health();
-          break;
-        } catch {
-          await new Promise((r) => setTimeout(r, 4000));
-        }
-      }
-      if (!cancelled) {
-        clearTimeout(slowTimer);
-        setWaking(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      clearTimeout(slowTimer);
-    };
+  // 첫 진입 시 서버 깨우기
+  useEffect(() => {
+    api.health().catch(() => {
+      /* 실패 상태는 배너가 표시한다 */
+    });
   }, []);
 
-  if (!waking) return null;
-  return <div className="wake-banner">법정 문을 여는 중입니다… 첫 접속은 최대 1분 정도 걸릴 수 있습니다 ⚖</div>;
+  if (conn.phase === "idle") return null;
+
+  if (conn.phase === "failed") {
+    return (
+      <div className="conn-banner fail">
+        <span className="cb-text">
+          법원 서버와 연결하지 못했습니다 <span className="cb-detail">({conn.error})</span>
+        </span>
+        <button
+          className="cb-retry"
+          type="button"
+          onClick={() => {
+            api.health().catch(() => {});
+          }}
+        >
+          다시 시도
+        </button>
+      </div>
+    );
+  }
+
+  const elapsedSec = Math.max(0, Math.round(((nowMs || Date.now()) - conn.startedAt) / 1000));
+  const pct = Math.min(96, (elapsedSec / MAX_WAIT_SEC) * 100);
+
+  return (
+    <div className="conn-banner">
+      <span className="cb-text">
+        <span className="cb-gavel">🔨</span> 법정 문을 여는 중… <b>{elapsedSec}초</b>
+        <span className="cb-detail"> (보통 30초, 최대 {MAX_WAIT_SEC}초)</span>
+      </span>
+      <div className="cb-track">
+        <div className="cb-fill" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
 }
