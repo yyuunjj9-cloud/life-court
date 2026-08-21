@@ -1033,11 +1033,14 @@ p.sub {
   color: var(--gold-bright);
 }
 
-/* 저장용 오프스크린 원본 판결문 */
+/* 저장용 오프스크린 래퍼 — 숨김 역할만 한다 (캡처 대상 아님) */
 .capture-stage {
   position: fixed;
   left: -9999px;
   top: 0;
+}
+/* 실제 캡처 대상 — 반드시 static 포지션이어야 이미지 안에 정상 위치로 그려진다 */
+.capture-inner {
   width: 400px;
   padding: 24px 20px;
   background: linear-gradient(180deg, var(--parchment), var(--parchment-deep));

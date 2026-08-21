@@ -138,9 +138,11 @@ function SaveScreen() {
           </button>
         </div>
       </div>
-      {/* 이미지 캡처용 원본(오프스크린) */}
-      <div className="capture-stage" ref={stageRef} aria-hidden="true">
-        {doc}
+      {/* 이미지 캡처용 원본(오프스크린 래퍼 안의 static 노드를 캡처) */}
+      <div className="capture-stage" aria-hidden="true">
+        <div className="capture-inner" ref={stageRef}>
+          {doc}
+        </div>
       </div>
     </div>
   );
