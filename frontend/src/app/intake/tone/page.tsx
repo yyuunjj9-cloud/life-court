@@ -71,9 +71,14 @@ export default function TonePage() {
         </div>
         <div className="grow" />
         <div className="stack">
-          <button className="btn" type="button" onClick={submit}>
-            다음 — 대응 방식 선택
-          </button>
+          <div className="btn-row">
+            <button className="btn line" type="button" onClick={() => router.push("/intake/type")}>
+              이전
+            </button>
+            <button className="btn" type="button" style={{ flex: 2 }} onClick={submit}>
+              다음 — 대응 방식
+            </button>
+          </div>
           <DraftSaveButton />
         </div>
       </div>

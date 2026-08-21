@@ -66,9 +66,20 @@ export default function TypePage() {
         </div>
         <div className="grow" />
         <div className="stack">
-          <button className="btn" type="button" disabled={!ready} onClick={() => router.push("/intake/tone")}>
-            다음
-          </button>
+          <div className="btn-row">
+            <button className="btn line" type="button" onClick={() => router.push("/intake/story")}>
+              이전
+            </button>
+            <button
+              className="btn"
+              type="button"
+              style={{ flex: 2 }}
+              disabled={!ready}
+              onClick={() => router.push("/intake/tone")}
+            >
+              다음
+            </button>
+          </div>
           <DraftSaveButton />
         </div>
       </div>

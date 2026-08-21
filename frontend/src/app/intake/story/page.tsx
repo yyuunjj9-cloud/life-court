@@ -46,9 +46,14 @@ export default function StoryPage() {
         </div>
         <div className="grow" />
         <div className="stack">
-          <button className="btn" type="button" onClick={next}>
-            다음
-          </button>
+          <div className="btn-row">
+            <button className="btn line" type="button" onClick={() => router.push("/")}>
+              이전
+            </button>
+            <button className="btn" type="button" style={{ flex: 2 }} onClick={next}>
+              다음
+            </button>
+          </div>
           <DraftSaveButton />
         </div>
       </div>

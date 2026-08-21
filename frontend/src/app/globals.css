@@ -5,6 +5,15 @@
    모바일: 전체 화면 / 데스크톱: 중앙 폰 프레임
    ============================================================ */
 
+/* 외침 말풍선 전용 임팩트 폰트 (Black Han Sans 서브셋, 17KB 자체 호스팅) */
+@font-face {
+  font-family: "BurstHan";
+  src: url("/fonts/burst.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
 :root {
   --wood-deep: #241207;
   --wood: #3b2113;
@@ -979,11 +988,9 @@ p.sub {
   padding: 10px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
   transform: rotate(-0.8deg);
-  max-height: 300px;
-  overflow: hidden;
 }
 .thumbwrap .vdoc {
-  zoom: 0.62;
+  zoom: 0.55;
 }
 .fmt {
   display: grid;

@@ -65,7 +65,12 @@ export default function FilingPage() {
         </div>
         {error && <div className="help err">법원 서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.</div>}
         <div className="grow" />
-        <p className="sub">모든 문서는 오락용 가상 문서이며 실제 법적 효력이 없습니다.</p>
+        <button className="btn line" type="button" disabled={pending !== null} onClick={() => router.push("/intake/tone")}>
+          이전
+        </button>
+        <p className="sub" style={{ marginTop: 12 }}>
+          모든 문서는 오락용 가상 문서이며 실제 법적 효력이 없습니다.
+        </p>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 /**
  * 역전재판풍 외침 말풍선 (이의 있음! / 판결 선고! / 맞고소?!).
- * 붉은 스타버스트 위에 양피지 내부, 세리프 강조 텍스트를 얹은 SVG.
+ * 3중 스타버스트(진홍 테두리 → 붉은 그라데이션 → 양피지 내부) 위에
+ * 임팩트 폰트(BurstHan) 텍스트를 그림자·크림 외곽선·그라데이션의 3겹으로 얹는다.
  * 점 좌표는 고정 지터로 결정적으로 생성돼 서버/클라이언트 렌더가 일치한다.
  */
 
@@ -23,7 +24,23 @@ const OUTER = starPoints(130, 80, 124, 74, 0.74);
 const MID = starPoints(130, 80, 116, 68, 0.76);
 const INNER = starPoints(130, 80, 103, 59, 0.78);
 
+const FONT = "'BurstHan','Black Han Sans','Malgun Gothic',sans-serif";
+
 export function Burst({ text, width = 170 }: { text: string; width?: number }) {
+  // 글자 수에 따라 크기를 조절해 버스트를 꽉 채운다 (공백 제외)
+  const glyphs = text.replace(/\s/g, "").length;
+  const fontSize = glyphs <= 4 ? 54 : glyphs === 5 ? 48 : 42;
+
+  const textAttrs = {
+    x: 130,
+    y: 82,
+    textAnchor: "middle" as const,
+    dominantBaseline: "central" as const,
+    fontFamily: FONT,
+    fontSize,
+    letterSpacing: "-1",
+  };
+
   return (
     <svg
       viewBox="0 0 260 160"
@@ -41,25 +58,34 @@ export function Burst({ text, width = 170 }: { text: string; width?: number }) {
           <stop offset="0" stopColor="#FDF8EA" />
           <stop offset="1" stopColor="#F0E4C8" />
         </linearGradient>
+        <linearGradient id="burst-text" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#D6432F" />
+          <stop offset="0.55" stopColor="#B3261E" />
+          <stop offset="1" stopColor="#7C1210" />
+        </linearGradient>
       </defs>
+
       {/* 외곽 어두운 테두리 → 붉은 버스트 → 양피지 내부 */}
       <polygon points={OUTER} fill="#5E0D08" />
       <polygon points={MID} fill="url(#burst-red)" />
       <polygon points={INNER} fill="url(#burst-paper)" stroke="#B3261E" strokeWidth="2.5" />
-      <text
-        x="130"
-        y="80"
-        textAnchor="middle"
-        dominantBaseline="central"
-        transform="rotate(-3 130 80)"
-        fontFamily="'Nanum Myeongjo','Noto Serif KR','Batang','바탕',serif"
-        fontSize="36"
-        fontWeight="900"
-        fill="#8F1610"
-        letterSpacing="1"
-      >
-        {text}
-      </text>
+
+      {/* 텍스트: 기울임 + 그림자 → 크림 외곽선 → 그라데이션 본체 */}
+      <g transform="rotate(-4 130 80) skewX(-4)">
+        <text {...textAttrs} transform="translate(3.5 5)" fill="#4A0B07" opacity="0.85">
+          {text}
+        </text>
+        <text
+          {...textAttrs}
+          fill="url(#burst-text)"
+          stroke="#FDF8EA"
+          strokeWidth="8"
+          strokeLinejoin="round"
+          paintOrder="stroke"
+        >
+          {text}
+        </text>
+      </g>
     </svg>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
-import { toJpeg, toPng } from "html-to-image";
+import { toBlob, toJpeg } from "html-to-image";
 import { AppealDoc, VerdictDoc } from "@/components/VerdictDoc";
 import { ComplaintDocView, CountersuitDocView, DemandDocView } from "@/components/LegalDocs";
 import { formatKoreanDate } from "@/domain/date";
@@ -72,13 +72,36 @@ function SaveScreen() {
     setError(false);
     try {
       const opts = { pixelRatio: 2, backgroundColor: "#f4e9d0" };
-      const dataUrl =
-        format === "png" ? await toPng(node, opts) : await toJpeg(node, { ...opts, quality: 0.95 });
+      // iOS Safari는 첫 캡처가 비어 나오는 경우가 있어 한 번 워밍업 후 실제 캡처
+      await toBlob(node, opts);
+      let blob: Blob | null;
+      if (format === "png") {
+        blob = await toBlob(node, opts);
+      } else {
+        const dataUrl = await toJpeg(node, { ...opts, quality: 0.95 });
+        blob = await (await fetch(dataUrl)).blob();
+      }
+      if (!blob) throw new Error("capture failed");
+
       const stem = verdict ? verdict.caseNo.replace(/\s/g, "_") : "생활법원";
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = `${stem}_${DOC_LABEL[kind].replace(/[·\s]/g, "")}.${format}`;
-      a.click();
+      const filename = `${stem}_${DOC_LABEL[kind].replace(/[·\s]/g, "")}.${format}`;
+      const file = new File([blob], filename, { type: format === "png" ? "image/png" : "image/jpeg" });
+
+      // 아이폰/모바일: 공유 시트로 저장(사진에 저장 가능). 데스크톱: 파일 다운로드.
+      if (typeof navigator !== "undefined" && navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: "오늘의 생활법원" });
+        } catch (e) {
+          if ((e as Error).name !== "AbortError") throw e; // 사용자가 취소한 경우는 정상 종료
+        }
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      }
     } catch {
       setError(true);
     } finally {
