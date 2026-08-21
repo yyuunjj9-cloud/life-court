@@ -506,23 +506,8 @@ p.sub {
     opacity: 1;
   }
 }
-.objection .burst,
-.verdict-flash .burst {
-  background: #fff;
-  color: var(--objection-red);
-  font-weight: 900;
-  letter-spacing: 0.05em;
-  clip-path: polygon(
-    2% 20%, 10% 12%, 8% 0%, 20% 10%, 30% 2%, 36% 12%, 48% 0%, 54% 13%,
-    66% 3%, 70% 14%, 82% 6%, 84% 18%, 98% 14%, 92% 30%, 100% 38%, 92% 48%,
-    100% 62%, 90% 68%, 96% 84%, 84% 82%, 84% 98%, 72% 88%, 62% 100%, 56% 88%,
-    44% 98%, 40% 86%, 28% 96%, 26% 84%, 12% 90%, 16% 74%, 2% 72%, 10% 58%,
-    0% 48%, 8% 38%
-  );
-}
-.objection .burst {
-  font-size: 15px;
-  padding: 11px 18px;
+.objection svg {
+  display: block;
 }
 
 /* ============================================================
@@ -967,9 +952,7 @@ p.sub {
     visibility: hidden;
   }
 }
-.verdict-flash .burst {
-  font-size: 26px;
-  padding: 20px 34px;
+.verdict-flash .burst-wrap {
   transform: rotate(-4deg);
   animation: slam2 0.45s cubic-bezier(0.2, 2.6, 0.4, 1) both;
   filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.6));

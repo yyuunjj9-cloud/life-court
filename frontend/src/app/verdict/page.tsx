@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Burst } from "@/components/Burst";
 import { VerdictDoc } from "@/components/VerdictDoc";
 import { useCaseStore } from "@/store/case-store";
 
@@ -36,7 +37,9 @@ export default function VerdictPage() {
   return (
     <div className="scr">
       <div className="verdict-flash">
-        <div className="burst">판결 선고!</div>
+        <div className="burst-wrap">
+          <Burst text="판결 선고!" width={300} />
+        </div>
       </div>
       <div className="pad">
         <VerdictDoc verdict={verdict} />

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Burst } from "@/components/Burst";
 import { CountersuitDocView } from "@/components/LegalDocs";
 import { formatKoreanDate } from "@/domain/date";
 import { useCaseStore } from "@/store/case-store";
@@ -45,7 +46,9 @@ export default function CountersuitPage() {
   return (
     <div className="scr">
       <div className="verdict-flash">
-        <div className="burst">맞고소?!</div>
+        <div className="burst-wrap">
+          <Burst text="맞고소?!" width={300} />
+        </div>
       </div>
       <div className="pad">
         <CountersuitDocView doc={countersuit} date={formatKoreanDate(new Date())} />

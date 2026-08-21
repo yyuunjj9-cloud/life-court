@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Burst } from "@/components/Burst";
 import { useCaseStore } from "@/store/case-store";
 
 /* 01 랜딩 — 어두운 법정 */
@@ -34,7 +35,7 @@ export default function LandingPage() {
       <span className="pillar l" />
       <span className="pillar r" />
       <div className="objection">
-        <div className="burst">이의 있음!</div>
+        <Burst text="이의 있음!" width={150} />
       </div>
       <div className="pad">
         <span className="kicker">大 생활법원</span>
