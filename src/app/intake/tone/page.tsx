@@ -22,15 +22,14 @@ const TONES: { key: Tone; icon: string; label: string }[] = [
 /* 04 사건 접수 — 심각성/성향 선택 */
 export default function TonePage() {
   const router = useRouter();
-  const { draft, setSeverity, setTone, submitCase } = useCaseStore();
+  const { draft, setSeverity, setTone } = useCaseStore();
 
   const submit = () => {
     if (!draft.caseType || !draft.relationship || draft.story.trim().length < 10) {
       router.replace("/intake/story");
       return;
     }
-    submitCase();
-    router.push("/trial");
+    router.push("/intake/filing");
   };
 
   return (
@@ -71,7 +70,7 @@ export default function TonePage() {
         </div>
         <div className="grow" />
         <button className="btn" type="button" onClick={submit}>
-          사건 접수하기
+          다음 — 대응 방식 선택
         </button>
       </div>
     </div>

@@ -8,6 +8,10 @@ const BACK_MAP: Record<string, string> = {
   "/intake/story": "/",
   "/intake/type": "/intake/story",
   "/intake/tone": "/intake/type",
+  "/intake/filing": "/intake/tone",
+  "/complaint": "/intake/filing",
+  "/demand": "/intake/filing",
+  "/countersuit": "/verdict",
   "/save": "/verdict",
   "/notice": "/",
 };

@@ -955,6 +955,109 @@ p.sub {
 }
 
 /* ============================================================
+   11 접수 방식 선택 — 고소/고발/내용증명
+   ============================================================ */
+.filing-opt {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  background: #fbf4e3;
+  border: 1px solid var(--gold-dim);
+  border-radius: 2px;
+  padding: 14px 14px;
+  font-family: var(--serif);
+  transition: transform 0.1s;
+}
+.filing-opt:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  border-color: var(--objection-red);
+}
+.filing-opt .fi {
+  font-size: 26px;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+.filing-opt .fx {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+.filing-opt .fn {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+}
+.filing-opt .fd {
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.filing-opt .fa {
+  font-size: 18px;
+  color: var(--gold-dim);
+}
+
+/* 판결 화면 — 맞고소 알림 배너 */
+.counter-alert {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: 13px;
+  padding: 11px 13px;
+  background: #fbf4e3;
+  border: 1px solid var(--paper-line);
+  border-left: 4px solid var(--objection-red);
+  border-radius: 2px;
+  text-decoration: none;
+  cursor: pointer;
+  animation: alert-in 0.45s cubic-bezier(0.2, 2.2, 0.4, 1) 1.6s both;
+}
+@keyframes alert-in {
+  from {
+    transform: translateY(10px) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.counter-alert .ca-mark {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--objection-red);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  transform: rotate(-8deg);
+}
+.counter-alert .ca-text {
+  flex: 1;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.counter-alert .ca-text b {
+  color: var(--objection-red);
+}
+.counter-alert .ca-arrow {
+  font-size: 16px;
+  color: var(--gold-dim);
+}
+
+/* ============================================================
    09 접수 완료
    ============================================================ */
 .laurel {

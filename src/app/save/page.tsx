@@ -1,37 +1,91 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { toJpeg, toPng } from "html-to-image";
 import { AppealDoc, VerdictDoc } from "@/components/VerdictDoc";
+import { ComplaintDocView, CountersuitDocView, DemandDocView } from "@/components/LegalDocs";
+import { generateComplaint, generateCountersuit, generateDemandLetter } from "@/domain/documents";
 import { formatKoreanDate } from "@/domain/date";
 import { useCaseStore } from "@/store/case-store";
+import type { CaseInput } from "@/domain/judgment";
 
 type Format = "png" | "jpg";
+type DocKind = "verdict" | "appeal" | "complaint" | "demand" | "countersuit";
 
-/* 08 판결문 저장 */
+const DOC_LABEL: Record<DocKind, string> = {
+  verdict: "판결문",
+  appeal: "항소심 판결문",
+  complaint: "고소·고발장",
+  demand: "내용증명",
+  countersuit: "맞고소장",
+};
+
+/** 취소 시 돌아갈 화면 */
+const DOC_BACK: Record<DocKind, string> = {
+  verdict: "/verdict",
+  appeal: "/appeal",
+  complaint: "/complaint",
+  demand: "/demand",
+  countersuit: "/countersuit",
+};
+
+/* 08 문서 저장 */
 function SaveScreen() {
   const router = useRouter();
   const params = useSearchParams();
-  const isAppeal = params.get("doc") === "appeal";
-  const { verdict, appeal } = useCaseStore();
+  const { draft, verdict, appeal, filingKind } = useCaseStore();
   const [format, setFormat] = useState<Format>("png");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
 
+  const raw = params.get("doc");
+  const kind: DocKind =
+    raw === "appeal" || raw === "complaint" || raw === "demand" || raw === "countersuit" ? raw : "verdict";
+
+  const input: CaseInput | null = useMemo(() => {
+    if (!draft.caseType || !draft.relationship) return null;
+    return {
+      story: draft.story,
+      caseType: draft.caseType,
+      relationship: draft.relationship,
+      severity: draft.severity,
+      tone: draft.tone,
+    };
+  }, [draft]);
+
+  // 내용증명은 접수 전에도 저장할 수 있고, 나머지는 판결(접수)이 있어야 한다.
+  const ready = kind === "demand" ? input !== null && draft.story.trim().length >= 10 : verdict !== null;
+
   useEffect(() => {
-    if (!verdict) router.replace("/");
-  }, [verdict, router]);
+    if (!ready) router.replace("/");
+  }, [ready, router]);
 
-  if (!verdict) return <div className="scr" />;
+  if (!ready) return <div className="scr" />;
 
-  const showAppeal = isAppeal && appeal !== null;
-  const doc = showAppeal ? (
-    <AppealDoc verdict={verdict} appeal={appeal} date={formatKoreanDate(new Date())} />
-  ) : (
-    <VerdictDoc verdict={verdict} />
-  );
+  const date = formatKoreanDate(new Date());
+  const doc = (() => {
+    switch (kind) {
+      case "appeal":
+        return verdict && appeal ? <AppealDoc verdict={verdict} appeal={appeal} date={date} /> : null;
+      case "complaint":
+        return verdict && input ? (
+          <ComplaintDocView doc={generateComplaint(input, verdict, filingKind ?? "complaint")} date={date} />
+        ) : null;
+      case "demand":
+        return input ? <DemandDocView doc={generateDemandLetter(input)} date={date} /> : null;
+      case "countersuit":
+        return verdict && input ? <CountersuitDocView doc={generateCountersuit(input, verdict)} date={date} /> : null;
+      default:
+        return verdict ? <VerdictDoc verdict={verdict} /> : null;
+    }
+  })();
+
+  if (!doc) {
+    router.replace(verdict ? "/verdict" : "/");
+    return <div className="scr" />;
+  }
 
   const save = async () => {
     const node = stageRef.current;
@@ -42,9 +96,10 @@ function SaveScreen() {
       const opts = { pixelRatio: 2, backgroundColor: "#f4e9d0" };
       const dataUrl =
         format === "png" ? await toPng(node, opts) : await toJpeg(node, { ...opts, quality: 0.95 });
+      const stem = verdict ? verdict.caseNo.replace(/\s/g, "_") : "생활법원";
       const a = document.createElement("a");
       a.href = dataUrl;
-      a.download = `${verdict.caseNo.replace(/\s/g, "_")}${showAppeal ? "_항소심" : ""}_판결문.${format}`;
+      a.download = `${stem}_${DOC_LABEL[kind].replace(/[·\s]/g, "")}.${format}`;
       a.click();
     } catch {
       setError(true);
@@ -57,7 +112,7 @@ function SaveScreen() {
     <div className="scr">
       <div className="pad">
         <h1 className="tt" style={{ fontSize: 19 }}>
-          판결문 저장
+          {DOC_LABEL[kind]} 저장
         </h1>
         <div className="thumbwrap">{doc}</div>
         <p className="lbl" style={{ marginTop: 22 }}>
@@ -77,7 +132,7 @@ function SaveScreen() {
           <button className="btn" type="button" onClick={save} disabled={saving}>
             {saving ? "저장 중..." : "저장하기"}
           </button>
-          <button className="btn line" type="button" onClick={() => router.push(showAppeal ? "/appeal" : "/verdict")}>
+          <button className="btn line" type="button" onClick={() => router.push(DOC_BACK[kind])}>
             취소
           </button>
         </div>

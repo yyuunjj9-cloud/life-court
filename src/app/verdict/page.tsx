@@ -30,6 +30,13 @@ export default function VerdictPage() {
       </div>
       <div className="pad">
         <VerdictDoc verdict={verdict} />
+        <Link className="counter-alert" href="/countersuit">
+          <span className="ca-mark">急</span>
+          <span className="ca-text">
+            피고 측이 <b>맞고소장</b>을 제출했습니다 — 확인하기
+          </span>
+          <span className="ca-arrow">›</span>
+        </Link>
         <div className="grow" />
         <div className="btn-row" style={{ marginTop: 14 }}>
           <button className="btn dark sm" type="button" onClick={appeal}>
