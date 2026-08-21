@@ -1,0 +1,20 @@
+# Render Blueprint — 대시보드 "New ▸ Blueprint"용 참고 파일.
+# 실제 배포는 CLI(render services create)로 같은 값을 플래그로 전달한다.
+services:
+  - type: web
+    name: life-court-api
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: backend
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: DATABASE_URL # Supabase Session Pooler URI (+?sslmode=require)
+        sync: false
+      - key: CORS_ORIGINS # https://<front>.vercel.app (쉼표 구분)
+        sync: false
+      - key: CORS_ORIGIN_REGEX # https://.*\.vercel\.app
+        sync: false

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { CaseProvider } from "@/store/case-store";
 import { TopBar } from "@/components/TopBar";
+import { WakeBanner } from "@/components/WakeBanner";
 
 export const metadata: Metadata = {
   title: "오늘의 생활법원",
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <CaseProvider>
           <div id="app">
             <TopBar />
+            <WakeBanner />
             {children}
           </div>
         </CaseProvider>

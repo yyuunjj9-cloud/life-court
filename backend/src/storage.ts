@@ -24,6 +24,8 @@ export interface CaseStorage {
   create(record: CaseRecord): Promise<void>;
   get(seq: number): Promise<CaseRecord | null>;
   update(seq: number, patch: Partial<Pick<CaseRecord, "appeal" | "countersuit">>): Promise<void>;
+  /** DB를 실제로 조회해 살아있는지 확인한다 (keep-alive가 Supabase 활동으로 집계되도록). */
+  health(): Promise<boolean>;
 }
 
 const SEQ_START = 41; // 첫 사건이 제042호
@@ -47,6 +49,9 @@ class MemoryStorage implements CaseStorage {
   async update(seq: number, patch: Partial<Pick<CaseRecord, "appeal" | "countersuit">>) {
     const rec = this.cases.get(seq);
     if (rec) Object.assign(rec, patch);
+  }
+  async health() {
+    return true;
   }
 }
 
@@ -112,12 +117,22 @@ class PgStorage implements CaseStorage {
         JSON.stringify(patch.countersuit),
       ]);
   }
+
+  async health() {
+    try {
+      await this.pool.query("SELECT 1");
+      return true;
+    } catch {
+      return false;
+    }
+  }
 }
 
 export function createStorage(): { storage: CaseStorage; kind: "postgres" | "memory" } {
   const url = process.env.DATABASE_URL;
   if (url) {
-    const pool = new Pool({ connectionString: url });
+    // Render free(512MB) + Supabase Session Pooler 기준으로 풀을 작게 유지한다.
+    const pool = new Pool({ connectionString: url, min: 1, max: 4, connectionTimeoutMillis: 10_000 });
     return { storage: new PgStorage(pool), kind: "postgres" };
   }
   return { storage: new MemoryStorage(), kind: "memory" };

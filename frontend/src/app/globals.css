@@ -137,6 +137,19 @@ body {
   visibility: hidden;
 }
 
+/* ---------- 콜드스타트 안내 배너 ---------- */
+.wake-banner {
+  flex: 0 0 auto;
+  background: var(--wood-warm);
+  color: var(--gold-soft);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: center;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--gold-dim);
+}
+
 /* ---------- 화면 공통 ---------- */
 .scr {
   display: flex;

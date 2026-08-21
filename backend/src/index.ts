@@ -50,11 +50,29 @@ function parseCaseInput(body: unknown): CaseInput | null {
 const { storage, kind: storageKind } = createStorage();
 const app = express();
 
-app.use(cors({ origin: process.env.CORS_ORIGIN ?? "*" }));
+// CORS: CORS_ORIGINS(쉼표 목록)와 CORS_ORIGIN_REGEX 중 하나라도 설정되면 그 규칙으로 제한하고,
+// 둘 다 없으면(로컬 개발) 전체 허용한다.
+const allowedOrigins = (process.env.CORS_ORIGINS ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+const originRegex = process.env.CORS_ORIGIN_REGEX ? new RegExp(process.env.CORS_ORIGIN_REGEX) : null;
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true); // curl/서버 간 호출
+      if (allowedOrigins.length === 0 && !originRegex) return cb(null, true);
+      if (allowedOrigins.includes(origin) || (originRegex !== null && originRegex.test(origin)))
+        return cb(null, true);
+      return cb(null, false);
+    },
+  }),
+);
 app.use(express.json());
 
-app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, storage: storageKind });
+app.get("/api/health", async (_req, res) => {
+  const dbOk = await storage.health();
+  res.status(dbOk ? 200 : 503).json({ ok: dbOk, storage: storageKind, db_ok: dbOk });
 });
 
 /** 다음 사건번호 미리보기 (09 접수 완료 화면용) */

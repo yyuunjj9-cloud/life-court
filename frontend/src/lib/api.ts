@@ -37,4 +37,6 @@ export const api = {
     }),
 
   nextSeq: () => request<{ seq: number }>("/api/meta/next-seq"),
+
+  health: () => request<{ ok: boolean; db_ok: boolean }>("/api/health"),
 };
