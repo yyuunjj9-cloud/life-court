@@ -7,12 +7,23 @@ import { WakeBanner } from "@/components/WakeBanner";
 export const metadata: Metadata = {
   title: "오늘의 생활법원",
   description: "당신의 사소한 억울함을 엄숙하게 심리합니다. 오락 목적의 가상 판결 서비스.",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "생활법원",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: "#3B2113",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
