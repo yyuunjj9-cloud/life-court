@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Steps } from "@/components/Steps";
+import { DraftSaveButton } from "@/components/DraftSaveButton";
 import { useCaseStore } from "@/store/case-store";
 
 const MIN = 10;
@@ -44,9 +45,12 @@ export default function StoryPage() {
           {touched && invalid ? `${MIN}자 이상 입력해야 접수할 수 있습니다.` : `${MIN}~${MAX}자 이내로 입력해주세요.`}
         </div>
         <div className="grow" />
-        <button className="btn" type="button" onClick={next}>
-          다음
-        </button>
+        <div className="stack">
+          <button className="btn" type="button" onClick={next}>
+            다음
+          </button>
+          <DraftSaveButton />
+        </div>
       </div>
     </div>
   );

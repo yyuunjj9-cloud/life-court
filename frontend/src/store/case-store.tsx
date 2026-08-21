@@ -39,11 +39,17 @@ interface CaseState {
 }
 
 interface CaseStore extends CaseState {
+  /** 임시저장된 초안의 저장 시각 (없으면 null) */
+  savedDraftAt: number | null;
   setStory: (story: string) => void;
   setCaseType: (caseType: CaseType) => void;
   setRelationship: (relationship: Relationship) => void;
   setSeverity: (severity: Severity) => void;
   setTone: (tone: Tone) => void;
+  /** 현재 초안을 localStorage에 임시저장한다. */
+  saveDraft: () => void;
+  /** 임시저장된 초안을 불러온다(새 사건으로 시작). 성공 여부 반환. */
+  loadDraft: () => boolean;
   /** 접수 확정: API로 사건을 생성하고 판결·고소장을 받아온다. 성공 여부 반환. */
   submitCase: (kind: FilingKind) => Promise<boolean>;
   /** 항소심 판결을 요청한다. */
@@ -76,6 +82,24 @@ const STATE_INIT: CaseState = {
 };
 
 const STATE_KEY = "lifecourt.state.v2";
+const DRAFT_KEY = "lifecourt.savedDraft.v1";
+
+interface SavedDraft {
+  draft: CaseDraft;
+  savedAt: number;
+}
+
+function readSavedDraft(): SavedDraft | null {
+  try {
+    const raw = window.localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SavedDraft;
+    if (!parsed?.draft || typeof parsed.savedAt !== "number") return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
 
 function draftToInput(draft: CaseDraft): CaseInput | null {
   if (!draft.caseType || !draft.relationship || draft.story.trim().length < 10) return null;
@@ -92,6 +116,7 @@ const CaseContext = createContext<CaseStore | null>(null);
 
 export function CaseProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<CaseState>(STATE_INIT);
+  const [savedDraftAt, setSavedDraftAt] = useState<number | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -101,6 +126,7 @@ export function CaseProvider({ children }: { children: ReactNode }) {
     } catch {
       /* 손상된 저장분은 무시 */
     }
+    setSavedDraftAt(readSavedDraft()?.savedAt ?? null);
     setHydrated(true);
   }, []);
 
@@ -115,11 +141,25 @@ export function CaseProvider({ children }: { children: ReactNode }) {
 
     return {
       ...state,
+      savedDraftAt,
       setStory: (story) => patchDraft({ story }),
       setCaseType: (caseType) => patchDraft({ caseType }),
       setRelationship: (relationship) => patchDraft({ relationship }),
       setSeverity: (severity) => patchDraft({ severity }),
       setTone: (tone) => patchDraft({ tone }),
+
+      saveDraft: () => {
+        const saved: SavedDraft = { draft: state.draft, savedAt: Date.now() };
+        window.localStorage.setItem(DRAFT_KEY, JSON.stringify(saved));
+        setSavedDraftAt(saved.savedAt);
+      },
+
+      loadDraft: () => {
+        const saved = readSavedDraft();
+        if (!saved) return false;
+        setState({ ...STATE_INIT, draft: { ...DRAFT_INIT, ...saved.draft } });
+        return true;
+      },
 
       submitCase: async (kind) => {
         const input = draftToInput(state.draft);
@@ -179,7 +219,7 @@ export function CaseProvider({ children }: { children: ReactNode }) {
 
       resetCase: () => setState(STATE_INIT),
     };
-  }, [state]);
+  }, [state, savedDraftAt]);
 
   return <CaseContext.Provider value={store}>{children}</CaseContext.Provider>;
 }

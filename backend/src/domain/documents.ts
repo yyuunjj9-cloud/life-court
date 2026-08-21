@@ -4,9 +4,8 @@
  */
 
 import {
-  CASE_NAMES,
   DEFENDANTS,
-  ORDERS,
+  SCENARIOS,
   hashSeed,
   mulberry32,
   pick,
@@ -112,14 +111,15 @@ const DEMAND_WARNINGS = [
 
 export function generateDemandLetter(input: CaseInput): DemandLetterDoc {
   const rand = mulberry32(hashSeed(`demand|${input.story}|${input.caseType}|${input.relationship}`));
-  const caseName = pick(rand, CASE_NAMES[input.caseType]);
+  // 제목과 요구사항이 같은 시나리오에서 나와 논리적으로 일치한다.
+  const scenario = pick(rand, SCENARIOS[input.caseType]);
 
   return {
-    title: `「${caseName}」 관련 시정 요구의 건`,
+    title: `「${scenario.name}」 관련 시정 요구의 건`,
     sender: "원고 본인",
     receiver: pick(rand, DEFENDANTS[input.relationship]),
     background: `발신인은 최근 "${excerptOf(input.story)}"라는 일을 겪었습니다. 이는 수신인의 부주의 또는 고의에 기인한 것으로, 발신인의 생활 평온을 명백히 해치는 행위입니다.`,
-    demand: pick(rand, ORDERS[input.caseType]).replace(/^피고인은/, "수신인은"),
+    demand: pick(rand, scenario.orders).replace(/^피고인은/, "수신인은"),
     deadline: "본 서면 수령일로부터 3일 이내",
     warning: pick(rand, DEMAND_WARNINGS),
   };

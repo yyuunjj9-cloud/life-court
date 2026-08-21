@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Steps } from "@/components/Steps";
+import { DraftSaveButton } from "@/components/DraftSaveButton";
 import { useCaseStore } from "@/store/case-store";
 import type { Severity, Tone } from "@/domain/judgment";
 
@@ -69,9 +70,12 @@ export default function TonePage() {
           ))}
         </div>
         <div className="grow" />
-        <button className="btn" type="button" onClick={submit}>
-          다음 — 대응 방식 선택
-        </button>
+        <div className="stack">
+          <button className="btn" type="button" onClick={submit}>
+            다음 — 대응 방식 선택
+          </button>
+          <DraftSaveButton />
+        </div>
       </div>
     </div>
   );

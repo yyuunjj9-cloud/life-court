@@ -1,7 +1,34 @@
-import Link from "next/link";
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useCaseStore } from "@/store/case-store";
 
 /* 01 랜딩 — 어두운 법정 */
 export default function LandingPage() {
+  const router = useRouter();
+  const { savedDraftAt, resetCase, loadDraft } = useCaseStore();
+
+  // 새 사건 접수: 이전 진행 상태를 완전히 초기화하고 시작한다.
+  const startNew = () => {
+    resetCase();
+    router.push("/intake/story");
+  };
+
+  // 임시저장된 초안 불러오기
+  const resume = () => {
+    if (loadDraft()) router.push("/intake/story");
+  };
+
+  const savedLabel =
+    savedDraftAt !== null
+      ? new Date(savedDraftAt).toLocaleString("ko-KR", {
+          month: "numeric",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : null;
+
   return (
     <div className="scr dark">
       <span className="pillar l" />
@@ -26,9 +53,16 @@ export default function LandingPage() {
           <span className="g">⚖</span>
         </div>
         <div className="grow" />
-        <Link className="btn" href="/intake/story">
-          사건 접수하기
-        </Link>
+        <div className="stack">
+          <button className="btn" type="button" onClick={startNew}>
+            사건 접수하기
+          </button>
+          {savedLabel && (
+            <button className="btn dark sm" type="button" onClick={resume}>
+              임시저장 불러오기 ({savedLabel})
+            </button>
+          )}
+        </div>
         <div className="disclaim">
           본 서비스는 오락 목적의 가상 콘텐츠이며
           <br />

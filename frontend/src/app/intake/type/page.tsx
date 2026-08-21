@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Steps } from "@/components/Steps";
+import { DraftSaveButton } from "@/components/DraftSaveButton";
 import { useCaseStore } from "@/store/case-store";
 import type { CaseType, Relationship } from "@/domain/judgment";
 
@@ -64,9 +65,12 @@ export default function TypePage() {
           ))}
         </div>
         <div className="grow" />
-        <button className="btn" type="button" disabled={!ready} onClick={() => router.push("/intake/tone")}>
-          다음
-        </button>
+        <div className="stack">
+          <button className="btn" type="button" disabled={!ready} onClick={() => router.push("/intake/tone")}>
+            다음
+          </button>
+          <DraftSaveButton />
+        </div>
       </div>
     </div>
   );
