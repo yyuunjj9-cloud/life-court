@@ -11,9 +11,20 @@
 import type { AppealVerdict, CaseInput, Verdict } from "@/domain/judgment";
 import type { ComplaintDoc, CountersuitDoc, DemandLetterDoc, FilingKind } from "@/domain/documents";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const DIRECT_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 /** next.config.mjs rewrites가 /backend/* 를 백엔드로 프록시한다. */
 const PROXY_BASE = "/backend";
+/**
+ * 운영 환경 브라우저에서는 같은 도메인 프록시를 기본 경로로 쓴다.
+ * 일부 모바일 통신망/CDN 엣지에서 onrender.com 직접 연결이 지속적으로
+ * no-server 404를 반환하는 사례가 있어, 재시도마다 프록시↔직접을 번갈아 시도한다.
+ */
+const PROXY_PRIMARY = typeof window !== "undefined" && Boolean(process.env.NEXT_PUBLIC_API_URL);
+
+function baseFor(attempt: number): string {
+  if (!PROXY_PRIMARY) return DIRECT_BASE;
+  return attempt % 2 === 0 ? PROXY_BASE : DIRECT_BASE;
+}
 
 /** 서버 도달 전 실패(라우팅 404) 또는 게이트웨이 오류만 재시도한다. */
 const RETRYABLE_STATUS = new Set([404, 502, 503, 504]);
@@ -47,9 +58,6 @@ export function subscribeConnection(fn: (s: ConnState) => void): () => void {
 
 /* ---------- 요청 ---------- */
 
-let networkFailures = 0;
-let useProxy = false;
-
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
@@ -64,14 +72,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const startedAt = Date.now();
 
   for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
-    const base = useProxy && typeof window !== "undefined" ? PROXY_BASE : BASE;
     try {
-      const res = await fetch(`${base}${path}`, {
+      const res = await fetch(`${baseFor(attempt)}${path}`, {
         ...init,
         headers: { "Content-Type": "application/json", ...init?.headers },
       });
       if (res.ok) {
-        networkFailures = 0;
         setConn({ phase: "idle", startedAt: 0, attempt: 0 });
         return (await res.json()) as T;
       }
@@ -83,9 +89,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     } catch (e) {
       if (e instanceof Error && e.message.startsWith(`API ${path}`)) throw e;
       lastError = e;
-      // fetch 자체가 던지는 오류는 네트워크 수준 실패 — 2회 누적 시 프록시로 전환
-      networkFailures++;
-      if (networkFailures >= 2) useProxy = true;
     }
     if (attempt < RETRY_DELAYS_MS.length) {
       setConn({ phase: "connecting", startedAt, attempt: attempt + 1 });
