@@ -43,6 +43,7 @@ body {
 /* ---------- 앱 프레임 ---------- */
 #app {
   width: 100%;
+  height: 100vh; /* dvh 미지원 구형 브라우저 폴백 */
   height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -64,14 +65,29 @@ body {
       ),
       linear-gradient(180deg, #31190b, var(--wood-deep));
   }
+  /* 폰 프레임: 화면 크기에 비례해 커지고 줄어든다 (세로 94%, 가로는 폰 비율 유지, 최대 560px) */
   #app {
-    width: 400px;
-    height: min(760px, 94dvh);
+    height: min(880px, 94vh); /* dvh 폴백 */
+    height: min(880px, 94dvh);
+    width: min(92vw, 560px, calc(min(880px, 94vh) * 0.56));
+    width: min(92vw, 560px, calc(min(880px, 94dvh) * 0.56));
     border-radius: 18px;
     border: 2px solid var(--gold-dim);
     outline: 1px solid rgba(201, 162, 39, 0.35);
     outline-offset: 5px;
     box-shadow: 0 26px 70px rgba(0, 0, 0, 0.6);
+  }
+}
+/* 가로 모드 폰처럼 낮은 화면에서는 프레임 없이 전체 화면으로 */
+@media (min-width: 640px) and (max-height: 520px) {
+  #app {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    border-radius: 0;
+    border: 0;
+    outline: none;
+    box-shadow: none;
   }
 }
 
