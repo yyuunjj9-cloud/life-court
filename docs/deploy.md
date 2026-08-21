@@ -44,15 +44,20 @@ cd frontend && vercel deploy --prod --yes
 
 Render 환경변수 변경은 REST(PUT `/v1/services/<srv>/env-vars`, 전체 치환이므로 기존 값 병합) 후 재배포.
 
-## keep-alive
+## keep-alive (이중화)
 
-`.github/workflows/keepalive.yml` — 10분 간격으로 `/api/health`를 호출한다.
-health가 DB를 실제 조회(`SELECT 1`)하므로 이 핑 하나로 Render 스핀다운(15분 유휴)과
-Supabase 무료 프로젝트 정지(7일 무활동)를 모두 방지한다.
+health가 DB를 실제 조회(`SELECT 1`)하므로 핑 하나로 Render 스핀다운(15분 유휴)과
+Supabase 무료 프로젝트 정지(7일 무활동)를 모두 방지한다. 핑은 두 경로로 이중화돼 있다:
 
-- 대상 URL 변경: 리포 Settings → Variables → `KEEPALIVE_URL`
-- 리포에 60일간 커밋이 없으면 GitHub가 스케줄을 자동 비활성화 → Actions 탭에서 Enable
-- 수동 실행: `gh workflow run keepalive.yml`
+1. **Supabase pg_cron (주 경로)** — DB 안에서 10분마다 `net.http_get`으로 백엔드 health를 호출.
+   GitHub 스케줄과 달리 지연이 거의 없다.
+   - 잡 확인: `select * from cron.job;` (jobname `lifecourt-keepalive`)
+   - 실행 이력: `select * from cron.job_run_details order by start_time desc limit 5;`
+   - 해제: `select cron.unschedule('lifecourt-keepalive');`
+2. **GitHub Actions (보조)** — `.github/workflows/keepalive.yml`, 10분 간격(실제로는 수십 분 지연 가능).
+   - 대상 URL 변경: 리포 Settings → Variables → `KEEPALIVE_URL`
+   - 리포에 60일간 커밋이 없으면 자동 비활성화 → Actions 탭에서 Enable
+   - 수동 실행: `gh workflow run keepalive.yml`
 
 ## 무료 티어 한계
 
