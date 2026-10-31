@@ -94,8 +94,14 @@ export function pick<T>(rand: () => number, arr: readonly T[]): T {
 
 /* ---------- 템플릿 풀 ---------- */
 
+/** 피고인의 궁색한 항변과 재판부가 이를 배척하는 이유. 판결 이유 단락에 삽입된다. */
+export interface ScenarioDefense {
+  claim: string;
+  rejection: string;
+}
+
 /**
- * 사건 시나리오: 사건명·가상 죄명·주문이 한 세트로 묶여 있어
+ * 사건 시나리오: 사건명·가상 죄명·주문·항변이 한 세트로 묶여 있어
  * 판결문 안에서 항상 논리적으로 일관된다.
  * keywords는 사연 본문과 대조해 가장 어울리는 시나리오를 고르는 데 쓰인다.
  */
@@ -103,6 +109,7 @@ export interface CaseScenario {
   name: string;
   crime: string;
   orders: readonly string[];
+  defense: ScenarioDefense;
   keywords: readonly string[];
 }
 
@@ -115,6 +122,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 다음 회의부터 자료 요청을 회의 24시간 전까지 완료할 것.",
         "피고인은 향후 자료 검토 요청 시 최소 반나절의 여유를 두고 전달할 것.",
       ],
+      defense: {
+        claim: "원래 회의란 닥쳐야 완성되는 법이다",
+        rejection: "회의는 마감이 아니라 준비로 완성된다는 것이 재판부의 확립된 견해이므로 이를 배척한다.",
+      },
       keywords: ["회의", "자료", "발표", "보고서", "직전에"],
     },
     {
@@ -124,6 +135,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 업무 인계 시 범위와 기한을 문서로 명시하고, 금주 내 원고에게 커피 1잔을 제공할 것.",
         "피고인은 떠넘긴 업무의 절반을 회수하여 직접 수행할 것.",
       ],
+      defense: {
+        claim: "권한 위임이자 성장의 기회를 준 것이다",
+        rejection: "성장의 기회는 기한과 인수인계가 동반될 때에만 성립하므로 이유 없다.",
+      },
       keywords: ["떠넘", "맡기", "넘기", "대신", "시키", "시켰", "미루"],
     },
     {
@@ -133,6 +148,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 퇴근 30분 전 이후의 신규 업무 지시를 금지당한다.",
         "피고인은 부득이한 늦은 지시 시 다음 날 오전으로 기한을 자동 연장할 것.",
       ],
+      defense: {
+        claim: "갑자기 생각난 걸 어떡하느냐",
+        rejection: "갑자기 난 생각은 메모해 두었다가 다음 날 아침에 전달할 수 있었음이 인정되어 이를 배척한다.",
+      },
       keywords: ["퇴근", "야근", "칼퇴", "늦게까지", "밤까지", "직전"],
     },
     {
@@ -142,6 +161,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 다음 회의에서 실제 기여자의 이름을 명시적으로 언급할 것.",
         "피고인은 가로챈 공로를 원소유자에게 반환하고 전체 메일로 정정할 것.",
       ],
+      defense: {
+        claim: "팀의 성과는 곧 모두의 성과다",
+        rejection: "'모두의 성과'를 발표한 입은 피고인 하나뿐이었음이 확인되어 받아들이지 않는다.",
+      },
       keywords: ["가로채", "공로", "내 공", "아이디어", "성과", "숟가락", "자기가 한 것처럼"],
     },
     {
@@ -151,6 +174,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 회의 시작 시 종료 시각을 선언하고 이를 준수할 것.",
         "피고인은 안건 없는 발언이 3분을 초과할 경우 스스로 발언권을 내려놓을 것.",
       ],
+      defense: {
+        claim: "중요한 안건이라 어쩔 수 없었다",
+        rejection: "회의록 어디에도 해당 안건이 기재되어 있지 않음이 확인되어 이를 배척한다.",
+      },
       keywords: ["길어", "안 끝", "끝나지 않", "끝날 기미", "연장", "한 시간 넘", "두 시간"],
     },
     {
@@ -160,6 +187,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 주말 및 공휴일의 업무 연락을 금지당한다.",
         "피고인은 부득이한 휴일 연락 시 '월요일에 봐도 됩니다'를 문장 끝에 명기할 것.",
       ],
+      defense: {
+        claim: "월요일에 읽어도 된다고 분명히 적었다",
+        rejection: "알림음이 울리는 순간 휴일의 평온은 이미 침해된 것이므로 이유 없다.",
+      },
       keywords: ["주말", "휴일", "연휴", "일요일", "토요일", "휴가"],
     },
     {
@@ -169,6 +200,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 수신한 결재 요청을 영업일 기준 1일 이내에 승인 또는 반려로 확정할 것.",
         "피고인은 보류 시 그 사유와 예상 처리 시점을 요청자에게 고지할 것.",
       ],
+      defense: {
+        claim: "신중하게 검토하는 중이었다",
+        rejection: "검토 화면을 열어 본 접속 기록이 존재하지 않아 이를 배척한다.",
+      },
       keywords: ["결재", "승인", "보류", "반려도 없이", "사인을 안"],
     },
     {
@@ -178,6 +213,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 원고의 점심시간 중 업무 언급을 금지당한다.",
         "피고인은 침해한 점심시간에 상응하는 커피 1잔을 금주 내 제공할 것.",
       ],
+      defense: {
+        claim: "밥 먹으면서 가볍게 말한 것뿐이다",
+        rejection: "업무 이야기가 반찬으로 오르는 순간 점심은 회의가 된다는 점에서 받아들이지 않는다.",
+      },
       keywords: ["점심시간", "밥 먹는데", "식사 중에", "밥 먹을 때"],
     },
     {
@@ -187,6 +226,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 타인의 발언이 마침표에 도달할 때까지 경청할 것.",
         "피고인은 말을 끊은 횟수만큼 다음 회의에서 원고에게 우선 발언권을 양보할 것.",
       ],
+      defense: {
+        claim: "너무 좋은 생각이 떠올라 참을 수 없었다",
+        rejection: "좋은 생각은 3초를 기다려도 사라지지 않으므로 이유 없다.",
+      },
       keywords: ["말을 끊", "말을 자르", "가로막", "끼어들", "발언"],
     },
     {
@@ -196,6 +239,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 업무 지시 시 목적·범위·기한의 세 가지를 반드시 명시할 것.",
         "피고인은 '알아서 잘'이라는 표현의 업무상 사용을 금지당한다.",
       ],
+      defense: {
+        claim: "믿고 맡긴다는 신뢰의 표현이었다",
+        rejection: "신뢰는 목적과 기한을 명시한 뒤에도 충분히 표현될 수 있으므로 이를 배척한다.",
+      },
       keywords: ["알아서", "대충 해", "모호", "애매", "뭘 하라는"],
     },
     {
@@ -205,6 +252,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 '전체 회신' 클릭 전 수신인 목록을 소리 내어 읽을 것.",
         "피고인은 두 명에게만 필요한 내용의 전체 공유를 금지당한다.",
       ],
+      defense: {
+        claim: "정보는 투명하게 공유되어야 한다",
+        rejection: "점심 메뉴 회신은 전사적 투명성의 대상이 아니므로 받아들이지 않는다.",
+      },
       keywords: ["전체 회신", "참조", "메일을 전부", "단체 메일"],
     },
     {
@@ -214,6 +265,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 정시 퇴근자에게 눈빛·한숨 등 일체의 신호를 송출하지 말 것.",
         "피고인은 '벌써 가?'라는 발언을 금지당한다.",
       ],
+      defense: {
+        claim: "한숨은 비염 때문이었다",
+        rejection: "비염성 한숨이 정시 퇴근자의 방향으로만 발생할 확률은 통계적으로 희박하여 이를 배척한다.",
+      },
       keywords: ["눈치", "먼저 가", "벌써 가", "못 가게"],
     },
     {
@@ -223,6 +278,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 1일 간식 취식량을 2개 이하로 제한당한다.",
         "피고인은 마지막 간식 취식 시 그 사실을 공용 채널에 자진 신고할 것.",
       ],
+      defense: {
+        claim: "선착순은 만국 공통의 규칙이다",
+        rejection: "탕비실은 경쟁의 장이 아니라 복지의 공간이므로 이유 없다.",
+      },
       keywords: ["간식", "탕비실", "과자", "커피를 다", "다 먹어서 없"],
     },
     {
@@ -232,6 +291,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 공용 공간의 온도 변경 전 과반의 동의를 득할 것.",
         "피고인은 리모컨을 공용 위치에 반환하고 개인 담요로 자구책을 마련할 것.",
       ],
+      defense: {
+        claim: "적정 온도에 관한 전문적 소견이 있다",
+        rejection: "피고인의 전문성은 본인의 체감온도에 한정됨이 확인되어 이를 배척한다.",
+      },
       keywords: ["에어컨", "온도", "춥", "덥", "히터", "냉방"],
     },
     {
@@ -241,6 +304,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 수정 요청 시 모든 수정 사항을 1회에 취합하여 전달할 것.",
         "피고인은 3회차 이상의 수정 요청 시 그 사유를 서면으로 소명할 것.",
       ],
+      defense: {
+        claim: "완벽을 향한 여정이었다",
+        rejection: "7차 수정본이 1차 시안으로 회귀한 사실이 확인되어 받아들이지 않는다.",
+      },
       keywords: ["수정", "다시 해", "다시 하라", "고치라", "빨간펜"],
     },
     {
@@ -250,6 +317,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 원고의 책상 위 적치물을 금일 중 자진 철거할 것.",
         "피고인은 파티션 경계를 국경에 준하여 존중할 것.",
       ],
+      defense: {
+        claim: "잠시 올려 둔 것뿐이다",
+        rejection: "그 '잠시'가 3주째 계속되고 있음이 사진으로 입증되어 이를 배척한다.",
+      },
       keywords: ["책상", "자리에 짐", "자리를 침", "내 자리"],
     },
     {
@@ -259,6 +330,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 화상회의 소집 시 최소 30분 전에 예고할 것.",
         "피고인은 메시지로 충분한 용건의 화상 호출을 금지당한다.",
       ],
+      defense: {
+        claim: "얼굴 보고 말해야 빠르다",
+        rejection: "동일한 용건이 메시지 두 줄로 종결된 전례가 다수 확인되어 이유 없다.",
+      },
       keywords: ["재택", "화상", "줌", "호출", "콜을 걸"],
     },
     {
@@ -268,6 +343,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 회식 불참 사유를 추궁하지 말 것.",
         "피고인은 2차 이후의 동행 권유를 1회로 제한당한다.",
       ],
+      defense: {
+        claim: "다 너 좋으라고 만든 자리다",
+        rejection: "수혜자가 거부 의사를 밝힌 호의는 더 이상 호의가 아니므로 이를 배척한다.",
+      },
       keywords: ["회식", "술", "2차", "강제로", "빠지지 말"],
     },
     {
@@ -277,6 +356,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 금주 내 인수인계 문서를 작성하여 후임자에게 전달할 것.",
         "피고인은 인수인계 누락분에 대한 질문에 성실히 답변할 의무를 진다.",
       ],
+      defense: {
+        claim: "보면 다 알 수 있게 되어 있다",
+        rejection: "'다 알 수 있다'던 자료의 최종 수정일이 3년 전임이 확인되어 받아들이지 않는다.",
+      },
       keywords: ["인수인계", "문서도 없이", "넘겨받", "전임자"],
     },
     {
@@ -286,6 +369,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 100매 이상의 대량 인쇄를 점심시간 등 한산한 시간대에 수행할 것.",
         "피고인은 인쇄물을 출력 후 10분 이내에 수거할 것.",
       ],
+      defense: {
+        claim: "급한 출력물이었다",
+        rejection: "출력물의 표지가 '내년도 계획(초안)'이었음이 확인되어 긴급성을 인정하지 아니한다.",
+      },
       keywords: ["프린터", "인쇄", "복합기", "출력"],
     },
   ],
@@ -297,6 +384,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 다음 약속에 10분 먼저 도착하여 성의를 증명할 것.",
         "피고인은 지각 1회당 음료 1잔의 벌칙에 서면 동의할 것.",
       ],
+      defense: {
+        claim: "버스가 안 왔다",
+        rejection: "같은 버스가 3년째 피고인에게만 오지 않는다는 주장은 경험칙에 반하여 이를 배척한다.",
+      },
       keywords: ["지각", "늦게", "늦었", "늦는", "기다리", "기다렸"],
     },
     {
@@ -306,6 +397,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 원고의 다음 이야기 세 건에 진심 어린 리액션을 제공할 것.",
         "피고인은 대화 중 휴대폰을 내려놓고 눈을 맞추는 연습을 이행할 것.",
       ],
+      defense: {
+        claim: "조용히 깊게 공감하는 스타일이다",
+        rejection: "깊은 공감 도중 휴대폰 게임 최고 점수가 갱신된 사실이 확인되어 받아들이지 않는다.",
+      },
       keywords: ["리액션", "반응", "건성", "시큰둥", "성의 없", "영혼 없", "대충 듣"],
     },
     {
@@ -315,6 +410,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 약속 취소 시 대체 일정 두 개를 즉시 제시할 것.",
         "피고인은 취소 사유를 성의 있게 설명하고 다음 만남의 비용을 부담할 것.",
       ],
+      defense: {
+        claim: "피치 못할 사정이 있었다",
+        rejection: "같은 시각 피고인의 SNS에 카페 사진이 게시된 사실이 확인되어 이유 없다.",
+      },
       keywords: ["취소", "파토", "펑크", "바람맞", "미뤘", "미룬", "당일에"],
     },
     {
@@ -324,6 +423,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 금주 내 원고에게 안부 연락 1회 이상을 자발적으로 시행할 것.",
         "피고인은 원고가 서운했던 지점 세 가지를 경청하고 복명복창할 것.",
       ],
+      defense: {
+        claim: "연락 안 해도 편한 사이라고 생각했다",
+        rejection: "편한 사이란 연락의 의무가 없는 사이가 아니라 서운함을 말할 수 있는 사이이므로 이를 배척한다.",
+      },
       keywords: ["서운", "무심", "배려", "연락이 없", "연락도 없", "챙겨주지", "관심이 없"],
     },
     {
@@ -333,6 +436,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 지각한 축하를 평소의 세 배 성의로 즉시 이행할 것.",
         "피고인은 원고의 다음 경사를 달력에 등록하고 당일 오전 중 축하를 전할 것.",
       ],
+      defense: {
+        claim: "마음속으로는 누구보다 축하했다",
+        rejection: "마음속 축하는 수신자에게 도달한 바 없으므로 효력을 인정하지 아니한다.",
+      },
       keywords: ["생일", "축하", "경사", "합격", "취업", "기념일"],
     },
     {
@@ -342,6 +449,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 전파된 비밀의 수신자 전원에게 정정 및 함구를 요청할 것.",
         "피고인은 향후 '너한테만 말하는 건데'로 시작하는 발화를 금지당한다.",
       ],
+      defense: {
+        claim: "딱 한 명한테만 말했다",
+        rejection: "그 한 명 역시 '딱 한 명한테만' 말했음이 연쇄적으로 확인되어 받아들이지 않는다.",
+      },
       keywords: ["비밀", "소문", "퍼뜨", "말하고 다", "얘기하고 다", "다 말해", "폭로"],
     },
     {
@@ -351,6 +462,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 잠수 예정 시 최소 '살아 있음' 한 줄을 사전 공지할 것.",
         "피고인은 부상 후 72시간 이내에 잠수 사유를 소명할 것.",
       ],
+      defense: {
+        claim: "혼자만의 시간이 필요했다",
+        rejection: "혼자만의 시간 중 단체방에는 접속한 기록이 확인되어 이를 배척한다.",
+      },
       keywords: ["잠수", "두절", "사라졌", "증발", "갑자기 연락이 안"],
     },
     {
@@ -360,6 +475,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 자랑 1건당 상대방의 근황 질문 1건을 의무적으로 첨부할 것.",
         "피고인의 동일 자랑 반복 횟수는 2회로 제한한다.",
       ],
+      defense: {
+        claim: "근황을 공유했을 뿐이다",
+        rejection: "근황 공유에 시세·연봉·평수가 반복 포함되어야 할 필연성은 인정되지 아니한다.",
+      },
       keywords: ["자랑", "과시", "플렉스", "잘난", "은근히 자기"],
     },
     {
@@ -369,6 +488,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 부재자에 대한 평가 발언을 당사자 앞에서 할 수 있는 수위로 제한할 것.",
         "피고인은 뒷담화 유통 경로에서 자진 이탈할 것.",
       ],
+      defense: {
+        claim: "맞장구만 쳤을 뿐이다",
+        rejection: "맞장구는 뒷담화의 연료라는 것이 재판부의 확립된 견해이므로 이유 없다.",
+      },
       keywords: ["뒷담", "험담", "흉을", "내 욕"],
     },
     {
@@ -378,6 +501,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 본 판결문 수령 즉시 차용금 전액을 상환할 것.",
         "피고인은 상환 전까지 신상 구매품의 SNS 게시를 자제할 것.",
       ],
+      defense: {
+        claim: "말 안 해도 갚을 생각이었다",
+        rejection: "상환 의사는 마음이 아니라 송금 기록으로만 입증되므로 이를 배척한다.",
+      },
       keywords: ["빌려간 돈", "빌린 돈", "안 갚", "꿔간", "갚는다고 하고"],
     },
     {
@@ -387,6 +514,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 불참한 경조사에 상응하는 축하 또는 위로를 소급 이행할 것.",
         "피고인은 원고의 다음 경조사에 최우선 일정으로 참석할 것.",
       ],
+      defense: {
+        claim: "청첩장을 못 받은 줄 알았다",
+        rejection: "'꼭 간다'고 답장한 기록이 현존하여 받아들이지 않는다.",
+      },
       keywords: ["결혼식", "장례", "경조사", "돌잔치", "불참", "안 왔"],
     },
     {
@@ -396,6 +527,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 해당 게시물을 즉시 삭제하고 보정된 사진으로 대체할 것.",
         "피고인은 향후 게시 전 피사체의 사전 검열권을 보장할 것.",
       ],
+      defense: {
+        claim: "자연스러워서 올렸다",
+        rejection: "자연스러움의 판단 권한은 촬영자가 아니라 피사체에게 전속되므로 이유 없다.",
+      },
       keywords: ["못 나온 사진", "굴욕", "이상한 사진", "허락도 없이 올"],
     },
     {
@@ -405,6 +540,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 대화 지분의 50%를 초과 점유하지 말 것.",
         "피고인은 자기 이야기 종료 후 '너는 요즘 어때'를 의무적으로 발화할 것.",
       ],
+      defense: {
+        claim: "할 얘기가 너무 많았을 뿐이다",
+        rejection: "원고에게도 할 얘기가 있었다는 사실이 심리 결과 뒤늦게 밝혀져 이를 배척한다.",
+      },
       keywords: ["자기 얘기만", "자기 말만", "말을 못 하게", "안 듣", "듣지를 않"],
     },
     {
@@ -414,6 +553,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 요청받지 않은 조언의 제공을 금지당한다.",
         "피고인은 훈수 전 '조언이 필요해, 공감이 필요해?'를 선질문할 것.",
       ],
+      defense: {
+        claim: "다 너를 위한 말이었다",
+        rejection: "수요 없는 공급은 위함이 아니라 침해이므로 받아들이지 않는다.",
+      },
       keywords: ["잔소리", "훈수", "충고", "가르치려", "조언이랍시고"],
     },
     {
@@ -423,6 +566,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 월 1회 이상 원고와의 단독 만남을 유지할 것.",
         "피고인은 연애와 우정이 양립 가능함을 행동으로 증명할 것.",
       ],
+      defense: {
+        claim: "연애 초기라 어쩔 수 없다",
+        rejection: "그 '초기'가 11개월째 지속 중임이 확인되어 이를 배척한다.",
+      },
       keywords: ["연애", "애인", "남친", "여친", "생기더니", "커플"],
     },
     {
@@ -432,6 +579,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 동일 소재의 장난 반복을 금지당한다.",
         "피고인은 '장난인데 왜 정색해'라는 발언으로 책임을 전가하지 말 것.",
       ],
+      defense: {
+        claim: "친하니까 그런 거다",
+        rejection: "친밀도는 장난의 면허가 아니라 책임의 가중 사유이므로 이유 없다.",
+      },
       keywords: ["장난", "놀리", "짓궂", "정색"],
     },
     {
@@ -441,6 +592,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 원고를 제3자와 비교하는 발언을 금지당한다.",
         "피고인은 비교 1건당 원고의 고유한 장점 2건을 병기할 것.",
       ],
+      defense: {
+        claim: "동기부여 차원이었다",
+        rejection: "비교로 상승한 것은 의욕이 아니라 혈압뿐임이 확인되어 받아들이지 않는다.",
+      },
       keywords: ["비교", "누구는", "남들은", "걔는 되는데"],
     },
     {
@@ -450,6 +605,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 다음 선물 선정 시 최소 10분의 고민 시간을 투입할 것.",
         "피고인은 받은 선물의 재포장 증정(선물 재탕)을 금지당한다.",
       ],
+      defense: {
+        claim: "실용성을 최우선으로 고려했다",
+        rejection: "3년 연속 동일 기프티콘은 실용이 아니라 자동화이므로 이를 배척한다.",
+      },
       keywords: ["선물", "기프티콘만", "재탕", "성의가 없"],
     },
     {
@@ -459,6 +618,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 모임 예약·정산 업무를 윤번제로 전환하는 합의안에 서명할 것.",
         "피고인은 총무의 노고에 대해 모임 1회당 감사 인사 1건을 이행할 것.",
       ],
+      defense: {
+        claim: "네가 제일 잘하니까 맡긴 거다",
+        rejection: "칭찬은 노동의 대가가 될 수 없으므로 이유 없다.",
+      },
       keywords: ["총무", "예약도 내가", "정리도 내가", "독박", "내가 다 하"],
     },
     {
@@ -468,6 +631,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 약속 장소를 쌍방 거리의 중간 지점에서 선정할 것.",
         "피고인은 자택 인근 고집 시 상대의 교통비를 부담할 것.",
       ],
+      defense: {
+        claim: "그 동네 맛집은 내가 제일 잘 안다",
+        rejection: "맛집 지식이 원고의 왕복 세 시간을 상쇄하지 못함이 계산 결과 확인되어 이를 배척한다.",
+      },
       keywords: ["장소", "자기 집 앞", "자기 동네", "멀리까지 오라"],
     },
   ],
@@ -479,6 +646,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 금일 오후 1시까지 제육볶음 또는 비빔밥 중 하나를 최종 선택할 것.",
         "피고인은 메뉴 고민 시간을 3분으로 제한하고 초과 시 첫 번째 후보로 확정할 것.",
       ],
+      defense: {
+        claim: "신중한 선택이 맛있는 한 끼를 만든다",
+        rejection: "고민이 이어진 40분 사이 후보 식당 두 곳이 브레이크타임에 들어갔음이 확인되어 이유 없다.",
+      },
       keywords: ["못 정", "못 고르", "고민", "결정", "뭐 먹", "우유부단"],
     },
     {
@@ -488,6 +659,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 다음 식사에서 메뉴 결정권을 원고에게 전면 양도할 것.",
         "피고인은 메뉴 결정을 교대제로 전환하는 합의안에 서명할 것.",
       ],
+      defense: {
+        claim: "다들 내 선택에 만족해 왔다",
+        rejection: "만족의 증거로 제출된 것이 동석자들의 침묵뿐이어서 이를 배척한다.",
+      },
       keywords: ["독재", "마음대로", "자기가 먹고", "자기 먹고 싶은", "강요", "맨날 같은"],
     },
     {
@@ -497,6 +672,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 마지막 한 조각에 대한 원고의 우선권을 인정하고 동일 메뉴 1인분을 배상할 것.",
         "피고인은 향후 마지막 조각 취식 전 반드시 구두 동의를 구할 것.",
       ],
+      defense: {
+        claim: "버려질까 봐 먹은 것이다",
+        rejection: "원고의 젓가락이 해당 조각을 향해 이동 중이었음이 목격되어 받아들이지 않는다.",
+      },
       keywords: ["마지막", "한 입", "한 조각", "뺏어", "집어 먹", "집어먹", "먹어버렸"],
     },
     {
@@ -506,6 +685,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 향후 1주일간 '아무거나'라는 진술을 금지당한다.",
         "피고인은 메뉴 질문에 반드시 구체적 후보 두 개 이상으로 답할 것.",
       ],
+      defense: {
+        claim: "정말로 다 괜찮았다",
+        rejection: "직후 제시된 후보 네 개를 전부 기각한 전력이 확인되어 이를 배척한다.",
+      },
       keywords: ["아무거나", "아무 거나", "아무렇게나", "다 좋다"],
     },
     {
@@ -515,6 +698,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인의 식전 촬영은 1식 1컷으로 제한한다.",
         "피고인은 촬영 중 음식이 식을 경우 동일 메뉴를 재주문하여 배상할 것.",
       ],
+      defense: {
+        claim: "기록은 음식에 대한 예의다",
+        rejection: "식어 버린 국수에 대한 예의가 우선한다는 점에서 이유 없다.",
+      },
       keywords: ["사진", "찍", "인증", "카메라", "먹기도 전에"],
     },
     {
@@ -524,6 +711,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 본 판결문 수령 즉시 미정산 금액을 송금할 것.",
         "피고인은 향후 정산 요청 수신 후 24시간 내 송금을 완료할 것.",
       ],
+      defense: {
+        claim: "잊은 게 아니라 못 본 것이다",
+        rejection: "정산 요청 메시지에 '웃겨요' 반응을 남긴 기록이 확인되어 받아들이지 않는다.",
+      },
       keywords: ["더치", "정산", "엔빵", "송금", "계좌", "돈을 안", "안 갚", "밥값"],
     },
     {
@@ -533,6 +724,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 '한 입만'을 1식 1회로 제한당하며, 그 한 입의 크기는 숟가락 하나를 초과하지 말 것.",
         "피고인은 향후 타인의 음식이 탐나는 경우 처음부터 같은 메뉴를 주문할 것.",
       ],
+      defense: {
+        claim: "한 입은 칼로리가 없다",
+        rejection: "피고인의 한 입이 일반 성인의 세 입에 해당함이 계량 결과 확인되어 이를 배척한다.",
+      },
       keywords: ["한 입만", "한입만", "한 입 달라", "뺏어 먹", "내 걸 먹"],
     },
     {
@@ -542,6 +737,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 세 번째 추천까지 전부 기각할 경우 스스로 메뉴를 제시할 의무를 진다.",
         "피고인은 추천 기각 시 기각 사유를 구체적으로 소명할 것.",
       ],
+      defense: {
+        claim: "더 좋은 선택지를 기다렸을 뿐이다",
+        rejection: "더 좋은 선택지를 제시할 책임은 기각한 자에게 귀속되므로 이유 없다.",
+      },
       keywords: ["추천", "다 싫다", "그건 싫", "별로라며", "퇴짜"],
     },
     {
@@ -551,6 +750,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 공용 찌개 취식 시 반드시 국자와 앞접시를 경유할 것.",
         "피고인은 개인 수저의 공용 찌개 직접 투입을 금지당한다.",
       ],
+      defense: {
+        claim: "가족 같은 사이에 뭐 어떠냐",
+        rejection: "가족 같은 사이일수록 앞접시가 관계를 보전한다는 점에서 받아들이지 않는다.",
+      },
       keywords: ["찌개", "국물", "수저를 담", "숟가락을 담", "덜어 먹"],
     },
     {
@@ -560,6 +763,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 불판 담당자의 고기 굽기에 대한 훈수를 금지당한다.",
         "피고인은 훈수 1회당 고기 1점의 우선 취식권을 불판 담당자에게 양도할 것.",
       ],
+      defense: {
+        claim: "지금 안 뒤집으면 탄다",
+        rejection: "불판 담당자가 이미 완벽한 타이밍을 계산하고 있었음이 인정되어 이를 배척한다.",
+      },
       keywords: ["고기", "굽", "집게", "불판", "삼겹살", "태웠"],
     },
     {
@@ -569,6 +776,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 동석자의 식사가 끝날 때까지 자리에서 평온하게 대기할 것.",
         "피고인은 '다 먹었어?'라는 질문을 1식 1회로 제한당한다.",
       ],
+      defense: {
+        claim: "커피까지 생각한 효율적 일정 관리였다",
+        rejection: "효율은 타인의 식도를 담보로 달성될 수 없으므로 이유 없다.",
+      },
       keywords: ["빨리 먹", "재촉", "먹는 속도", "다 먹었냐", "일어나자"],
     },
     {
@@ -578,6 +789,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 계산대 앞에서의 신발끈 묶기·통화·화장실 이탈을 금지당한다.",
         "피고인은 금회 식사 비용을 전액 부담하여 누적된 혐의를 청산할 것.",
       ],
+      defense: {
+        claim: "정말 급한 전화가 온 것이다",
+        rejection: "통화 기록상 발신자도 수신자도 존재하지 않음이 확인되어 받아들이지 않는다.",
+      },
       keywords: ["계산", "카운터", "신발끈", "지갑을 안", "계산할 때만"],
     },
     {
@@ -587,6 +802,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 타인의 맵기 선택권을 존중하고 '이 정도는 안 맵다'는 발언을 금지당한다.",
         "피고인은 매운 메뉴 강행 시 동석자의 음료와 계란찜 비용을 부담할 것.",
       ],
+      defense: {
+        claim: "이 정도는 맵지도 않다",
+        rejection: "맵기의 기준은 먹는 사람의 혀에 전속되므로 이를 배척한다.",
+      },
       keywords: ["맵", "매운", "불닭", "마라", "맵찔"],
     },
     {
@@ -596,6 +815,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 '모자라면 더 시키자' 원칙에 서면 동의할 것.",
         "피고인은 잔반 발생 시 포장 용기를 요청하여 책임지고 수거할 것.",
       ],
+      defense: {
+        claim: "눈이 아니라 위장이 시킨 것이다",
+        rejection: "주문 당시 피고인의 위장은 이미 전채로 충만하였음이 확인되어 이유 없다.",
+      },
       keywords: ["많이 시키", "남기", "다 못 먹", "잔반", "눈이 커"],
     },
     {
@@ -605,6 +828,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 본인이 고르지 않은 식당에 대한 평가를 식사 종료 후로 유보할 것.",
         "피고인은 불평 1건당 다음 식당 후보 2곳을 직접 조사하여 제시할 것.",
       ],
+      defense: {
+        claim: "솔직한 리뷰였을 뿐이다",
+        rejection: "리뷰는 앱에 쓰는 것이고 동석자에게는 감사가 우선이므로 받아들이지 않는다.",
+      },
       keywords: ["맛없", "별로", "불평", "투정", "여기 왜 왔"],
     },
     {
@@ -614,6 +841,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 '안 먹는다' 선언 후 타인의 음식에 손대지 말 것.",
         "피고인은 취식 의사가 있는 경우 주문 단계에서 정직하게 신고할 것.",
       ],
+      defense: {
+        claim: "맛보기는 식사가 아니다",
+        rejection: "그 맛보기가 그릇의 절반을 소거한 사실이 확인되어 이를 배척한다.",
+      },
       keywords: ["다이어트", "살 빼", "안 먹는다더니", "샐러드만 시키고"],
     },
     {
@@ -623,6 +854,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 배달 주문 확정 전 동거인 전원의 의사를 확인할 것.",
         "피고인은 독단 주문 시 배달비 전액을 부담할 것.",
       ],
+      defense: {
+        claim: "배가 고파서 판단력이 흐려졌다",
+        rejection: "흐려진 판단력으로도 본인 취향만은 정확히 선택하였음이 확인되어 이유 없다.",
+      },
       keywords: ["배달", "시켜 놓", "배민", "주문해 버", "물어보지도 않고 시"],
     },
     {
@@ -632,6 +867,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 전원의 음식이 도착할 때까지 수저 들기를 유보할 것.",
         "피고인은 부득이한 선취식 시 '먼저 먹을게'를 명시적으로 발화할 것.",
       ],
+      defense: {
+        claim: "면은 불면 끝이라 어쩔 수 없었다",
+        rejection: "피고인이 먼저 먹은 메뉴는 면이 아니라 돈가스였음이 확인되어 받아들이지 않는다.",
+      },
       keywords: ["먼저 먹", "기다리지 않", "다 나오기 전에", "혼자 먹기 시작"],
     },
     {
@@ -641,6 +880,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 타인의 동일 메뉴 주문을 저지하지 말 것.",
         "피고인은 '같은 거 시키지 마'라는 발언을 금지당하며, 나눠 먹기는 합의 사항임을 유념할 것.",
       ],
+      defense: {
+        claim: "다양하게 시켜야 나눠 먹을 수 있다",
+        rejection: "나눠 먹기에 관한 합의가 선행된 바 없음이 확인되어 이를 배척한다.",
+      },
       keywords: ["같은 거 시키", "똑같은 메뉴", "겹치", "다른 거 시켜"],
     },
     {
@@ -650,6 +893,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 오후 10시 이후 치킨·족발 등 야식 사진의 전송을 금지당한다.",
         "피고인은 교사에 성공한 야식의 배달비를 부담할 것.",
       ],
+      defense: {
+        claim: "같이 먹고 싶었을 뿐이다",
+        rejection: "순수한 동행 의사는 자정에 전송된 치킨 사진 세 장과 양립하기 어려워 이유 없다.",
+      },
       keywords: ["야식", "치킨 시키", "밤에 먹", "족발", "배고프지 않냐"],
     },
   ],
@@ -661,6 +908,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 수신 후 3시간 이내 최소 1개의 성의 있는 문장으로 회신할 것.",
         "피고인은 즉답이 어려운 경우 '이따 답할게' 한 줄이라도 남길 것.",
       ],
+      defense: {
+        claim: "답장을 마음속으로 보냈다",
+        rejection: "마음속 답장은 서버에 기록되지 않으므로 이를 배척한다.",
+      },
       keywords: ["읽씹", "읽고 답", "답장을 안", "답장이 없", "답이 없", "안 읽", "무시"],
     },
     {
@@ -670,6 +921,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 향후 답장 시 'ㅇㅋ' 단독 사용을 자제하고 완성된 문장으로 회신할 것.",
         "피고인은 답장에 이모티콘 1개 이상을 첨부하여 온기를 보충할 것.",
       ],
+      defense: {
+        claim: "간결함이 미덕이다",
+        rejection: "미덕과 성의는 한 글자 안에 공존하기 어려우므로 이유 없다.",
+      },
       keywords: ["단답", "ㅇㅋ", "ㅇㅇ", "ㄴㄴ", "라고만", "한 글자"],
     },
     {
@@ -679,6 +934,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 오후 10시 이후 단체방 소환을 삼갈 것.",
         "피고인은 심야 용건은 예약 전송 기능을 활용하여 오전 9시 이후 도착시킬 것.",
       ],
+      defense: {
+        claim: "생각났을 때 보내야 안 까먹는다",
+        rejection: "'나에게 보내기' 기능이 이미 존재함이 확인되어 받아들이지 않는다.",
+      },
       keywords: ["새벽", "심야", "밤에", "자는데", "자고 있는데"],
     },
     {
@@ -688,6 +947,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 상황에 맞는 이모티콘을 선별하여 사용할 것.",
         "피고인은 같은 이모티콘 연속 3회 사용 시 문장으로 마음을 표현할 것.",
       ],
+      defense: {
+        claim: "그 이모티콘이 내 마음의 전부를 표현한다",
+        rejection: "축하 자리와 위로 자리에 같은 이모티콘이 사용된 사실이 확인되어 이를 배척한다.",
+      },
       keywords: ["이모티콘", "임티", "스티커"],
     },
     {
@@ -697,6 +960,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 SNS 게시 전 미회신 메시지를 우선 처리할 것.",
         "피고인은 스토리 업로드와 동시에 원고의 메시지에 회신할 것.",
       ],
+      defense: {
+        claim: "스토리는 예약 업로드였다",
+        rejection: "업로드 직후 댓글에 실시간으로 답한 기록이 확인되어 이유 없다.",
+      },
       keywords: ["스토리", "인스타", "SNS", "에스엔에스", "피드", "좋아요"],
     },
     {
@@ -706,6 +973,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 단체방 복귀 후 이탈 사유를 한 문장 이상으로 소명할 것.",
         "피고인은 향후 이탈 시 최소 한 개의 작별 인사를 남길 것.",
       ],
+      defense: {
+        claim: "손이 미끄러져 나가진 것이다",
+        rejection: "나가기에는 확인 버튼을 한 번 더 눌러야 함이 기술적으로 확인되어 받아들이지 않는다.",
+      },
       keywords: ["나가", "나갔", "탈퇴", "이탈", "방을 나"],
     },
     {
@@ -715,6 +986,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 숫자 1의 소멸 시한을 24시간으로 준수할 것.",
         "피고인은 메시지를 확인할 수 없는 사정이 있는 경우 상태메시지로 사전 공지할 것.",
       ],
+      defense: {
+        claim: "알림을 못 봤다",
+        rejection: "같은 기간 게임 알림에는 즉시 반응한 사실이 확인되어 이를 배척한다.",
+      },
       keywords: ["안읽씹", "안 읽씹", "읽지도 않", "숫자 1", "1이 안 없어"],
     },
     {
@@ -724,6 +999,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 하나의 용건을 세 개 이하의 말풍선으로 완성할 것.",
         "피고인은 한 글자씩 끊어 보내는 연타 전송을 금지당한다.",
       ],
+      defense: {
+        claim: "생각의 흐름을 생생히 전달하고 싶었다",
+        rejection: "그 생각의 흐름이 수신자의 진동 23회로 전달되었으므로 이유 없다.",
+      },
       keywords: ["한 글자씩", "연속으로 보", "쪼개서", "알림이 수십", "연타"],
     },
     {
@@ -733,6 +1012,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 '뭐해?' 전송 시 후속 말풍선에 용건을 즉시 병기할 것.",
         "피고인은 용건 없는 '자니?'의 심야 전송을 금지당한다.",
       ],
+      defense: {
+        claim: "분위기를 먼저 살핀 것이다",
+        rejection: "'뭐해?' 이후 4시간의 침묵은 분위기 파악으로 보기 어려워 받아들이지 않는다.",
+      },
       keywords: ["뭐해", "자니", "용건", "바쁘냐고만", "왜 불렀"],
     },
     {
@@ -742,6 +1025,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 단체방 입장 시 공지 및 직전 대화 10개를 우선 열람할 것.",
         "피고인은 이미 공지된 사항의 재질문 1회당 공지 요약 의무를 1회 부담한다.",
       ],
+      defense: {
+        claim: "스크롤이 너무 길었다",
+        rejection: "해당 공지는 스크롤과 무관하게 상단에 고정되어 있었음이 확인되어 이를 배척한다.",
+      },
       keywords: ["공지", "못 봤다", "위에 다 있", "또 물어", "몇 번을 말"],
     },
     {
@@ -751,6 +1038,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 통화 발신 전 '전화 가능?' 메시지로 사전 협의할 것.",
         "피고인은 메시지로 충분한 용건의 통화 발신을 금지당한다.",
       ],
+      defense: {
+        claim: "급한 일이었다",
+        rejection: "통화의 첫마디가 '뭐 해?'였음이 진술로 확인되어 긴급성을 인정하지 아니한다.",
+      },
       keywords: ["갑자기 전화", "다짜고짜 전화", "통화", "전화를 걸", "콜을"],
     },
     {
@@ -760,6 +1051,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 문맥상 이해 가능한 오타에 대한 지적을 금지당한다.",
         "피고인은 맞춤법 교정 욕구 발생 시 본인의 과거 오타를 먼저 회고할 것.",
       ],
+      defense: {
+        claim: "바로잡아 주는 것이 돕는 것이다",
+        rejection: "같은 날 피고인도 '왠만하면'이라고 적은 사실이 확인되어 이유 없다.",
+      },
       keywords: ["오타", "맞춤법", "지적", "틀렸다고"],
     },
     {
@@ -769,6 +1064,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 영상 링크 전송 시 요약 한 줄과 소요 시간을 병기할 것.",
         "피고인은 전송한 링크에 대한 시청 확인 독촉을 금지당한다.",
       ],
+      defense: {
+        claim: "너 생각나서 보낸 것이다",
+        rejection: "47분짜리 영상에는 요약이라는 배려가 동봉되었어야 하므로 받아들이지 않는다.",
+      },
       keywords: ["링크", "영상을 보내", "유튜브", "짤", "봤냐고"],
     },
     {
@@ -778,6 +1077,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 질문을 남긴 경우 답변 도착까지 접속 상태를 유지할 것.",
         "피고인은 할 말만 하고 이탈하는 경우 복귀 예정 시각을 고지할 것.",
       ],
+      defense: {
+        claim: "급한 일이 생겨 자리를 비웠다",
+        rejection: "같은 시간 다른 단체방에서 활발히 활동한 기록이 확인되어 이를 배척한다.",
+      },
       keywords: ["할 말만 하고", "보내 놓고", "사라졌", "답은 안 하", "자기 말만 하고"],
     },
     {
@@ -787,6 +1090,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 특정인이 유추 가능한 상태메시지 게시를 금지당한다.",
         "피고인은 불만 사항을 상태메시지가 아닌 당사자와의 대화로 직접 전달할 것.",
       ],
+      defense: {
+        claim: "그냥 좋아하는 노래 가사다",
+        rejection: "가사 변경 시점이 다툼 종료 후 3분 이내임이 확인되어 이유 없다.",
+      },
       keywords: ["상태메시지", "상메", "프사", "저격", "돌려서 말"],
     },
     {
@@ -796,6 +1103,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 사적 대화의 캡처 전파 전 대화 상대의 동의를 득할 것.",
         "피고인은 이미 유출된 캡처의 수신자 전원에게 삭제를 요청할 것.",
       ],
+      defense: {
+        claim: "너무 웃겨서 나만 보기 아까웠다",
+        rejection: "웃김의 공유에도 발화자의 동의가 선행되어야 하므로 받아들이지 않는다.",
+      },
       keywords: ["캡처", "캡쳐", "퍼다", "보여줬", "박제"],
     },
     {
@@ -805,6 +1116,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 단체방 투표 생성 후 24시간 이내에 참여할 것.",
         "피고인은 투표 종료 후 결과에 대한 이의 제기를 금지당한다.",
       ],
+      defense: {
+        claim: "다수의 뜻에 따르려고 기다렸다",
+        rejection: "전원이 같은 생각으로 침묵하여 투표가 영구 미결에 빠졌으므로 이를 배척한다.",
+      },
       keywords: ["투표", "안 누르", "참여를 안", "날짜 조사", "응답이 없"],
     },
     {
@@ -814,6 +1129,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 30초를 초과하는 음성메시지에 텍스트 요약을 첨부할 것.",
         "피고인은 공공장소에서 청취 곤란한 음성메시지의 연속 전송을 자제할 것.",
       ],
+      defense: {
+        claim: "타이핑할 상황이 아니었다",
+        rejection: "음성메시지 직후 장문의 텍스트를 전송한 기록이 확인되어 이유 없다.",
+      },
       keywords: ["음성메시지", "음성으로 보", "보이스", "녹음해서 보"],
     },
     {
@@ -823,6 +1142,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 동일 화제의 연속 전송을 10개 이하로 제한당한다.",
         "피고인은 도배로 매몰시킨 타인의 공지를 재게시할 것.",
       ],
+      defense: {
+        claim: "중요한 내용이라 반복 전송했다",
+        rejection: "도배분의 9할이 피고인 본인의 셀카였음이 확인되어 받아들이지 않는다.",
+      },
       keywords: ["도배", "수십 개", "알림이 끊이지", "폭주", "밀려서"],
     },
     {
@@ -832,6 +1155,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 메시지 전송 후 최소 3시간의 응답 대기 시간을 보장할 것.",
         "피고인은 '?'만 담긴 독촉 말풍선의 전송을 금지당한다.",
       ],
+      defense: {
+        claim: "걱정돼서 그런 것이다",
+        rejection: "걱정의 발신 간격이 2분 단위였다는 점은 걱정이 아니라 독촉임을 뒷받침하므로 이를 배척한다.",
+      },
       keywords: ["독촉", "빨리 답", "왜 답이 없냐고", "계속 물어", "재촉"],
     },
   ],
@@ -843,6 +1170,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 오후 10시 이후 취식·통화·세탁 등 소음 활동을 자제할 것.",
         "피고인은 심야 야식 취식 시 원고에게 한 입을 제공하여 합의를 도모할 것.",
       ],
+      defense: {
+        claim: "까치발로 다녔다",
+        rejection: "기록된 진동 파형이 뒤꿈치 보행과 일치함이 감정 결과 확인되어 이를 배척한다.",
+      },
       keywords: ["소음", "시끄", "쿵쿵", "떠들", "새벽", "볼륨", "쾅"],
     },
     {
@@ -852,6 +1183,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 리모컨 사용권을 요일제로 분할하는 합의안에 서명할 것.",
         "피고인은 채널 변경 전 반드시 시청 중인 자의 동의를 구할 것.",
       ],
+      defense: {
+        claim: "채널 선택에도 전문성이 필요하다",
+        rejection: "그 전문성이 주로 재방송 시청으로 발휘되어 왔음이 확인되어 이유 없다.",
+      },
       keywords: ["리모컨", "채널", "티비", "TV", "텔레비전", "독점", "독차지"],
     },
     {
@@ -861,6 +1196,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 금주 내 공용공간을 원상 복구하고 그 결과를 사진으로 보고할 것.",
         "피고인은 집안일 분담표를 작성하여 냉장고에 게시할 것.",
       ],
+      defense: {
+        claim: "나름의 질서가 있는 배치다",
+        rejection: "그 질서를 해독할 수 있는 자가 지구상에 피고인뿐이므로 받아들이지 않는다.",
+      },
       keywords: ["설거지", "청소", "집안일", "어지럽", "치우", "빨래", "분리수거", "쓰레기"],
     },
     {
@@ -870,6 +1209,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 알람을 1회로 통일하고 두 번째 미루기부터는 기상할 것.",
         "피고인은 알람 미루기 1회당 아침 설거지 1회를 부담할 것.",
       ],
+      defense: {
+        claim: "첫 알람은 준비운동이다",
+        rejection: "준비운동이 본운동 없이 아홉 차례 반복되었음이 확인되어 이를 배척한다.",
+      },
       keywords: ["알람", "늦잠", "기상", "안 일어나", "못 일어나"],
     },
     {
@@ -879,6 +1222,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인의 아침 화장실 사용 시간은 1회 15분으로 제한한다.",
         "피고인은 입장 전 예상 소요 시간을 사전 고지할 것.",
       ],
+      defense: {
+        claim: "샤워는 나만의 힐링 타임이다",
+        rejection: "그 힐링의 비용이 문 앞 대기자의 지각으로 전가되었으므로 이유 없다.",
+      },
       keywords: ["화장실", "샤워", "욕실", "변기"],
     },
     {
@@ -888,6 +1235,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 무단 차용한 물품을 원위치에 반환하고 사용 사실을 보고할 것.",
         "피고인은 향후 차용 전 구두 허락을 득하고 반환 기한을 고지할 것.",
       ],
+      defense: {
+        claim: "내 것처럼 아껴 쓰려고 했다",
+        rejection: "'내 것처럼'이라는 표현은 내 것이 아님의 자백이므로 받아들이지 않는다.",
+      },
       keywords: ["충전기", "빌려", "안 돌려", "가져가", "내 물건", "허락 없이", "맘대로 쓰"],
     },
     {
@@ -897,6 +1248,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 치약을 끝에서부터 순차적으로 압착할 것.",
         "피고인은 중간 압착으로 변형된 치약을 금일 중 원상 복구할 것.",
       ],
+      defense: {
+        claim: "어디를 짜든 나오는 양은 같다",
+        rejection: "치약의 보전은 총량이 아니라 질서의 문제이므로 이를 배척한다.",
+      },
       keywords: ["치약", "중간부터", "짜", "끝에서부터"],
     },
     {
@@ -906,6 +1261,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 공간 이탈 시 조명·에어컨 등 전원 차단을 이행할 것.",
         "피고인은 미소등 1회당 전기요금 잔소리 1회를 감수할 것.",
       ],
+      defense: {
+        claim: "금방 돌아올 예정이었다",
+        rejection: "그 '금방'이 외박으로 이어진 전례가 확인되어 이유 없다.",
+      },
       keywords: ["불을 안 끄", "불 켜 놓", "켜 둔 채", "전등", "소등"],
     },
     {
@@ -915,6 +1274,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 취식한 품목과 동일한 물품을 3일 이내에 보충할 것.",
         "피고인은 이름이 기재된 식품에 대한 접근을 금지당한다.",
       ],
+      defense: {
+        claim: "유통기한이 임박해 구조한 것이다",
+        rejection: "유통기한이 2주나 남아 있었음이 확인되어 받아들이지 않는다.",
+      },
       keywords: ["냉장고", "아껴 둔", "아껴둔", "몰래 먹", "내 푸딩", "먹어 버렸"],
     },
     {
@@ -924,6 +1287,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 세탁 종료 알림 후 1시간 이내에 세탁물을 수거·건조할 것.",
         "피고인은 방치로 꿉꿉해진 세탁물을 재세탁하여 원상 복구할 것.",
       ],
+      defense: {
+        claim: "자연 건조 중이었다",
+        rejection: "세탁기 내부는 자연 건조의 장소로 인정된 바 없으므로 이를 배척한다.",
+      },
       keywords: ["세탁기", "빨래를 안 널", "널지", "건조기", "꿉꿉"],
     },
     {
@@ -933,6 +1300,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 상대방의 시청 진도 확인 전 결말·범인 언급을 금지당한다.",
         "피고인은 유포한 스포일러에 상응하는 새 작품 1편을 추천하여 배상할 것.",
       ],
+      defense: {
+        claim: "이미 다 아는 내용인 줄 알았다",
+        rejection: "원고가 1화 시청 중임을 피고인이 육안으로 확인하고도 발화하였으므로 이유 없다.",
+      },
       keywords: ["스포", "결말", "범인", "미리 말해", "아직 안 봤는데"],
     },
     {
@@ -942,6 +1313,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 취침 중 점유한 이불의 절반을 즉시 반환할 것.",
         "피고인은 상습 점유 재발 시 개인 이불 체제 전환에 동의할 것.",
       ],
+      defense: {
+        claim: "수면 중 무의식의 행동이다",
+        rejection: "그 무의식이 매일 밤 같은 방향으로만 작동하는 점은 고의에 준하므로 받아들이지 않는다.",
+      },
       keywords: ["이불", "끌어가", "침대를 다", "말고 자"],
     },
     {
@@ -951,6 +1326,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 수취인 명의가 본인이 아닌 택배의 개봉을 금지당한다.",
         "피고인은 개봉 욕구 발생 시 수취인에게 도착 사실만 신속히 전파할 것.",
       ],
+      defense: {
+        claim: "내 택배인 줄 알았다",
+        rejection: "송장에 기재된 수취인 성명이 피고인과 한 글자도 겹치지 않음이 확인되어 이를 배척한다.",
+      },
       keywords: ["택배", "뜯어", "뜯었", "개봉", "박스를"],
     },
     {
@@ -960,6 +1339,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 현관 상시 비치 신발을 1인 2켤레로 제한당한다.",
         "피고인은 널브러진 신발을 금일 중 신발장으로 이전할 것.",
       ],
+      defense: {
+        claim: "그날그날 기분에 맞는 신발이 필요하다",
+        rejection: "기분의 다양성이 통행로를 침해할 권리까지 보장하지는 않으므로 이유 없다.",
+      },
       keywords: ["신발", "현관", "널브러", "발 디딜"],
     },
     {
@@ -969,6 +1352,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 반려동물 산책·배변 처리 당번표에 서명하고 이를 준수할 것.",
         "피고인은 귀여워만 하고 책임지지 않는 행위를 금지당한다.",
       ],
+      defense: {
+        claim: "쟤는 나보다 너를 더 좋아한다",
+        rejection: "호감도와 배변 봉투의 책임은 별개의 법익이므로 받아들이지 않는다.",
+      },
       keywords: ["강아지", "고양이", "산책", "배변", "밥 주", "반려"],
     },
     {
@@ -978,6 +1365,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 혼자 시청한 분량을 내색 없이 재시청하는 성의를 보일 것.",
         "피고인은 향후 동반 시청 협정 체결 콘텐츠의 단독 시청을 금지당한다.",
       ],
+      defense: {
+        claim: "딱 5분만 보려고 했다",
+        rejection: "시청 기록상 3화 연속 재생이 확인되어 이를 배척한다.",
+      },
       keywords: ["같이 보기로", "먼저 봤", "혼자 봤", "다음 화", "몰아 봤"],
     },
     {
@@ -987,6 +1378,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 '다 됐어'라는 발언 후 5분 이내에 실제로 현관에 도착할 것.",
         "피고인은 예상 준비 시간을 사전에 고지하고 그 1.5배를 초과하지 말 것.",
       ],
+      defense: {
+        claim: "'다 됐어'는 마음의 준비가 됐다는 뜻이었다",
+        rejection: "언어의 통상적 의미를 벗어난 해석이므로 이유 없다.",
+      },
       keywords: ["준비", "꾸물", "아직도 안 씻", "다 됐다더니", "언제 나가"],
     },
     {
@@ -996,6 +1391,10 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 미납한 생활비·공과금 분담분을 본 판결문 수령 즉시 송금할 것.",
         "피고인은 매월 고정 정산일을 합의하고 자동이체를 설정할 것.",
       ],
+      defense: {
+        claim: "모아서 한 번에 보내는 게 깔끔하다",
+        rejection: "지금까지 모인 것은 금액이 아니라 원고의 분노뿐이므로 받아들이지 않는다.",
+      },
       keywords: ["생활비", "공과금", "월세", "관리비", "반반"],
     },
     {
@@ -1005,15 +1404,23 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 충전 중인 기기의 케이블 탈취 전 잔여 배터리를 확인하고 양해를 구할 것.",
         "피고인은 개인용 충전 케이블을 1주일 내 구비할 것.",
       ],
+      defense: {
+        claim: "내 배터리가 더 급했다",
+        rejection: "탈취 당시 피고인의 배터리 잔량은 62%였음이 확인되어 이를 배척한다.",
+      },
       keywords: ["충전 중인데", "케이블", "뽑아", "콘센트", "배터리"],
     },
     {
       name: "문 강타 사건",
       crime: "문 강타죄",
       orders: [
-        "피고인은 문 개폐 시 손잡이를 끝까지 잡아 소음을 차단할 것. '바람이 그런 거예요'라는 항변은 당시 창문이 전부 닫혀 있었음이 확인되어 받아들이지 않는다.",
-        "피고인은 감정 표현의 수단으로 문을 사용하지 말 것. 바람의 소행을 주장할 경우 창문 개폐 상태를 입증할 책임은 피고인에게 있다.",
+        "피고인은 문 개폐 시 손잡이를 끝까지 잡아 소음을 차단할 것.",
+        "피고인은 감정 표현의 수단으로 문을 사용하지 말 것.",
       ],
+      defense: {
+        claim: "바람이 그런 거예요",
+        rejection: "당시 모든 창문이 닫혀 있었음이 확인되어 바람의 소행 주장을 받아들이지 않는다.",
+      },
       keywords: ["문을 쾅", "문소리", "세게 닫", "쾅 닫", "바람이 그런"],
     },
   ],
@@ -1123,15 +1530,16 @@ export function generateVerdict(input: CaseInput, caseSeq: number): Verdict {
   const score = verdictScore(input.severity, input.tone);
   const tier = RESULTS.find((r) => score >= r.min) ?? RESULTS[RESULTS.length - 1];
 
+  // 사건명·죄명·주문·항변이 논리적으로 묶인 시나리오를 사연 키워드 기준으로 선택한다.
+  const scenario = selectScenario(input.story, input.caseType);
+
   const excerpt = input.story.length > 40 ? `${input.story.slice(0, 40)}…` : input.story;
   const reasoning = [
     `피고인은 "${excerpt}"라는 취지의 행위에 이르렀다.`,
     pick(rand, REASONING_OPENERS),
+    `피고인은 "${scenario.defense.claim}"라고 항변하였으나, ${scenario.defense.rejection}`,
     pick(rand, REASONING_CLOSERS[input.tone]),
   ].join(" ");
-
-  // 사건명·죄명·주문이 논리적으로 묶인 시나리오를 사연 키워드 기준으로 선택한다.
-  const scenario = selectScenario(input.story, input.caseType);
 
   return {
     caseNo: formatCaseNo(caseSeq),
