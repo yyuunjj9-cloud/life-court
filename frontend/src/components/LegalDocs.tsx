@@ -68,6 +68,12 @@ export function DemandDocView({ doc, date }: { doc: DemandLetterDoc; date: strin
         <p className="k">경 위</p>
         <p className="t">{doc.background}</p>
       </div>
+      {doc.rebuttal && (
+        <div className="vsec">
+          <p className="k">예 상 해 명</p>
+          <p className="t">{doc.rebuttal}</p>
+        </div>
+      )}
       <div className="vsec">
         <p className="k">요 구 사 항</p>
         <p className="t">{doc.demand}</p>

@@ -39,6 +39,7 @@ export interface DemandLetterDoc {
   sender: string;
   receiver: string;
   background: string;
+  rebuttal: string;
   demand: string;
   deadline: string;
   warning: string;
@@ -120,6 +121,8 @@ export function generateDemandLetter(input: CaseInput): DemandLetterDoc {
     sender: "원고 본인",
     receiver: pick(rand, DEFENDANTS[input.relationship]),
     background: `발신인은 최근 "${excerptOf(input.story)}"라는 일을 겪었습니다. 이는 수신인의 부주의 또는 고의에 기인한 것으로, 발신인의 생활 평온을 명백히 해치는 행위입니다.`,
+    // 판결문에서 배척될 항변을 내용증명 단계에서 미리 봉쇄한다.
+    rebuttal: `수신인께서는 "${scenario.defense.claim}"라고 해명하실 것으로 예상됩니다. 그러나 생활법원은 동종 사건에서 같은 취지의 항변에 대하여 "${scenario.defense.rejection}"라고 판시한 바 있으므로, 해당 해명은 통하지 않을 것임을 미리 알려드립니다.`,
     demand: pickScenarioOrder(input.story, scenario).replace(/^피고인([은의])/, "수신인$1"),
     deadline: "본 서면 수령일로부터 3일 이내",
     warning: pick(rand, DEMAND_WARNINGS),

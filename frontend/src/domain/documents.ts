@@ -27,6 +27,7 @@ export interface DemandLetterDoc {
   sender: string;
   receiver: string;
   background: string;
+  rebuttal: string;
   demand: string;
   deadline: string;
   warning: string;
