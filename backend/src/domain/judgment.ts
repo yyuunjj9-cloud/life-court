@@ -97,11 +97,13 @@ export function pick<T>(rand: () => number, arr: readonly T[]): T {
 /**
  * 사건 시나리오: 사건명·가상 죄명·주문이 한 세트로 묶여 있어
  * 판결문 안에서 항상 논리적으로 일관된다.
+ * keywords는 사연 본문과 대조해 가장 어울리는 시나리오를 고르는 데 쓰인다.
  */
 export interface CaseScenario {
   name: string;
   crime: string;
   orders: readonly string[];
+  keywords: readonly string[];
 }
 
 export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
@@ -113,6 +115,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 다음 회의부터 자료 요청을 회의 24시간 전까지 완료할 것.",
         "피고인은 향후 자료 검토 요청 시 최소 반나절의 여유를 두고 전달할 것.",
       ],
+      keywords: ["회의", "자료", "발표", "보고서", "직전에"],
     },
     {
       name: "업무 떠넘기기 사건",
@@ -121,6 +124,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 업무 인계 시 범위와 기한을 문서로 명시하고, 금주 내 원고에게 커피 1잔을 제공할 것.",
         "피고인은 떠넘긴 업무의 절반을 회수하여 직접 수행할 것.",
       ],
+      keywords: ["떠넘", "맡기", "넘기", "대신", "시키", "시켰", "미루"],
     },
     {
       name: "퇴근 직전 업무 지시 사건",
@@ -129,6 +133,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 퇴근 30분 전 이후의 신규 업무 지시를 금지당한다.",
         "피고인은 부득이한 늦은 지시 시 다음 날 오전으로 기한을 자동 연장할 것.",
       ],
+      keywords: ["퇴근", "야근", "칼퇴", "늦게까지", "밤까지", "직전"],
     },
     {
       name: "공로 가로채기 의혹 사건",
@@ -137,6 +142,25 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 다음 회의에서 실제 기여자의 이름을 명시적으로 언급할 것.",
         "피고인은 가로챈 공로를 원소유자에게 반환하고 전체 메일로 정정할 것.",
       ],
+      keywords: ["가로채", "공로", "내 공", "아이디어", "성과", "숟가락", "자기가 한 것처럼"],
+    },
+    {
+      name: "회의 무한 연장 사건",
+      crime: "회의 무한 연장죄",
+      orders: [
+        "피고인은 회의 시작 시 종료 시각을 선언하고 이를 준수할 것.",
+        "피고인은 안건 없는 발언이 3분을 초과할 경우 스스로 발언권을 내려놓을 것.",
+      ],
+      keywords: ["길어", "안 끝", "끝나지 않", "끝날 기미", "연장", "한 시간 넘", "두 시간"],
+    },
+    {
+      name: "휴일 업무 연락 사건",
+      crime: "휴일 업무 연락죄",
+      orders: [
+        "피고인은 주말 및 공휴일의 업무 연락을 금지당한다.",
+        "피고인은 부득이한 휴일 연락 시 '월요일에 봐도 됩니다'를 문장 끝에 명기할 것.",
+      ],
+      keywords: ["주말", "휴일", "연휴", "일요일", "토요일", "휴가"],
     },
   ],
   relationship: [
@@ -147,6 +171,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 다음 약속에 10분 먼저 도착하여 성의를 증명할 것.",
         "피고인은 지각 1회당 음료 1잔의 벌칙에 서면 동의할 것.",
       ],
+      keywords: ["지각", "늦게", "늦었", "늦는", "기다리", "기다렸"],
     },
     {
       name: "성의 없는 답장 사건",
@@ -155,6 +180,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 원고의 다음 이야기 세 건에 진심 어린 리액션을 제공할 것.",
         "피고인은 대화 중 휴대폰을 내려놓고 눈을 맞추는 연습을 이행할 것.",
       ],
+      keywords: ["리액션", "반응", "건성", "시큰둥", "성의 없", "영혼 없", "대충 듣"],
     },
     {
       name: "일방적 약속 취소 사건",
@@ -163,6 +189,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 약속 취소 시 대체 일정 두 개를 즉시 제시할 것.",
         "피고인은 취소 사유를 성의 있게 설명하고 다음 만남의 비용을 부담할 것.",
       ],
+      keywords: ["취소", "파토", "펑크", "바람맞", "미뤘", "미룬", "당일에"],
     },
     {
       name: "서운함 누적 사건",
@@ -171,6 +198,25 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 금주 내 원고에게 안부 연락 1회 이상을 자발적으로 시행할 것.",
         "피고인은 원고가 서운했던 지점 세 가지를 경청하고 복명복창할 것.",
       ],
+      keywords: ["서운", "무심", "배려", "연락이 없", "연락도 없", "챙겨주지", "관심이 없"],
+    },
+    {
+      name: "경사 무반응 사건",
+      crime: "경사 무반응죄",
+      orders: [
+        "피고인은 지각한 축하를 평소의 세 배 성의로 즉시 이행할 것.",
+        "피고인은 원고의 다음 경사를 달력에 등록하고 당일 오전 중 축하를 전할 것.",
+      ],
+      keywords: ["생일", "축하", "경사", "합격", "취업", "기념일"],
+    },
+    {
+      name: "비밀 누설 사건",
+      crime: "비밀 무단 공유죄",
+      orders: [
+        "피고인은 전파된 비밀의 수신자 전원에게 정정 및 함구를 요청할 것.",
+        "피고인은 향후 '너한테만 말하는 건데'로 시작하는 발화를 금지당한다.",
+      ],
+      keywords: ["비밀", "소문", "퍼뜨", "말하고 다", "얘기하고 다", "다 말해", "폭로"],
     },
   ],
   meal: [
@@ -181,6 +227,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 금일 오후 1시까지 제육볶음 또는 비빔밥 중 하나를 최종 선택할 것.",
         "피고인은 메뉴 고민 시간을 3분으로 제한하고 초과 시 첫 번째 후보로 확정할 것.",
       ],
+      keywords: ["못 정", "못 고르", "고민", "결정", "뭐 먹", "우유부단"],
     },
     {
       name: "메뉴 선택권 침해 사건",
@@ -189,6 +236,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 다음 식사에서 메뉴 결정권을 원고에게 전면 양도할 것.",
         "피고인은 메뉴 결정을 교대제로 전환하는 합의안에 서명할 것.",
       ],
+      keywords: ["독재", "마음대로", "자기가 먹고", "자기 먹고 싶은", "강요", "맨날 같은"],
     },
     {
       name: "마지막 한 입 침탈 사건",
@@ -197,6 +245,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 마지막 한 조각에 대한 원고의 우선권을 인정하고 동일 메뉴 1인분을 배상할 것.",
         "피고인은 향후 마지막 조각 취식 전 반드시 구두 동의를 구할 것.",
       ],
+      keywords: ["마지막", "한 입", "한 조각", "뺏어", "집어 먹", "집어먹", "먹어버렸"],
     },
     {
       name: "'아무거나' 진술 반복 사건",
@@ -205,6 +254,25 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 향후 1주일간 '아무거나'라는 진술을 금지당한다.",
         "피고인은 메뉴 질문에 반드시 구체적 후보 두 개 이상으로 답할 것.",
       ],
+      keywords: ["아무거나", "아무 거나", "아무렇게나", "다 좋다"],
+    },
+    {
+      name: "음식 사진 선촬영 사건",
+      crime: "식전 촬영 강요죄",
+      orders: [
+        "피고인의 식전 촬영은 1식 1컷으로 제한한다.",
+        "피고인은 촬영 중 음식이 식을 경우 동일 메뉴를 재주문하여 배상할 것.",
+      ],
+      keywords: ["사진", "찍", "인증", "카메라", "먹기도 전에"],
+    },
+    {
+      name: "식사 정산 지연 사건",
+      crime: "더치페이 정산 지연죄",
+      orders: [
+        "피고인은 본 판결문 수령 즉시 미정산 금액을 송금할 것.",
+        "피고인은 향후 정산 요청 수신 후 24시간 내 송금을 완료할 것.",
+      ],
+      keywords: ["더치", "정산", "엔빵", "송금", "계좌", "돈을 안", "안 갚", "밥값"],
     },
   ],
   messenger: [
@@ -215,6 +283,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 수신 후 3시간 이내 최소 1개의 성의 있는 문장으로 회신할 것.",
         "피고인은 즉답이 어려운 경우 '이따 답할게' 한 줄이라도 남길 것.",
       ],
+      keywords: ["읽씹", "읽고 답", "답장을 안", "답장이 없", "답이 없", "안 읽", "무시"],
     },
     {
       name: "단답 응답 반복 사건",
@@ -223,6 +292,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 향후 답장 시 'ㅇㅋ' 단독 사용을 자제하고 완성된 문장으로 회신할 것.",
         "피고인은 답장에 이모티콘 1개 이상을 첨부하여 온기를 보충할 것.",
       ],
+      keywords: ["단답", "ㅇㅋ", "ㅇㅇ", "ㄴㄴ", "라고만", "한 글자"],
     },
     {
       name: "단체방 심야 소환 사건",
@@ -231,6 +301,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 오후 10시 이후 단체방 소환을 삼갈 것.",
         "피고인은 심야 용건은 예약 전송 기능을 활용하여 오전 9시 이후 도착시킬 것.",
       ],
+      keywords: ["새벽", "심야", "밤에", "자는데", "자고 있는데"],
     },
     {
       name: "이모티콘 성의 논란 사건",
@@ -239,6 +310,25 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 상황에 맞는 이모티콘을 선별하여 사용할 것.",
         "피고인은 같은 이모티콘 연속 3회 사용 시 문장으로 마음을 표현할 것.",
       ],
+      keywords: ["이모티콘", "임티", "스티커"],
+    },
+    {
+      name: "읽씹 중 SNS 활동 사건",
+      crime: "읽씹 중 SNS 활동죄",
+      orders: [
+        "피고인은 SNS 게시 전 미회신 메시지를 우선 처리할 것.",
+        "피고인은 스토리 업로드와 동시에 원고의 메시지에 회신할 것.",
+      ],
+      keywords: ["스토리", "인스타", "SNS", "에스엔에스", "피드", "좋아요"],
+    },
+    {
+      name: "단체방 무단 이탈 사건",
+      crime: "단체방 무단 이탈죄",
+      orders: [
+        "피고인은 단체방 복귀 후 이탈 사유를 한 문장 이상으로 소명할 것.",
+        "피고인은 향후 이탈 시 최소 한 개의 작별 인사를 남길 것.",
+      ],
+      keywords: ["나가", "나갔", "탈퇴", "이탈", "방을 나"],
     },
   ],
   daily: [
@@ -249,6 +339,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 오후 10시 이후 취식·통화·세탁 등 소음 활동을 자제할 것.",
         "피고인은 심야 야식 취식 시 원고에게 한 입을 제공하여 합의를 도모할 것.",
       ],
+      keywords: ["소음", "시끄", "쿵쿵", "떠들", "새벽", "볼륨", "쾅"],
     },
     {
       name: "공용물품 독점 사건",
@@ -257,6 +348,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 리모컨 사용권을 요일제로 분할하는 합의안에 서명할 것.",
         "피고인은 채널 변경 전 반드시 시청 중인 자의 동의를 구할 것.",
       ],
+      keywords: ["리모컨", "채널", "티비", "TV", "텔레비전", "독점", "독차지"],
     },
     {
       name: "집안일 분담 회피 사건",
@@ -265,6 +357,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 금주 내 공용공간을 원상 복구하고 그 결과를 사진으로 보고할 것.",
         "피고인은 집안일 분담표를 작성하여 냉장고에 게시할 것.",
       ],
+      keywords: ["설거지", "청소", "집안일", "어지럽", "치우", "빨래", "분리수거", "쓰레기"],
     },
     {
       name: "알람 연속 미루기 사건",
@@ -273,6 +366,25 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         "피고인은 알람을 1회로 통일하고 두 번째 미루기부터는 기상할 것.",
         "피고인은 알람 미루기 1회당 아침 설거지 1회를 부담할 것.",
       ],
+      keywords: ["알람", "늦잠", "기상", "안 일어나", "못 일어나"],
+    },
+    {
+      name: "화장실 장기 점유 사건",
+      crime: "화장실 장기 점유죄",
+      orders: [
+        "피고인의 아침 화장실 사용 시간은 1회 15분으로 제한한다.",
+        "피고인은 입장 전 예상 소요 시간을 사전 고지할 것.",
+      ],
+      keywords: ["화장실", "샤워", "욕실", "변기"],
+    },
+    {
+      name: "물건 무단 사용 사건",
+      crime: "물건 무단 차용죄",
+      orders: [
+        "피고인은 무단 차용한 물품을 원위치에 반환하고 사용 사실을 보고할 것.",
+        "피고인은 향후 차용 전 구두 허락을 득하고 반환 기한을 고지할 것.",
+      ],
+      keywords: ["충전기", "빌려", "안 돌려", "가져가", "내 물건", "허락 없이", "맘대로 쓰"],
     },
   ],
 };
@@ -330,6 +442,34 @@ const ADVICE: Record<CaseType, readonly string[]> = {
   ],
 };
 
+/**
+ * 사연 본문과 가장 어울리는 시나리오를 고른다.
+ * 키워드 적중 수가 가장 많은 시나리오를 선택하고, 동점이거나 적중이 없으면
+ * 사연 해시 시드 난수로 그 후보들 중에서 고른다 — 같은 입력이면 항상 같은 결과.
+ * 판결문·고소장·내용증명이 모두 이 함수를 쓰므로 한 사건의 죄목이 문서 간에 일치한다.
+ */
+export function selectScenario(story: string, caseType: CaseType): CaseScenario {
+  const pool = SCENARIOS[caseType];
+  let best: CaseScenario[] = [];
+  let bestScore = 0;
+  for (const s of pool) {
+    const score = s.keywords.reduce((n, k) => (story.includes(k) ? n + 1 : n), 0);
+    if (score > bestScore) {
+      bestScore = score;
+      best = [s];
+    } else if (score === bestScore && score > 0) {
+      best.push(s);
+    }
+  }
+  const rand = mulberry32(hashSeed(`scenario|${caseType}|${story}`));
+  return pick(rand, bestScore > 0 ? best : pool);
+}
+
+/** 주문 선택도 사연 해시로 결정해, 내용증명 요구사항과 판결 주문이 같은 문장이 되게 한다. */
+export function pickScenarioOrder(story: string, scenario: CaseScenario): string {
+  return scenario.orders[hashSeed(`order|${story}`) % scenario.orders.length];
+}
+
 /** 심각성 + 성향 → 판결 수위 점수(0~6) */
 function verdictScore(severity: Severity, tone: Tone): number {
   const toneOffset = tone === "lenient" ? -1 : tone === "strict" ? 1 : 0;
@@ -360,15 +500,15 @@ export function generateVerdict(input: CaseInput, caseSeq: number): Verdict {
     pick(rand, REASONING_CLOSERS[input.tone]),
   ].join(" ");
 
-  // 사건명·죄명·주문이 논리적으로 묶인 시나리오를 하나 선택한다.
-  const scenario = pick(rand, SCENARIOS[input.caseType]);
+  // 사건명·죄명·주문이 논리적으로 묶인 시나리오를 사연 키워드 기준으로 선택한다.
+  const scenario = selectScenario(input.story, input.caseType);
 
   return {
     caseNo: formatCaseNo(caseSeq),
     caseName: scenario.name,
     defendant: pick(rand, DEFENDANTS[input.relationship]),
     crime: scenario.crime,
-    order: pick(rand, scenario.orders),
+    order: pickScenarioOrder(input.story, scenario),
     reasoning,
     advice: pick(rand, ADVICE[input.caseType]),
     result: tier.result,
