@@ -19,6 +19,13 @@ export default function VerdictPage() {
     if (!verdict) router.replace("/");
   }, [verdict, router]);
 
+  // 선고 순간의 법봉 3타 — 진동 미지원 기기(iOS 등)에서는 조용히 무시된다.
+  useEffect(() => {
+    if (verdict && typeof navigator !== "undefined" && "vibrate" in navigator) {
+      navigator.vibrate([45, 70, 110]);
+    }
+  }, [verdict]);
+
   if (!verdict) return <div className="scr" />;
 
   const appeal = async () => {
@@ -35,7 +42,7 @@ export default function VerdictPage() {
   };
 
   return (
-    <div className="scr">
+    <div className="scr verdict-scr">
       <div className="verdict-flash">
         <div className="burst-wrap">
           <Burst text="판결 선고!" width={300} />

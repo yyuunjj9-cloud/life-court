@@ -119,6 +119,13 @@ export const api = {
       body: JSON.stringify(input),
     }),
 
+  /** 공유 링크 재현 — 저장 없이 입력+사건번호로 같은 판결을 다시 만든다. */
+  previewVerdict: (input: CaseInput, seq: number) =>
+    request<{ verdict: Verdict }>("/api/cases/preview", {
+      method: "POST",
+      body: JSON.stringify({ ...input, seq }),
+    }),
+
   nextSeq: () => request<{ seq: number }>("/api/meta/next-seq"),
 
   health: () => request<{ ok: boolean; db_ok: boolean }>("/api/health"),

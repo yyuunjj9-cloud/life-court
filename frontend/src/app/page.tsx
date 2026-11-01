@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Burst } from "@/components/Burst";
 import { useCaseStore } from "@/store/case-store";
 
@@ -8,6 +9,8 @@ import { useCaseStore } from "@/store/case-store";
 export default function LandingPage() {
   const router = useRouter();
   const { savedDraftAt, resetCase, loadDraft } = useCaseStore();
+  // 버스트 탭 이스터에그 — key를 바꿔 등장 애니메이션을 다시 재생한다.
+  const [slam, setSlam] = useState(0);
 
   // 새 사건 접수: 이전 진행 상태를 완전히 초기화하고 시작한다.
   const startNew = () => {
@@ -34,7 +37,14 @@ export default function LandingPage() {
     <div className="scr dark">
       <span className="pillar l" />
       <span className="pillar r" />
-      <div className="objection">
+      <div
+        className="objection tappable"
+        key={slam}
+        onClick={() => {
+          setSlam((n) => n + 1);
+          if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(30);
+        }}
+      >
         <Burst text="이의 있음!" width={150} />
       </div>
       <div className="pad">

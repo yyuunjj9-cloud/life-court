@@ -379,6 +379,41 @@ p.sub {
   border-color: var(--gold);
   background: rgba(255, 252, 240, 0.9);
 }
+/* 선고 연출 — 판결문 열람 화면에서 결과어와 도장이 쾅 찍힌다 */
+.verdict-scr .vfinal .w {
+  animation: stamp-slam 0.5s cubic-bezier(0.2, 2.4, 0.4, 1) 0.95s both;
+}
+.verdict-scr .vfinal .stamp {
+  animation: stamp-slam 0.5s cubic-bezier(0.2, 2.4, 0.4, 1) 1.2s both;
+}
+@keyframes stamp-slam {
+  from {
+    scale: 2.6;
+    opacity: 0;
+  }
+  70% {
+    scale: 0.92;
+    opacity: 1;
+  }
+  to {
+    scale: 1;
+    opacity: 1;
+  }
+}
+/* 랜딩 버스트 탭 이스터에그 */
+.objection.tappable {
+  pointer-events: auto;
+  cursor: pointer;
+}
+/* 공유받은 판결문 라벨 */
+.shared-label {
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+}
 /* 안내 페이지 문의 링크 */
 .contact-link {
   display: block;

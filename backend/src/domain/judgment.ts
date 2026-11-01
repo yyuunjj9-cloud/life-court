@@ -1555,6 +1555,22 @@ export function pickScenarioOrder(story: string, scenario: CaseScenario): string
   return scenario.orders[hashSeed(`order|${story}`) % scenario.orders.length];
 }
 
+/** 판결 성향이 주문의 어조에도 드러나도록 주문 끝에 붙는 문장. */
+const ORDER_TONE_SUFFIX: Record<Tone, readonly string[]> = {
+  lenient: [
+    "다만 재판부는 피고인의 자발적 이행을 믿어 보기로 한다.",
+    "이행이 다소 늦더라도 마음이 담겨 있다면 재판부는 기다릴 용의가 있다.",
+  ],
+  fair: [
+    "쌍방은 위 주문을 생활 평화의 최소 조건으로 삼을 것.",
+    "재판부는 이행 여부를 양심에 맡기되, 그 양심의 상태를 수시로 점검할 것을 당부한다.",
+  ],
+  strict: [
+    "위 주문의 이행을 엄중히 명하며, 불이행 시 가중 심리를 경고한다.",
+    "재판부는 이행 기한의 해태를 결코 가볍게 보지 않을 것임을 밝혀 둔다.",
+  ],
+};
+
 /** 심각성 + 성향 → 판결 수위 점수(0~6) */
 function verdictScore(severity: Severity, tone: Tone): number {
   const toneOffset = tone === "lenient" ? -1 : tone === "strict" ? 1 : 0;
@@ -1594,7 +1610,7 @@ export function generateVerdict(input: CaseInput, caseSeq: number): Verdict {
     caseName: scenario.name,
     defendant: pick(rand, DEFENDANTS[input.relationship]),
     crime: scenario.crime,
-    order: pickScenarioOrder(input.story, scenario),
+    order: `${pickScenarioOrder(input.story, scenario)} ${pick(rand, ORDER_TONE_SUFFIX[input.tone])}`,
     reasoning,
     advice: pick(rand, ADVICE[input.caseType]),
     evidence: [...EVIDENCE_POOL].sort(() => rand() - 0.5).slice(0, 3),

@@ -80,6 +80,20 @@ app.get("/api/meta/next-seq", async (_req, res) => {
   res.json({ seq: await storage.nextSeq() });
 });
 
+/**
+ * 공유 링크 재현: 입력+사건번호로 판결을 저장 없이 재생성한다.
+ * 같은 입력이면 같은 판결이 나오므로, 링크를 받은 사람은 원본과 동일한 판결문을 본다.
+ */
+app.post("/api/cases/preview", (req, res) => {
+  const input = parseCaseInput(req.body);
+  const seq = Number((req.body as Record<string, unknown>)?.seq);
+  if (!input || !Number.isInteger(seq) || seq < 1 || seq > 1_000_000) {
+    res.status(400).json({ error: "invalid case input" });
+    return;
+  }
+  res.json({ verdict: generateVerdict(input, seq) });
+});
+
 /** 사건 접수: 판결과 고소/고발장을 확정하고 저장한다. */
 app.post("/api/cases", async (req, res) => {
   const input = parseCaseInput(req.body);

@@ -6,6 +6,7 @@ import { toBlob, toJpeg } from "html-to-image";
 import { AppealDoc, VerdictDoc } from "@/components/VerdictDoc";
 import { ComplaintDocView, CountersuitDocView, DemandDocView } from "@/components/LegalDocs";
 import { formatKoreanDate } from "@/domain/date";
+import { encodeSharedCase } from "@/lib/share";
 import { useCaseStore } from "@/store/case-store";
 
 type Format = "png" | "jpg";
@@ -34,7 +35,7 @@ const SITE_URL = "https://life-court.vercel.app";
 function SaveScreen() {
   const router = useRouter();
   const params = useSearchParams();
-  const { verdict, appeal, complaint, countersuit, demand } = useCaseStore();
+  const { verdict, appeal, complaint, countersuit, demand, draft, caseSeq } = useCaseStore();
   const [format, setFormat] = useState<Format>("png");
   const [saving, setSaving] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -125,7 +126,21 @@ function SaveScreen() {
     setError(false);
     setCopied(false);
     try {
-      const shareText = `생활법원 ${DOC_LABEL[kind]}이 도착했습니다 — 당신의 억울함도 접수하세요: ${SITE_URL}`;
+      // 접수된 사건이면 원본 판결문을 그대로 재현하는 링크를, 아니면 사이트 링크를 공유한다.
+      const shareUrl =
+        verdict && caseSeq !== null && draft.caseType && draft.relationship && draft.story.trim().length >= 10
+          ? `${SITE_URL}/shared?d=${encodeSharedCase(
+              {
+                story: draft.story,
+                caseType: draft.caseType,
+                relationship: draft.relationship,
+                severity: draft.severity,
+                tone: draft.tone,
+              },
+              caseSeq,
+            )}`
+          : SITE_URL;
+      const shareText = `생활법원 ${DOC_LABEL[kind]}이 도착했습니다 — 당신의 억울함도 접수하세요: ${shareUrl}`;
       if (typeof navigator !== "undefined" && navigator.share) {
         const file = await captureFile();
         const withFile = { files: [file], title: "오늘의 생활법원", text: shareText };
