@@ -1,7 +1,8 @@
 import Link from "next/link";
 
 /** 문의·사연 삭제 요청 Google Form. 비워두면 링크가 노출되지 않는다. */
-const CONTACT_FORM_URL = "";
+const CONTACT_FORM_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSdY_Kw2W9He715Qa8RdqE0ztuVskSF00I-hoWE06oDE8X3q0w/viewform?usp=sharing";
 
 const NOTES = [
   "본 서비스는 오락 목적의 가상 콘텐츠이며, 실제 법률 자문·법률 판단 또는 실제 판결이 아닙니다.",
