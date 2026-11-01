@@ -68,6 +68,7 @@ export default function LandingPage() {
           본 서비스는 오락 목적의 가상 콘텐츠이며
           <br />
           실제 법률 자문, 법률 판단 또는 실제 판결이 아닙니다.
+          <br />© 2026 오늘의 생활법원
         </div>
       </div>
     </div>

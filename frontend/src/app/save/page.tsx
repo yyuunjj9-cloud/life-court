@@ -28,6 +28,8 @@ const DOC_BACK: Record<DocKind, string> = {
   countersuit: "/countersuit",
 };
 
+const SITE_URL = "https://life-court.vercel.app";
+
 /* 08 문서 저장 */
 function SaveScreen() {
   const router = useRouter();
@@ -35,6 +37,8 @@ function SaveScreen() {
   const { verdict, appeal, complaint, countersuit, demand } = useCaseStore();
   const [format, setFormat] = useState<Format>("png");
   const [saving, setSaving] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [error, setError] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
 
@@ -65,28 +69,33 @@ function SaveScreen() {
 
   if (!doc) return <div className="scr" />;
 
-  const save = async () => {
+  /** 문서를 이미지 파일로 캡처한다. 저장·공유가 공용으로 쓴다. */
+  const captureFile = async (): Promise<File> => {
     const node = stageRef.current;
-    if (!node || saving) return;
+    if (!node) throw new Error("no stage");
+    const opts = { pixelRatio: 2, backgroundColor: "#f4e9d0" };
+    // iOS Safari는 첫 캡처가 비어 나오는 경우가 있어 한 번 워밍업 후 실제 캡처
+    await toBlob(node, opts);
+    let blob: Blob | null;
+    if (format === "png") {
+      blob = await toBlob(node, opts);
+    } else {
+      const dataUrl = await toJpeg(node, { ...opts, quality: 0.95 });
+      blob = await (await fetch(dataUrl)).blob();
+    }
+    if (!blob) throw new Error("capture failed");
+    const stem = verdict ? verdict.caseNo.replace(/\s/g, "_") : "생활법원";
+    const filename = `${stem}_${DOC_LABEL[kind].replace(/[·\s]/g, "")}.${format}`;
+    return new File([blob], filename, { type: format === "png" ? "image/png" : "image/jpeg" });
+  };
+
+  const save = async () => {
+    if (saving || sharing) return;
     setSaving(true);
     setError(false);
+    setCopied(false);
     try {
-      const opts = { pixelRatio: 2, backgroundColor: "#f4e9d0" };
-      // iOS Safari는 첫 캡처가 비어 나오는 경우가 있어 한 번 워밍업 후 실제 캡처
-      await toBlob(node, opts);
-      let blob: Blob | null;
-      if (format === "png") {
-        blob = await toBlob(node, opts);
-      } else {
-        const dataUrl = await toJpeg(node, { ...opts, quality: 0.95 });
-        blob = await (await fetch(dataUrl)).blob();
-      }
-      if (!blob) throw new Error("capture failed");
-
-      const stem = verdict ? verdict.caseNo.replace(/\s/g, "_") : "생활법원";
-      const filename = `${stem}_${DOC_LABEL[kind].replace(/[·\s]/g, "")}.${format}`;
-      const file = new File([blob], filename, { type: format === "png" ? "image/png" : "image/jpeg" });
-
+      const file = await captureFile();
       // 아이폰/모바일: 공유 시트로 저장(사진에 저장 가능). 데스크톱: 파일 다운로드.
       if (typeof navigator !== "undefined" && navigator.canShare?.({ files: [file] })) {
         try {
@@ -95,10 +104,10 @@ function SaveScreen() {
           if ((e as Error).name !== "AbortError") throw e; // 사용자가 취소한 경우는 정상 종료
         }
       } else {
-        const url = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(file);
         const a = document.createElement("a");
         a.href = url;
-        a.download = filename;
+        a.download = file.name;
         a.click();
         setTimeout(() => URL.revokeObjectURL(url), 10_000);
       }
@@ -106,6 +115,37 @@ function SaveScreen() {
       setError(true);
     } finally {
       setSaving(false);
+    }
+  };
+
+  /** 이미지 + 사이트 링크를 함께 공유한다. 공유 미지원 환경에서는 링크를 복사한다. */
+  const share = async () => {
+    if (saving || sharing) return;
+    setSharing(true);
+    setError(false);
+    setCopied(false);
+    try {
+      const shareText = `생활법원 ${DOC_LABEL[kind]}이 도착했습니다 — 당신의 억울함도 접수하세요: ${SITE_URL}`;
+      if (typeof navigator !== "undefined" && navigator.share) {
+        const file = await captureFile();
+        const withFile = { files: [file], title: "오늘의 생활법원", text: shareText };
+        try {
+          if (navigator.canShare?.({ files: [file] })) {
+            await navigator.share(withFile);
+          } else {
+            await navigator.share({ title: "오늘의 생활법원", text: shareText, url: SITE_URL });
+          }
+        } catch (e) {
+          if ((e as Error).name !== "AbortError") throw e;
+        }
+      } else {
+        await navigator.clipboard.writeText(shareText);
+        setCopied(true);
+      }
+    } catch {
+      setError(true);
+    } finally {
+      setSharing(false);
     }
   };
 
@@ -128,20 +168,27 @@ function SaveScreen() {
           </button>
         </div>
         {error && <div className="help err">저장에 실패했습니다. 다시 시도해주세요.</div>}
+        {copied && <div className="help">공유 문구와 링크가 복사되었습니다. 원하는 곳에 붙여넣으세요.</div>}
         <div className="grow" />
         <div className="stack">
-          <button className="btn" type="button" onClick={save} disabled={saving}>
-            {saving ? "저장 중..." : "저장하기"}
+          <button className="btn" type="button" onClick={share} disabled={saving || sharing}>
+            {sharing ? "공유 준비 중..." : "공유하기"}
           </button>
-          <button className="btn line" type="button" onClick={() => router.push(DOC_BACK[kind])}>
-            취소
-          </button>
+          <div className="btn-row">
+            <button className="btn dark sm" type="button" onClick={save} disabled={saving || sharing}>
+              {saving ? "저장 중..." : "저장하기"}
+            </button>
+            <button className="btn line sm" type="button" onClick={() => router.push(DOC_BACK[kind])}>
+              취소
+            </button>
+          </div>
         </div>
       </div>
       {/* 이미지 캡처용 원본(오프스크린 래퍼 안의 static 노드를 캡처) */}
       <div className="capture-stage" aria-hidden="true">
         <div className="capture-inner" ref={stageRef}>
           {doc}
+          <div className="capture-mark">오늘의 생활법원 · life-court.vercel.app</div>
         </div>
       </div>
     </div>

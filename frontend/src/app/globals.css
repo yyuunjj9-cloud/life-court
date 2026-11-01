@@ -51,6 +51,8 @@ body {
   font-family: var(--serif);
   background: var(--wood-deep);
   color: var(--ink);
+  /* 한국어 어절 단위 줄바꿈 — "확인하\n기" 같은 어색한 꺾임 방지 */
+  word-break: keep-all;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -1044,6 +1046,16 @@ p.sub {
   width: 400px;
   padding: 24px 20px;
   background: linear-gradient(180deg, var(--parchment), var(--parchment-deep));
+}
+/* 저장 이미지 하단 워터마크 — 캡처가 퍼졌을 때 출처가 남는다 */
+.capture-mark {
+  margin-top: 12px;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  opacity: 0.75;
 }
 
 /* ============================================================
