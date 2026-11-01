@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { TRIAL_STEPS } from "@/domain/judgment";
 import { useCaseStore } from "@/store/case-store";
 
@@ -13,10 +13,17 @@ export default function TrialPage() {
   const { verdict } = useCaseStore();
   const [step, setStep] = useState(0);
 
+  // 죄목 예고 — 확정된 사건명을 심리 기록에 슬쩍 흘려 선고 전 기대감을 만든다.
+  const steps = useMemo(() => {
+    const list: string[] = [...TRIAL_STEPS];
+    if (verdict) list.splice(3, 0, `유사 판례 『${verdict.caseName}』 열람 중...`);
+    return list;
+  }, [verdict]);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setStep((s) => {
-        if (s + 1 > TRIAL_STEPS.length) {
+        if (s + 1 > steps.length) {
           clearInterval(timer);
           return s;
         }
@@ -24,10 +31,10 @@ export default function TrialPage() {
       });
     }, STEP_MS);
     return () => clearInterval(timer);
-  }, []);
+  }, [steps.length]);
 
   useEffect(() => {
-    if (step > TRIAL_STEPS.length - 1) {
+    if (step > steps.length - 1) {
       const t = setTimeout(() => {
         // 접수된 사건이 없으면(직접 URL 진입 등) 접수 화면으로 보낸다.
         router.replace(verdict ? "/verdict" : "/intake/story");
@@ -53,7 +60,7 @@ export default function TrialPage() {
             </span>
           </div>
           <ul>
-            {TRIAL_STEPS.map((label, i) => (
+            {steps.map((label, i) => (
               <li key={label} className={i > step ? "dim" : undefined}>
                 <span className="mk">{i < step ? "✓" : i === step ? "▶" : ""}</span>
                 {label}
