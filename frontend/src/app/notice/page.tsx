@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+/** 문의·사연 삭제 요청 Google Form. 비워두면 링크가 노출되지 않는다. */
+const CONTACT_FORM_URL = "";
+
 const NOTES = [
   "본 서비스는 오락 목적의 가상 콘텐츠이며, 실제 법률 자문·법률 판단 또는 실제 판결이 아닙니다.",
   "입력하신 내용은 판결 생성을 위해 생활법원 서버로 전송되어 사건 기록으로 보관되며, 그 외의 용도로 사용되거나 제3자에게 공유되지 않습니다.",
@@ -24,6 +27,11 @@ export default function NoticePage() {
           ))}
         </div>
         <div className="grow" />
+        {CONTACT_FORM_URL && (
+          <a className="contact-link" href={CONTACT_FORM_URL} target="_blank" rel="noreferrer">
+            문의 · 사연 삭제 요청 · 오류 제보 →
+          </a>
+        )}
         <Link className="btn" href="/">
           확인하고 계속하기
         </Link>

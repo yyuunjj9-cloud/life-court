@@ -354,6 +354,42 @@ p.sub {
   display: flex;
   gap: 8px;
 }
+/* 사연 입력 예시 칩 — 입력란이 비어 있을 때만 노출 */
+.examples {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.example-chip {
+  font-family: var(--serif);
+  font-size: 12.5px;
+  line-height: 1.5;
+  text-align: left;
+  color: var(--ink-soft);
+  background: rgba(255, 252, 240, 0.55);
+  border: 1px solid var(--paper-line);
+  border-radius: 10px;
+  padding: 9px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.example-chip:hover,
+.example-chip:active {
+  border-color: var(--gold);
+  background: rgba(255, 252, 240, 0.9);
+}
+/* 안내 페이지 문의 링크 */
+.contact-link {
+  display: block;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  margin-bottom: 14px;
+}
 .btn-row .btn {
   flex: 1;
 }

@@ -24,6 +24,18 @@ export function VerdictDoc({ verdict }: { verdict: Verdict }) {
         <p className="k">판 결 이 유</p>
         <p className="t">{verdict.reasoning}</p>
       </div>
+      {verdict.evidence && verdict.evidence.length > 0 && (
+        <div className="vsec">
+          <p className="k">증 거 의 요 지</p>
+          <p className="t">
+            {verdict.evidence.map((e, i) => (
+              <span key={i} style={{ display: "block" }}>
+                {i + 1}. {e}
+              </span>
+            ))}
+          </p>
+        </div>
+      )}
       <div className="vsec">
         <p className="k">생 활 개 선 권 고</p>
         <p className="t">{verdict.advice}</p>

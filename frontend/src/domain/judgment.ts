@@ -25,6 +25,8 @@ export interface Verdict {
   order: string;
   reasoning: string;
   advice: string;
+  /** 구버전 저장 데이터에는 없을 수 있다. */
+  evidence?: string[];
   result: string;
   resultNote: string;
 }
