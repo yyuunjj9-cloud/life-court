@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Steps } from "@/components/Steps";
 import { DraftSaveButton } from "@/components/DraftSaveButton";
 import { useCaseStore } from "@/store/case-store";
@@ -22,13 +22,21 @@ export default function StoryPage() {
   const router = useRouter();
   const { draft, setStory } = useCaseStore();
   const [touched, setTouched] = useState(false);
+  const [shake, setShake] = useState(false);
+  const taRef = useRef<HTMLTextAreaElement>(null);
 
   const len = draft.story.trim().length;
   const invalid = len < MIN || len > MAX;
 
   const next = () => {
     setTouched(true);
-    if (!invalid) router.push("/intake/type");
+    if (!invalid) {
+      router.push("/intake/type");
+      return;
+    }
+    // 혼내는 대신 입력란으로 안내한다 — 포커스 + 가벼운 흔들림.
+    setShake(true);
+    taRef.current?.focus();
   };
 
   return (
@@ -37,8 +45,9 @@ export default function StoryPage() {
         <Steps current={1} />
         <h1 className="tt">사건 내용을 진술하시오</h1>
         <p className="sub">여러분의 사소한 사건을 들려주세요.</p>
-        <div className="field">
+        <div className={shake ? "field shake" : "field"} onAnimationEnd={() => setShake(false)}>
           <textarea
+            ref={taRef}
             value={draft.story}
             maxLength={MAX}
             onChange={(e) => setStory(e.target.value)}
@@ -49,8 +58,10 @@ export default function StoryPage() {
             {draft.story.length} / {MAX}
           </div>
         </div>
-        <div className={touched && invalid ? "help err" : "help"}>
-          {touched && invalid ? `${MIN}자 이상 입력해야 접수할 수 있습니다.` : `${MIN}~${MAX}자 이내로 입력해주세요.`}
+        <div className={touched && invalid ? "help warn" : "help"}>
+          {touched && invalid
+            ? `재판부가 심리할 내용이 부족합니다. 사연을 조금만 더 들려주세요. (${MIN}자 이상)`
+            : `${MIN}~${MAX}자 이내로 입력해주세요.`}
         </div>
         {draft.story.trim().length === 0 && (
           <div className="examples">
