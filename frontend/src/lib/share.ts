@@ -6,16 +6,25 @@
 
 import type { CaseInput, CaseType, Relationship, Severity, Tone } from "@/domain/judgment";
 
+/** OG 카드·미리보기용 표시 필드 — 판결 재생성 없이 링크만으로 그릴 수 있게 페이로드에 동봉한다. */
+export interface SharedDisplay {
+  caseName: string;
+  crime: string;
+  result: string;
+}
+
 export interface SharedCase {
   input: CaseInput;
   seq: number;
+  /** 구버전 링크에는 없을 수 있다. */
+  display?: SharedDisplay;
 }
 
 const CASE_TYPES: readonly CaseType[] = ["work", "relationship", "meal", "messenger", "daily"];
 const RELATIONSHIPS: readonly Relationship[] = ["self", "colleague", "friend", "boss", "anonymous"];
 const TONES: readonly Tone[] = ["lenient", "fair", "strict"];
 
-export function encodeSharedCase(input: CaseInput, seq: number): string {
+export function encodeSharedCase(input: CaseInput, seq: number, display?: SharedDisplay): string {
   const payload = {
     s: input.story,
     t: input.caseType,
@@ -23,6 +32,7 @@ export function encodeSharedCase(input: CaseInput, seq: number): string {
     v: input.severity,
     o: input.tone,
     n: seq,
+    ...(display ? { cn: display.caseName, cr: display.crime, rs: display.result } : {}),
   };
   const bytes = new TextEncoder().encode(JSON.stringify(payload));
   let bin = "";
@@ -48,6 +58,11 @@ export function decodeSharedCase(d: string): SharedCase | null {
     if (![1, 2, 3, 4, 5].includes(Number(p.v))) return null;
     if (!Number.isInteger(seq) || seq < 1) return null;
 
+    const display =
+      typeof p.cn === "string" && typeof p.cr === "string" && typeof p.rs === "string"
+        ? { caseName: p.cn.slice(0, 30), crime: p.cr.slice(0, 30), result: p.rs.slice(0, 20) }
+        : undefined;
+
     return {
       input: {
         story,
@@ -57,6 +72,7 @@ export function decodeSharedCase(d: string): SharedCase | null {
         tone: p.o as Tone,
       },
       seq,
+      display,
     };
   } catch {
     return null;

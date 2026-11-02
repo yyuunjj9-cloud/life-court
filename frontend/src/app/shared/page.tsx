@@ -1,96 +1,42 @@
-"use client";
-
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { VerdictDoc } from "@/components/VerdictDoc";
-import type { Verdict } from "@/domain/judgment";
-import { api } from "@/lib/api";
+import type { Metadata } from "next";
 import { decodeSharedCase } from "@/lib/share";
-import { useCaseStore } from "@/store/case-store";
+import { SharedScreen } from "./shared-screen";
 
-/* 공유받은 판결문 — 링크의 사건 데이터로 원본과 동일한 판결을 재현한다. */
-function SharedScreen() {
-  const router = useRouter();
-  const params = useSearchParams();
-  const { resetCase } = useCaseStore();
+/**
+ * 공유 링크의 사건 데이터로 사건별 OG 태그·카드를 만든다.
+ * 크롤러는 JS를 실행하지 않으므로 메타태그는 서버 컴포넌트에서 생성해야 한다.
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ d?: string }>;
+}): Promise<Metadata> {
+  const { d } = await searchParams;
+  const shared = d ? decodeSharedCase(d) : null;
+  if (!shared?.display) return { title: "공유받은 판결문" };
 
-  const shared = useMemo(() => {
-    const d = params.get("d");
-    return d ? decodeSharedCase(d) : null;
-  }, [params]);
+  const { caseName, crime, result } = shared.display;
+  const title = `『${caseName}』 판결문`;
+  const description = `가상 죄명 ${crime} — ${result}. 오늘의 생활법원이 엄숙하게 심리했습니다.`;
+  const ogImage = `/api/og?n=${encodeURIComponent(caseName)}&c=${encodeURIComponent(crime)}&r=${encodeURIComponent(result)}`;
 
-  const [verdict, setVerdict] = useState<Verdict | null>(null);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    if (!shared) return;
-    let alive = true;
-    api
-      .previewVerdict(shared.input, shared.seq)
-      .then(({ verdict }) => {
-        if (alive) setVerdict(verdict);
-      })
-      .catch(() => {
-        if (alive) setFailed(true);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [shared]);
-
-  const startMine = () => {
-    resetCase();
-    router.push("/intake/story");
+  return {
+    title,
+    description,
+    openGraph: {
+      title: `${title} | 오늘의 생활법원`,
+      description,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
+    },
   };
-
-  if (!shared || failed) {
-    return (
-      <div className="scr">
-        <div className="pad">
-          <h1 className="tt">사건 기록을 열 수 없습니다</h1>
-          <p className="sub">
-            {!shared ? "링크가 잘못되었거나 훼손되었습니다." : "법원 서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요."}
-          </p>
-          <div className="grow" />
-          <button className="btn" type="button" onClick={startMine}>
-            내 사건 접수하기
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!verdict) {
-    return (
-      <div className="scr">
-        <div className="pad">
-          <h1 className="tt">사건 기록을 여는 중...</h1>
-          <p className="sub">공유받은 판결문을 재현하고 있습니다. 잠시만 기다려주세요 🔨</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="scr verdict-scr">
-      <div className="pad">
-        <p className="shared-label">📨 공유받은 판결문</p>
-        <VerdictDoc verdict={verdict} />
-        <div className="grow" />
-        <div className="stack" style={{ marginTop: 14 }}>
-          <button className="btn" type="button" onClick={startMine}>
-            나도 사건 접수하기
-          </button>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export default function SharedPage() {
-  return (
-    <Suspense fallback={<div className="scr" />}>
-      <SharedScreen />
-    </Suspense>
-  );
+  return <SharedScreen />;
 }

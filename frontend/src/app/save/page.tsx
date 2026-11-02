@@ -138,6 +138,7 @@ function SaveScreen() {
                 tone: draft.tone,
               },
               caseSeq,
+              { caseName: verdict.caseName, crime: verdict.crime, result: verdict.result },
             )}`
           : SITE_URL;
       const shareText = `생활법원 ${DOC_LABEL[kind]}이 도착했습니다 — 당신의 억울함도 접수하세요: ${shareUrl}`;
