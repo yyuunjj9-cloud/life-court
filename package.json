@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test": "cd backend && npm test",
+    "test:postgres": "cd backend && npm run test:postgres",
     "dev:frontend": "cd frontend && npm run dev",
     "dev:backend": "cd backend && npm run dev",
     "build": "cd backend && npm run build && cd ../frontend && npm run build",

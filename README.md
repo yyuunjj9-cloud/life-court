@@ -31,9 +31,12 @@
 ## 개발 검증
 
 ```bash
-cd backend
-node --test tests/judgment.test.cjs
+npm test
+npm run typecheck
+npm run build
 ```
+
+push·PR마다 GitHub Actions가 위 검사와 실제 Postgres 동시 요청 검증을 자동 실행합니다. 운영 DB와 격리된 컨테이너를 사용합니다. 로컬 Postgres 테스트는 `TEST_DATABASE_URL`을 지정하고 `npm run test:postgres`로 실행합니다. 자세한 구성과 안전장치는 [docs/ci.md](docs/ci.md)를 참고하세요.
 
 사건 분류, 문서 간 죄목 일치, 판결 다양성, 재현성 및 심각성·성향에 따른 판결 수위 순서를 검증합니다. 새 규칙은 새로 생성하는 사건에 적용되며, DB에 저장된 판결은 변경하지 않습니다. 구형 `/shared` 링크는 현재 규칙으로 재생성하므로 결과가 달라질 수 있습니다.
 
