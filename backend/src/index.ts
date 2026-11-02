@@ -7,6 +7,7 @@ import cors from "cors";
 import express from "express";
 import {
   generateVerdict,
+  hashSeed,
   type CaseInput,
   type CaseType,
   type Relationship,
@@ -117,10 +118,23 @@ app.post("/api/cases", async (req, res) => {
   res.status(201).json({ seq, verdict, complaint });
 });
 
+/**
+ * 공유 토큰: 사연 내용을 아는 사람만 만들 수 있다(프런트 share.ts와 동일 공식).
+ * 사건번호가 순번이라도 토큰 없이는 타인의 기록을 열람할 수 없다.
+ */
+function shareTokenFor(seq: number, story: string): string {
+  return hashSeed(`share|${seq}|${story}`).toString(36);
+}
+
 app.get("/api/cases/:seq", async (req, res) => {
-  const rec = await storage.get(Number(req.params.seq));
+  const seq = Number(req.params.seq);
+  const rec = await storage.get(seq);
   if (!rec) {
     res.status(404).json({ error: "case not found" });
+    return;
+  }
+  if (String(req.query.t ?? "") !== shareTokenFor(seq, rec.input.story)) {
+    res.status(403).json({ error: "invalid share token" });
     return;
   }
   res.json(rec);

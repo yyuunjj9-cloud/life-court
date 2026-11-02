@@ -52,6 +52,9 @@ export default function AppealPage() {
           <Link className="btn sm" href="/save?doc=appeal">
             판결문 저장
           </Link>
+          <Link className="btn dark sm" href="/verdict">
+            원심 판결문
+          </Link>
           <Link className="btn dark sm" href="/received">
             새 사건 접수
           </Link>

@@ -38,25 +38,25 @@ export default function ReceivedPage() {
       <div className="pad" style={{ paddingTop: 40 }}>
         <div className="laurel">🔨</div>
         <h1 className="tt" style={{ marginTop: 20 }}>
-          새로운 사건이 접수되었습니다!
+          접수 창구가 열려 있습니다
         </h1>
         <div className="caseno">
-          <span className="k">사 건 번 호</span>
+          <span className="k">다 음 사 건 번 호</span>
           <span className="v">{nextNo ?? "…"}</span>
         </div>
         <p className="sub" style={{ marginTop: 18 }}>
-          재판부가 성실히 심리하겠습니다.
+          재판부가 다음 사건을 기다리고 있습니다.
         </p>
         <div className="grow" />
         <div className="stack">
-          {verdict && (
-            <Link className="btn" href="/verdict">
-              사건 내용 확인하기
-            </Link>
-          )}
-          <button className={verdict ? "btn line" : "btn"} type="button" onClick={startNew}>
+          <button className="btn" type="button" onClick={startNew}>
             새 사건 접수하기
           </button>
+          {verdict && (
+            <Link className="btn line" href="/verdict">
+              이전 판결문 보기
+            </Link>
+          )}
         </div>
       </div>
     </div>

@@ -8,9 +8,13 @@ import { useCaseStore } from "@/store/case-store";
 /* 01 랜딩 — 어두운 법정 */
 export default function LandingPage() {
   const router = useRouter();
-  const { savedDraftAt, resetCase, loadDraft } = useCaseStore();
+  const { savedDraftAt, resetCase, loadDraft, verdict, draft } = useCaseStore();
   // 버스트 탭 이스터에그 — key를 바꿔 등장 애니메이션을 다시 재생한다.
   const [slam, setSlam] = useState(0);
+
+  // 로고를 눌러 홈에 온 사용자가 진행 중이던 사건을 잃지 않도록 복귀 경로를 제공한다.
+  const hasVerdict = Boolean(verdict);
+  const hasDraft = !hasVerdict && draft.story.trim().length > 0;
 
   // 새 사건 접수: 이전 진행 상태를 완전히 초기화하고 시작한다.
   const startNew = () => {
@@ -66,8 +70,18 @@ export default function LandingPage() {
         <div className="grow" />
         <div className="stack">
           <button className="btn" type="button" onClick={startNew}>
-            사건 접수하기
+            {hasVerdict || hasDraft ? "새 사건 접수하기" : "사건 접수하기"}
           </button>
+          {hasVerdict && (
+            <button className="btn dark sm" type="button" onClick={() => router.push("/verdict")}>
+              진행 중인 사건 보기
+            </button>
+          )}
+          {hasDraft && (
+            <button className="btn dark sm" type="button" onClick={() => router.push("/intake/story")}>
+              작성 중인 사연 이어가기
+            </button>
+          )}
           {savedLabel && (
             <button className="btn dark sm" type="button" onClick={resume}>
               임시저장 불러오기 ({savedLabel})

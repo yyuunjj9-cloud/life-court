@@ -1,4 +1,6 @@
-import Link from "next/link";
+"use client";
+
+import { useRouter } from "next/navigation";
 
 /** 문의·사연 삭제 요청 Google Form. 비워두면 링크가 노출되지 않는다. */
 const CONTACT_FORM_URL =
@@ -13,6 +15,14 @@ const NOTES = [
 
 /* 10 안내(고지) 페이지 */
 export default function NoticePage() {
+  const router = useRouter();
+
+  // 보던 화면으로 복귀 — 판결문을 보다 안내를 열어도 흐름이 끊기지 않는다.
+  const goBack = () => {
+    if (window.history.length > 1) router.back();
+    else router.push("/");
+  };
+
   return (
     <div className="scr">
       <div className="pad">
@@ -33,9 +43,9 @@ export default function NoticePage() {
             문의 · 사연 삭제 요청 · 오류 제보 →
           </a>
         )}
-        <Link className="btn" href="/">
+        <button className="btn" type="button" onClick={goBack}>
           확인하고 계속하기
-        </Link>
+        </button>
       </div>
     </div>
   );

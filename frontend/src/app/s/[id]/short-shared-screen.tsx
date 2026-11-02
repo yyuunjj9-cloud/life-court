@@ -1,0 +1,47 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { VerdictDoc } from "@/components/VerdictDoc";
+import type { Verdict } from "@/domain/judgment";
+import { useCaseStore } from "@/store/case-store";
+
+/* 짧은 공유 링크 수신 화면 — 서버에 보관된 원본 판결문을 그대로 보여준다. */
+export function ShortSharedScreen({ verdict }: { verdict: Verdict | null }) {
+  const router = useRouter();
+  const { resetCase } = useCaseStore();
+
+  const startMine = () => {
+    resetCase();
+    router.push("/intake/story");
+  };
+
+  if (!verdict) {
+    return (
+      <div className="scr">
+        <div className="pad">
+          <h1 className="tt">사건 기록을 열 수 없습니다</h1>
+          <p className="sub">링크가 잘못되었거나, 법원 서버가 잠에서 깨는 중입니다. 잠시 후 새로고침해 주세요.</p>
+          <div className="grow" />
+          <button className="btn" type="button" onClick={startMine}>
+            내 사건 접수하기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="scr verdict-scr">
+      <div className="pad">
+        <p className="shared-label">📨 공유받은 판결문</p>
+        <VerdictDoc verdict={verdict} />
+        <div className="grow" />
+        <div className="stack" style={{ marginTop: 14 }}>
+          <button className="btn" type="button" onClick={startMine}>
+            나도 사건 접수하기
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

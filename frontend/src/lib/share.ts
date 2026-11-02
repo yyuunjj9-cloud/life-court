@@ -24,6 +24,32 @@ const CASE_TYPES: readonly CaseType[] = ["work", "relationship", "meal", "messen
 const RELATIONSHIPS: readonly Relationship[] = ["self", "colleague", "friend", "boss", "anonymous"];
 const TONES: readonly Tone[] = ["lenient", "fair", "strict"];
 
+/** backend hashSeed와 동일한 FNV-1a — 공유 토큰 공식을 양쪽에서 맞춘다. */
+function fnv1a(text: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/**
+ * 짧은 공유 ID: "사건번호-토큰". 토큰은 사연을 아는 당사자만 계산할 수 있어
+ * 순번 열거로 타인의 사건을 열 수 없다. 카톡에 붙여도 스팸처럼 보이지 않는 길이.
+ */
+export function shortShareId(seq: number, story: string): string {
+  return `${seq}-${fnv1a(`share|${seq}|${story}`).toString(36)}`;
+}
+
+export function parseShortShareId(id: string): { seq: number; token: string } | null {
+  const m = /^(\d{1,7})-([0-9a-z]{1,8})$/.exec(id);
+  if (!m) return null;
+  const seq = Number(m[1]);
+  if (!Number.isInteger(seq) || seq < 1) return null;
+  return { seq, token: m[2] };
+}
+
 export function encodeSharedCase(input: CaseInput, seq: number, display?: SharedDisplay): string {
   const payload = {
     s: input.story,
