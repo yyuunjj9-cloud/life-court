@@ -39,6 +39,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // iOS의 입력란 포커스 자동 확대(뒤로 가기 후에도 줌 유지) 억제 — 핀치 줌은 iOS가 계속 허용한다.
+  maximumScale: 1,
   viewportFit: "cover",
   themeColor: "#3B2113",
 };

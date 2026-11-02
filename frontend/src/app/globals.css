@@ -682,7 +682,8 @@ p.sub {
   resize: none;
   background: transparent;
   font-family: var(--sans);
-  font-size: 13px;
+  /* 16px 미만이면 iOS가 포커스 시 화면을 자동 확대하고, 뒤로 가도 줌이 유지된다 */
+  font-size: 16px;
   line-height: 1.9;
   color: var(--ink);
 }
