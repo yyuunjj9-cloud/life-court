@@ -67,6 +67,11 @@ body {
   overflow: hidden;
   position: relative;
 }
+/* 인앱 브라우저(카톡 등): dvh가 주소창 숨김 기준으로 잘못 보고돼 상단이 잘린다 → 최소 뷰포트(svh) 기준으로 */
+html.inapp #app {
+  height: 100vh;
+  height: 100svh;
+}
 @media (min-width: 640px) {
   body {
     display: grid;

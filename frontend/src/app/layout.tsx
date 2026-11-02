@@ -43,10 +43,17 @@ export const viewport: Viewport = {
   themeColor: "#3B2113",
 };
 
+/**
+ * 인앱 브라우저(카톡·인스타·네이버 등)는 dvh를 주소창 숨김 기준으로 잘못 보고해
+ * 상단 콘텐츠가 주소창 뒤로 숨는다. 페인트 전에 클래스를 달아 svh 레이아웃으로 전환한다.
+ */
+const INAPP_DETECT = `if(/KAKAOTALK|Instagram|NAVER|Line\\/|FBAN|FBAV/i.test(navigator.userAgent))document.documentElement.classList.add("inapp");`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
       <body>
+        <script dangerouslySetInnerHTML={{ __html: INAPP_DETECT }} />
         <CaseProvider>
           <div id="app">
             <TopBar />
