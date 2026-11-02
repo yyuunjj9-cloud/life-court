@@ -1,9 +1,7 @@
 /**
  * 사건별 동적 OG 카드 (1200×630).
- * 표시 텍스트는 전부 고정 풀(사건명·죄명·판결 결과)에서 오므로,
- * 해당 글자만 서브셋한 나눔명조(SIL OFL)를 임베드한다 — 각 ~215KB.
- * 시나리오 풀에 새 글자가 추가되면 backend/scripts/extract-og-charset.ts로
- * charset을 다시 뽑아 서브셋을 재생성해야 한다.
+ * 나눔명조 전체 글꼴(SIL OFL)을 임베드해 새 사건명·일반 분쟁 문구의
+ * 한글도 누락 없이 표시한다. 라이선스는 같은 디렉터리의 OFL.txt 참조.
  */
 
 import { readFile } from "node:fs/promises";
@@ -16,7 +14,7 @@ const regular = readFile(join(process.cwd(), "src/app/api/og/og-myeongjo-regular
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  // 서브셋 글자 밖의 입력은 두부(빈 글리프)로 나올 뿐이므로 길이만 제한한다.
+  // Keep preview labels bounded so arbitrary URLs cannot create unbounded cards.
   const caseName = (searchParams.get("n") ?? "").slice(0, 30);
   const crime = (searchParams.get("c") ?? "").slice(0, 30);
   const result = (searchParams.get("r") ?? "").slice(0, 20);
@@ -51,6 +49,10 @@ export async function GET(req: Request) {
             boxShadow: "inset 0 0 0 5px rgba(201,162,39,0.18)",
           }}
         />
+        <div style={{ position: "absolute", left: 66, top: 62, display: "flex", flexDirection: "column", color: "#c9a227" }}>
+          <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: 5 }}>LIFE COURT</div>
+          <div style={{ fontSize: 12, letterSpacing: 2, marginTop: 8, color: "#a8905c" }}>SMALL CASE. BIG DRAMA.</div>
+        </div>
         {/* 결과 도장 */}
         {result.length > 0 && (
           <div
@@ -115,6 +117,9 @@ export async function GET(req: Request) {
           }}
         >
           life-court.vercel.app
+        </div>
+        <div style={{ position: "absolute", left: 70, bottom: 62, display: "flex", padding: "10px 22px", backgroundColor: "#f4e9d0", border: "3px solid #b3261e", color: "#b3261e", fontSize: 26, fontWeight: 800, transform: "rotate(-6deg)", boxShadow: "4px 4px 0 #6c1813" }}>
+          Objection!
         </div>
       </div>
     ),

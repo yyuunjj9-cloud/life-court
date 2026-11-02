@@ -35,7 +35,7 @@ const SITE_URL = "https://life-court.vercel.app";
 function SaveScreen() {
   const router = useRouter();
   const params = useSearchParams();
-  const { verdict, appeal, complaint, countersuit, demand, draft, caseSeq } = useCaseStore();
+  const { verdict, appeal, complaint, countersuit, demand, shareToken, caseSeq, hydrated } = useCaseStore();
   const [format, setFormat] = useState<Format>("png");
   const [saving, setSaving] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -65,8 +65,8 @@ function SaveScreen() {
 
   const docExists = doc !== null;
   useEffect(() => {
-    if (!docExists) router.replace(verdict ? "/verdict" : "/");
-  }, [docExists, verdict, router]);
+    if (hydrated && !docExists) router.replace(verdict ? "/verdict" : "/");
+  }, [docExists, verdict, router, hydrated]);
 
   if (!doc) return <div className="scr" />;
 
@@ -128,8 +128,8 @@ function SaveScreen() {
     try {
       // 접수된 사건이면 원본 판결문을 여는 짧은 링크를, 아니면 사이트 링크를 공유한다.
       const shareUrl =
-        verdict && caseSeq !== null && draft.story.trim().length >= 10
-          ? `${SITE_URL}/s/${shortShareId(caseSeq, draft.story.trim())}`
+        verdict && caseSeq !== null && shareToken
+          ? `${SITE_URL}/s/${shortShareId(caseSeq, shareToken)}`
           : SITE_URL;
       const shareText = `생활법원 ${DOC_LABEL[kind]}이 도착했습니다 — 당신의 억울함도 접수하세요: ${shareUrl}`;
       if (typeof navigator !== "undefined" && navigator.share) {
@@ -139,7 +139,7 @@ function SaveScreen() {
           if (navigator.canShare?.({ files: [file] })) {
             await navigator.share(withFile);
           } else {
-            await navigator.share({ title: "오늘의 생활법원", text: shareText, url: SITE_URL });
+            await navigator.share({ title: "오늘의 생활법원", text: shareText, url: shareUrl });
           }
         } catch (e) {
           if ((e as Error).name !== "AbortError") throw e;
@@ -173,6 +173,7 @@ function SaveScreen() {
             <span className="chk">✓</span>이미지 (JPG)
           </button>
         </div>
+        {verdict && !shareToken && <p className="help">이전에 접수한 사건은 이미지로 공유할 수 있습니다. 판결문 링크는 새 사건부터 제공됩니다.</p>}
         {error && <div className="help err">저장에 실패했습니다. 다시 시도해주세요.</div>}
         {copied && <div className="help">공유 문구와 링크가 복사되었습니다. 원하는 곳에 붙여넣으세요.</div>}
         <div className="grow" />

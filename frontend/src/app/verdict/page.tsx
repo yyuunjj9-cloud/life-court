@@ -10,14 +10,14 @@ import { useCaseStore } from "@/store/case-store";
 /* 06 판결 결과 */
 export default function VerdictPage() {
   const router = useRouter();
-  const { verdict, fileAppeal } = useCaseStore();
+  const { verdict, fileAppeal, hydrated } = useCaseStore();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     // 접수 없이 직접 진입한 경우
-    if (!verdict) router.replace("/");
-  }, [verdict, router]);
+    if (hydrated && !verdict) router.replace("/");
+  }, [verdict, router, hydrated]);
 
   // 선고 순간의 법봉 3타 — 진동 미지원 기기(iOS 등)에서는 조용히 무시된다.
   useEffect(() => {

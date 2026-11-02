@@ -4,16 +4,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppealDoc } from "@/components/VerdictDoc";
+import { Burst } from "@/components/Burst";
 import { formatKoreanDate } from "@/domain/date";
 import { useCaseStore } from "@/store/case-store";
 
 /* 07 항소 결과 */
 export default function AppealPage() {
   const router = useRouter();
-  const { verdict, appeal, fileAppeal } = useCaseStore();
+  const { verdict, appeal, fileAppeal, hydrated } = useCaseStore();
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    if (!hydrated) return;
     if (!verdict) {
       router.replace("/");
       return;
@@ -24,7 +26,7 @@ export default function AppealPage() {
         if (!ok) setError(true);
       });
     }
-  }, [verdict, appeal, fileAppeal, router]);
+  }, [verdict, appeal, fileAppeal, router, hydrated]);
 
   if (!verdict) return <div className="scr" />;
 
@@ -45,6 +47,11 @@ export default function AppealPage() {
 
   return (
     <div className="scr">
+      <div className="verdict-flash">
+        <div className="burst-wrap">
+          <Burst text={appeal.overturned ? "Sustained!" : "Overruled!"} width={300} variant={appeal.overturned ? "sustained" : "overruled"} />
+        </div>
+      </div>
       <div className="pad">
         <AppealDoc verdict={verdict} appeal={appeal} date={formatKoreanDate(new Date())} />
         <div className="grow" />

@@ -10,13 +10,13 @@ import { useCaseStore } from "@/store/case-store";
 /* 13 내용증명 — 재판 전 경고장 */
 export default function DemandPage() {
   const router = useRouter();
-  const { demand, submitCase } = useCaseStore();
+  const { demand, submitCase, hydrated } = useCaseStore();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!demand) router.replace("/intake/filing");
-  }, [demand, router]);
+    if (hydrated && !demand) router.replace("/intake/filing");
+  }, [demand, router, hydrated]);
 
   if (!demand) return <div className="scr" />;
 

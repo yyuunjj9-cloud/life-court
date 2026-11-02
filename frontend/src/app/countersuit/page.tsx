@@ -11,10 +11,11 @@ import { useCaseStore } from "@/store/case-store";
 /* 14 맞고소 — 피고의 역습 */
 export default function CountersuitPage() {
   const router = useRouter();
-  const { caseSeq, countersuit, fileCountersuit } = useCaseStore();
+  const { caseSeq, countersuit, fileCountersuit, hydrated } = useCaseStore();
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    if (!hydrated) return;
     if (caseSeq === null) {
       router.replace("/");
       return;
@@ -24,7 +25,7 @@ export default function CountersuitPage() {
         if (!ok) setError(true);
       });
     }
-  }, [caseSeq, countersuit, fileCountersuit, router]);
+  }, [caseSeq, countersuit, fileCountersuit, router, hydrated]);
 
   if (caseSeq === null) return <div className="scr" />;
 
@@ -47,7 +48,7 @@ export default function CountersuitPage() {
     <div className="scr">
       <div className="verdict-flash">
         <div className="burst-wrap">
-          <Burst text="맞고소?!" width={300} />
+          <Burst text={countersuit.accepted ? "맞고소?!" : "Case dismissed!"} width={300} variant={countersuit.accepted ? "objection" : "dismissed"} />
         </div>
       </div>
       <div className="pad">

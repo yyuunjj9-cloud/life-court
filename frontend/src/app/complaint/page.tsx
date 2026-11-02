@@ -10,11 +10,11 @@ import { useCaseStore } from "@/store/case-store";
 /* 12 고소장 / 고발장 확인 */
 export default function ComplaintPage() {
   const router = useRouter();
-  const { complaint } = useCaseStore();
+  const { complaint, hydrated } = useCaseStore();
 
   useEffect(() => {
-    if (!complaint) router.replace("/intake/story");
-  }, [complaint, router]);
+    if (hydrated && !complaint) router.replace("/intake/story");
+  }, [complaint, router, hydrated]);
 
   if (!complaint) return <div className="scr" />;
 

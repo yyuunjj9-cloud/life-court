@@ -15,14 +15,14 @@ const OPTIONS: { kind: FilingKind | "demand"; icon: string; name: string; desc: 
 /* 11 접수 방식 선택 — 고소 / 고발 / 내용증명 */
 export default function FilingPage() {
   const router = useRouter();
-  const { draft, submitCase, createDemand } = useCaseStore();
+  const { draft, submitCase, createDemand, hydrated } = useCaseStore();
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState(false);
   const incomplete = !draft.caseType || !draft.relationship || draft.story.trim().length < 10;
 
   useEffect(() => {
-    if (incomplete) router.replace("/intake/story");
-  }, [incomplete, router]);
+    if (hydrated && incomplete) router.replace("/intake/story");
+  }, [incomplete, router, hydrated]);
 
   if (incomplete) return <div className="scr" />;
 

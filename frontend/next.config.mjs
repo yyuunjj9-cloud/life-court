@@ -6,7 +6,7 @@ const nextConfig = {
     return [
       {
         source: "/backend/:path*",
-        destination: "https://life-court-api.onrender.com/:path*",
+        destination: `${(process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").trim().replace(/\/$/, "")}/:path*`,
       },
     ];
   },

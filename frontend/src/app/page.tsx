@@ -62,7 +62,7 @@ export default function LandingPage() {
           if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(30);
         }}
       >
-        <Burst text="이의 있음!" width={150} />
+        <Burst text="Objection!" width={170} />
       </div>
       <div className="pad">
         <span className="kicker">大 생활법원</span>

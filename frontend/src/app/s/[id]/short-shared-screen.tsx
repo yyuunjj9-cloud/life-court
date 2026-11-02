@@ -5,9 +5,19 @@ import { SaveVerdictImage } from "@/components/SaveVerdictImage";
 import { VerdictDoc } from "@/components/VerdictDoc";
 import type { Verdict } from "@/domain/judgment";
 import { useCaseStore } from "@/store/case-store";
+import { DefenseSection } from "@/components/DefenseSection";
+import type { DefenseResponseDoc } from "@/domain/response";
+
+export interface SharedCase {
+  verdict: Verdict;
+  responseDoc: DefenseResponseDoc | null;
+  seq: number;
+  token: string;
+}
 
 /* 짧은 공유 링크 수신 화면 — 서버에 보관된 원본 판결문을 그대로 보여준다. */
-export function ShortSharedScreen({ verdict }: { verdict: Verdict | null }) {
+export function ShortSharedScreen({ shared }: { shared: SharedCase | null }) {
+  const verdict = shared?.verdict;
   const router = useRouter();
   const { resetCase } = useCaseStore();
 
@@ -36,6 +46,7 @@ export function ShortSharedScreen({ verdict }: { verdict: Verdict | null }) {
       <div className="pad">
         <p className="shared-label">📨 공유받은 판결문</p>
         <VerdictDoc verdict={verdict} />
+        {shared && <DefenseSection key={`${shared.seq}-${shared.token}`} seq={shared.seq} token={shared.token} initial={shared.responseDoc} />}
         <div className="grow" />
         <div className="stack" style={{ marginTop: 14 }}>
           <button className="btn" type="button" onClick={startMine}>

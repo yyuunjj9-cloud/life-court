@@ -30,6 +30,8 @@ interface CaseDraft {
 interface CaseState {
   draft: CaseDraft;
   caseSeq: number | null;
+  shareToken: string | null;
+  ownerToken: string | null;
   filingKind: FilingKind | null;
   verdict: Verdict | null;
   complaint: ComplaintDoc | null;
@@ -39,6 +41,7 @@ interface CaseState {
 }
 
 interface CaseStore extends CaseState {
+  hydrated: boolean;
   /** 임시저장된 초안의 저장 시각 (없으면 null) */
   savedDraftAt: number | null;
   setStory: (story: string) => void;
@@ -73,6 +76,8 @@ const DRAFT_INIT: CaseDraft = {
 const STATE_INIT: CaseState = {
   draft: DRAFT_INIT,
   caseSeq: null,
+  shareToken: null,
+  ownerToken: null,
   filingKind: null,
   verdict: null,
   complaint: null,
@@ -141,6 +146,7 @@ export function CaseProvider({ children }: { children: ReactNode }) {
 
     return {
       ...state,
+      hydrated,
       savedDraftAt,
       setStory: (story) => patchDraft({ story }),
       setCaseType: (caseType) => patchDraft({ caseType }),
@@ -165,10 +171,12 @@ export function CaseProvider({ children }: { children: ReactNode }) {
         const input = draftToInput(state.draft);
         if (!input) return false;
         try {
-          const { seq, verdict, complaint } = await api.submitCase(input, kind);
+          const { seq, verdict, complaint, shareToken, ownerToken } = await api.submitCase(input, kind);
           setState((s) => ({
             ...s,
             caseSeq: seq,
+            shareToken,
+            ownerToken,
             filingKind: kind,
             verdict,
             complaint,
@@ -184,8 +192,9 @@ export function CaseProvider({ children }: { children: ReactNode }) {
       fileAppeal: async () => {
         if (state.caseSeq === null) return false;
         if (state.appeal) return true;
+        if (!state.ownerToken) return false;
         try {
-          const { appeal } = await api.fileAppeal(state.caseSeq);
+          const { appeal } = await api.fileAppeal(state.caseSeq, state.ownerToken);
           setState((s) => ({ ...s, appeal }));
           return true;
         } catch {
@@ -196,8 +205,9 @@ export function CaseProvider({ children }: { children: ReactNode }) {
       fileCountersuit: async () => {
         if (state.caseSeq === null) return false;
         if (state.countersuit) return true;
+        if (!state.ownerToken) return false;
         try {
-          const { countersuit } = await api.fileCountersuit(state.caseSeq);
+          const { countersuit } = await api.fileCountersuit(state.caseSeq, state.ownerToken);
           setState((s) => ({ ...s, countersuit }));
           return true;
         } catch {
@@ -219,7 +229,7 @@ export function CaseProvider({ children }: { children: ReactNode }) {
 
       resetCase: () => setState(STATE_INIT),
     };
-  }, [state, savedDraftAt]);
+  }, [state, savedDraftAt, hydrated]);
 
   return <CaseContext.Provider value={store}>{children}</CaseContext.Provider>;
 }

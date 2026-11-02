@@ -10,6 +10,7 @@
 
 import type { AppealVerdict, CaseInput, Verdict } from "@/domain/judgment";
 import type { ComplaintDoc, CountersuitDoc, DemandLetterDoc, FilingKind } from "@/domain/documents";
+import type { DefenseResponseDoc } from "@/domain/response";
 
 // trim(): 환경변수에 BOM(U+FEFF)이 섞여 들어와 직접 연결 URL이 깨진 사례가 있다.
 const DIRECT_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").trim();
@@ -103,16 +104,16 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   submitCase: (input: CaseInput, filingKind: FilingKind) =>
-    request<{ seq: number; verdict: Verdict; complaint: ComplaintDoc }>("/api/cases", {
+    request<{ seq: number; verdict: Verdict; complaint: ComplaintDoc; shareToken: string; ownerToken: string }>("/api/cases", {
       method: "POST",
       body: JSON.stringify({ ...input, filingKind }),
     }),
 
-  fileAppeal: (seq: number) =>
-    request<{ appeal: AppealVerdict }>(`/api/cases/${seq}/appeal`, { method: "POST" }),
+  fileAppeal: (seq: number, ownerToken: string) =>
+    request<{ appeal: AppealVerdict }>(`/api/cases/${seq}/appeal`, { method: "POST", headers: { "X-Owner-Token": ownerToken } }),
 
-  fileCountersuit: (seq: number) =>
-    request<{ countersuit: CountersuitDoc }>(`/api/cases/${seq}/countersuit`, { method: "POST" }),
+  fileCountersuit: (seq: number, ownerToken: string) =>
+    request<{ countersuit: CountersuitDoc }>(`/api/cases/${seq}/countersuit`, { method: "POST", headers: { "X-Owner-Token": ownerToken } }),
 
   createDemandLetter: (input: CaseInput) =>
     request<{ demand: DemandLetterDoc }>("/api/documents/demand", {
@@ -125,6 +126,13 @@ export const api = {
     request<{ verdict: Verdict }>("/api/cases/preview", {
       method: "POST",
       body: JSON.stringify({ ...input, seq }),
+    }),
+
+  /** 피고 측 답변서 제출 — 공유 링크 수신자가 선택지로 응답한다. 사건당 1회. */
+  submitDefense: (seq: number, token: string, option: string) =>
+    request<{ responseDoc: DefenseResponseDoc }>(`/api/cases/${seq}/response`, {
+      method: "POST",
+      body: JSON.stringify({ t: token, option }),
     }),
 
   nextSeq: () => request<{ seq: number }>("/api/meta/next-seq"),
