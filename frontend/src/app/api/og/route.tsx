@@ -6,12 +6,13 @@
  * charset을 다시 뽑아 서브셋을 재생성해야 한다.
  */
 
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { ImageResponse } from "next/og";
 
-export const runtime = "edge";
-
-const extraBold = fetch(new URL("./og-myeongjo-extrabold.ttf", import.meta.url)).then((r) => r.arrayBuffer());
-const regular = fetch(new URL("./og-myeongjo-regular.ttf", import.meta.url)).then((r) => r.arrayBuffer());
+// Node 런타임: 엣지의 1MB 번들 제한을 피하고, 폰트는 파일 트레이싱으로 함께 배포된다.
+const extraBold = readFile(join(process.cwd(), "src/app/api/og/og-myeongjo-extrabold.ttf"));
+const regular = readFile(join(process.cwd(), "src/app/api/og/og-myeongjo-regular.ttf"));
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
