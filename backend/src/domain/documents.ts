@@ -69,8 +69,8 @@ const COMPLAINANTS: Record<FilingKind, readonly string[]> = {
 
 const COMPLAINT_FACT_CLOSERS = [
   "이는 단순한 해프닝으로 넘기기에는 그 괘씸함이 상당하다.",
-  "위 행위로 인하여 고소인의 생활 평온이 심각하게 침해되었다.",
-  "피고소인은 현재까지 별다른 사과의 정황을 보이지 않고 있다.",
+  "위 행위로 인하여 고소인의 일상생활의 평온이 현저히 침해되었다.",
+  "피고소인은 현재까지 아무런 사과나 원상회복의 조치를 취하지 아니하고 있다.",
 ] as const;
 
 export function generateComplaint(input: CaseInput, verdict: Verdict, kind: FilingKind): ComplaintDoc {
@@ -112,7 +112,7 @@ export function generateDemandLetter(input: CaseInput): DemandLetterDoc {
     title: `「${scenario.name}」 관련 시정 요구의 건`,
     sender: "원고 본인",
     receiver: pick(rand, DEFENDANTS[input.relationship]),
-    background: `발신인은 최근 "${excerptOf(input.story)}"라는 일을 겪었습니다. 이는 수신인의 부주의 또는 고의에 기인한 것으로, 발신인의 생활 평온을 명백히 해치는 행위입니다.`,
+    background: `발신인은 최근 "${excerptOf(input.story)}"라는 일을 겪었습니다. 이는 수신인의 부주의 또는 고의에 기인한 것으로, 발신인의 일상생활의 평온을 현저히 해치는 행위입니다.`,
     // 판결문에서 배척될 항변을 내용증명 단계에서 미리 봉쇄한다.
     rebuttal: `수신인께서는 "${scenario.defense.claim}"라고 해명하실 것으로 예상됩니다. 그러나 생활법원은 동종 사건에서 같은 취지의 항변에 대하여 "${scenario.defense.rejection}"라고 판시한 바 있으므로, 해당 해명은 통하지 않을 것임을 미리 알려드립니다.`,
     demand: pickScenarioOrder(input.story, scenario).replace(/^피고인([은의])/, "수신인$1"),
