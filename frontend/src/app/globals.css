@@ -414,6 +414,68 @@ p.sub {
   color: var(--ink-soft);
   margin-bottom: 10px;
 }
+/* ---------- 랜딩 전광판 (법원 로비 LED) ---------- */
+.board {
+  margin-bottom: 14px;
+  border: 1px solid rgba(201, 162, 39, 0.4);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.42);
+  overflow: hidden;
+}
+.board-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--sans);
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  color: var(--gold-soft);
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(201, 162, 39, 0.25);
+}
+.board-live {
+  color: var(--objection-red);
+  font-weight: 700;
+  animation: board-blink 1.6s steps(2, start) infinite;
+}
+@keyframes board-blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+.board-ticker {
+  overflow: hidden;
+  padding: 7px 0;
+}
+.board-track {
+  display: inline-flex;
+  white-space: nowrap;
+  will-change: transform;
+  animation: board-scroll 28s linear infinite;
+}
+.board-group {
+  display: inline-flex;
+  gap: 32px;
+  padding-right: 32px;
+}
+.board-item {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--gold-bright);
+  text-shadow: 0 0 8px rgba(232, 201, 92, 0.45);
+}
+.board-item b {
+  font-weight: 700;
+}
+@keyframes board-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 /* 안내 페이지 문의 링크 */
 .contact-link {
   display: block;

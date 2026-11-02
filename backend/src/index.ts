@@ -81,6 +81,19 @@ app.get("/api/meta/next-seq", async (_req, res) => {
   res.json({ seq: await storage.nextSeq() });
 });
 
+/** 랜딩 전광판 — 공개 가능한 메타데이터만. DB 보호를 위해 60초 캐시한다. */
+let boardCache: { data: unknown; at: number } | null = null;
+app.get("/api/board", async (_req, res) => {
+  try {
+    if (!boardCache || Date.now() - boardCache.at > 60_000) {
+      boardCache = { data: await storage.board(), at: Date.now() };
+    }
+    res.json(boardCache.data);
+  } catch {
+    res.status(503).json({ error: "board unavailable" });
+  }
+});
+
 /**
  * 공유 링크 재현: 입력+사건번호로 판결을 저장 없이 재생성한다.
  * 같은 입력이면 같은 판결이 나오므로, 링크를 받은 사람은 원본과 동일한 판결문을 본다.

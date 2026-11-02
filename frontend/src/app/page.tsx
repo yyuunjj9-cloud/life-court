@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Burst } from "@/components/Burst";
+import { fetchBoard, type BoardData } from "@/lib/api";
 import { useCaseStore } from "@/store/case-store";
 
 /* 01 랜딩 — 어두운 법정 */
@@ -15,6 +16,18 @@ export default function LandingPage() {
   // 로고를 눌러 홈에 온 사용자가 진행 중이던 사건을 잃지 않도록 복귀 경로를 제공한다.
   const hasVerdict = Boolean(verdict);
   const hasDraft = !hasVerdict && draft.story.trim().length > 0;
+
+  // 전광판 — 서버가 잠들어 있으면 조용히 생략된다.
+  const [board, setBoard] = useState<BoardData | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetchBoard().then((b) => {
+      if (alive) setBoard(b);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // 새 사건 접수: 이전 진행 상태를 완전히 초기화하고 시작한다.
   const startNew = () => {
@@ -68,6 +81,28 @@ export default function LandingPage() {
           <span className="g">⚖</span>
         </div>
         <div className="grow" />
+        {board && board.recent.length > 0 && (
+          <div className="board" aria-label="실시간 심리 현황">
+            <div className="board-head">
+              <span className="board-live">● LIVE</span>
+              금일 심리 {board.todayCount}건 · 누적 {board.totalCount}건
+              {board.topCrime ? ` · 최다 죄목 ${board.topCrime}` : ""}
+            </div>
+            <div className="board-ticker">
+              <div className="board-track">
+                {[0, 1].map((copy) => (
+                  <div className="board-group" key={copy} aria-hidden={copy === 1}>
+                    {board.recent.map((e) => (
+                      <span className="board-item" key={`${copy}-${e.caseNo}`}>
+                        {e.caseNo} <b>{e.crime}</b> — {e.result}
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
         <div className="stack">
           <button className="btn" type="button" onClick={startNew}>
             {hasVerdict || hasDraft ? "새 사건 접수하기" : "사건 접수하기"}

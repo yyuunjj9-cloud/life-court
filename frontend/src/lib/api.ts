@@ -130,3 +130,34 @@ export const api = {
 
   health: () => request<{ ok: boolean; db_ok: boolean }>("/api/health"),
 };
+
+/* ---------- 전광판 (장식용 — 실패해도 조용히 넘어간다) ---------- */
+
+export interface BoardEntry {
+  caseNo: string;
+  crime: string;
+  result: string;
+}
+
+export interface BoardData {
+  recent: BoardEntry[];
+  totalCount: number;
+  todayCount: number;
+  topCrime: string | null;
+}
+
+/**
+ * 랜딩 전광판 데이터. request()와 달리 재시도·연결 배너를 발동하지 않는다 —
+ * 콜드스타트 중이면 전광판 없이 랜딩을 보여주는 게 낫다.
+ */
+export async function fetchBoard(): Promise<BoardData | null> {
+  for (const base of [PROXY_BASE, DIRECT_BASE]) {
+    try {
+      const res = await fetch(`${base}/api/board`);
+      if (res.ok) return (await res.json()) as BoardData;
+    } catch {
+      /* 다음 경로 시도 */
+    }
+  }
+  return null;
+}
