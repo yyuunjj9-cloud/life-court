@@ -57,3 +57,21 @@ test('share token grants only public fields and defense; owner token alone grant
   assert.deepEqual(reread.responseDoc, winner.responseDoc);
   assert.deepEqual(reread.verdict, created.verdict);
 });
+test('moderation rejects every generation path before assigning or storing a case', async () => {
+  const beforeSeq = await (await fetch(base + '/api/meta/next-seq')).json();
+  const blocked = { ...data, story: '친구가 씨발이라고 하며 저에게 화를 냈어요' };
+  const check = await (await post('/api/stories/check', { story: blocked.story })).json();
+  assert.equal(check.issue.code, 'abusive_language');
+  for (const route of ['/api/cases', '/api/cases/preview', '/api/documents/demand']) {
+    const response = await post(route, { ...blocked, seq: 42 });
+    assert.equal(response.status, 422);
+    const issue = await response.json();
+    assert.equal(issue.code, 'CONTENT_REJECTED');
+    assert.equal(issue.issue.code, 'abusive_language');
+    assert.ok(!JSON.stringify(issue).includes(blocked.story));
+  }
+  assert.deepEqual(await (await fetch(base + '/api/meta/next-seq')).json(), beforeSeq);
+  const allowed = await post('/api/stories/check', { story: '시발점은 개발 일정이 바뀐 일이었어요' });
+  assert.deepEqual(await allowed.json(), { issue: null });
+  assert.equal((await post('/api/stories/check', { story: '짧음' })).status, 400);
+});

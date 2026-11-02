@@ -23,6 +23,7 @@ import {
 } from "./domain/documents";
 import { renderDefenseResponse, RESPONSE_OPTION_IDS } from "./domain/response";
 import { createStorage } from "./storage";
+import { checkStory } from "./domain/moderation";
 
 const CASE_TYPES: CaseType[] = ["work", "relationship", "meal", "messenger", "daily"];
 const RELATIONSHIPS: Relationship[] = ["self", "colleague", "friend", "boss", "anonymous"];
@@ -83,6 +84,28 @@ app.param("seq", (_req, res, next, value) => {
 app.get("/api/health", async (_req, res) => {
   const dbOk = await storage.health();
   res.status(dbOk ? 200 : 503).json({ ok: dbOk, storage: storageKind, db_ok: dbOk });
+});
+
+// One policy source for the form and every document-generating endpoint.
+app.post("/api/stories/check", (req, res) => {
+  const story = typeof req.body?.story === "string" ? req.body.story.trim() : "";
+  if (story.length < 10 || story.length > 300) {
+    res.status(400).json({ error: "invalid story length" });
+    return;
+  }
+  res.set("Cache-Control", "no-store");
+  res.json({ issue: checkStory(story) });
+});
+app.use(["/api/cases", "/api/cases/preview", "/api/documents/demand"], (req, res, next) => {
+  if (req.method !== "POST" || typeof req.body?.story !== "string") return next();
+  if (req.body.story.trim().length > 300) {
+    res.status(400).json({ error: "invalid story length" });
+    return;
+  }
+  const issue = checkStory(req.body.story);
+  if (!issue) return next();
+  res.set("Cache-Control", "no-store");
+  res.status(422).json({ error: "content rejected", code: "CONTENT_REJECTED", issue });
 });
 
 /** 다음 사건번호 미리보기 (09 접수 완료 화면용) */
