@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
+import { SaveVerdictImage } from "@/components/SaveVerdictImage";
 import { VerdictDoc } from "@/components/VerdictDoc";
 import type { Verdict } from "@/domain/judgment";
 import { api } from "@/lib/api";
@@ -81,6 +82,7 @@ function SharedScreenInner() {
           <button className="btn" type="button" onClick={startMine}>
             나도 사건 접수하기
           </button>
+          <SaveVerdictImage verdict={verdict} />
         </div>
       </div>
     </div>

@@ -46,6 +46,8 @@ html {
   /* iOS Safari가 가로 모드 등에서 임의로 글자를 키우는 것 방지 */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* 인앱 브라우저 하단 바·오버스크롤 등 어떤 틈에서도 흰 캔버스가 비치지 않도록 */
+  background: var(--wood-deep);
 }
 body {
   font-family: var(--serif);
@@ -123,7 +125,9 @@ html.inapp #app {
     padding-top: env(safe-area-inset-top, 0px);
   }
   .pad {
-    padding-bottom: calc(30px + env(safe-area-inset-bottom, 0px));
+    /* 카톡 등 인앱 브라우저는 safe-area를 0으로 보고한다 — 홈 인디케이터·브라우저 바에
+       마지막 버튼이 깔리지 않도록 최소 52px 바닥 여백을 보장한다 */
+    padding-bottom: max(52px, calc(30px + env(safe-area-inset-bottom, 0px)));
   }
 }
 
