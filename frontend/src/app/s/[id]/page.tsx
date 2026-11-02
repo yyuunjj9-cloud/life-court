@@ -5,8 +5,11 @@ import { ShortSharedScreen } from "./short-shared-screen";
 
 export const dynamic = "force-dynamic";
 
-/** 서버 간 호출용 백엔드 주소 — 프록시(next rewrites)는 브라우저 전용이라 직접 때린다. */
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "https://life-court-api.onrender.com";
+/**
+ * 서버 간 호출용 백엔드 주소 — 프록시(next rewrites)는 브라우저 전용이라 직접 때린다.
+ * trim(): Vercel 환경변수에 BOM(U+FEFF) 등 보이지 않는 문자가 섞이면 URL 파싱이 터진다(실제 발생).
+ */
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "https://life-court-api.onrender.com").trim();
 
 /**
  * 저장된 원본 판결 조회. 반드시 유한 시간 안에 끝나야 한다 —

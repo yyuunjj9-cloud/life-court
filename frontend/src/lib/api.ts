@@ -11,7 +11,8 @@
 import type { AppealVerdict, CaseInput, Verdict } from "@/domain/judgment";
 import type { ComplaintDoc, CountersuitDoc, DemandLetterDoc, FilingKind } from "@/domain/documents";
 
-const DIRECT_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+// trim(): 환경변수에 BOM(U+FEFF)이 섞여 들어와 직접 연결 URL이 깨진 사례가 있다.
+const DIRECT_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").trim();
 /** next.config.mjs rewrites가 /backend/* 를 백엔드로 프록시한다. */
 const PROXY_BASE = "/backend";
 /**
