@@ -114,23 +114,6 @@ html.inapp #app {
   }
 }
 
-/* iOS 노치/다이내믹 아일랜드·홈 인디케이터 대응 — 전체 화면 모드에서만 */
-@media (max-width: 639px), (min-width: 640px) and (max-height: 520px) {
-  #app {
-    padding-left: env(safe-area-inset-left, 0px);
-    padding-right: env(safe-area-inset-right, 0px);
-  }
-  .bar {
-    height: calc(54px + env(safe-area-inset-top, 0px));
-    padding-top: env(safe-area-inset-top, 0px);
-  }
-  .pad {
-    /* 카톡 등 인앱 브라우저는 safe-area를 0으로 보고한다 — 홈 인디케이터·브라우저 바에
-       마지막 버튼이 깔리지 않도록 최소 52px 바닥 여백을 보장한다 */
-    padding-bottom: max(52px, calc(30px + env(safe-area-inset-bottom, 0px)));
-  }
-}
-
 /* iOS Safari는 16px 미만 입력창을 탭하면 화면을 확대하고 되돌리지 않는다.
    터치 기기에서는 입력 글꼴을 16px로 올려 자동 확대 자체를 차단한다. */
 @media (pointer: coarse) {
@@ -1415,4 +1398,25 @@ p.sub {
   line-height: 1.8;
   color: var(--ink-soft);
   word-break: keep-all;
+}
+
+/* ============================================================
+   iOS 노치/다이내믹 아일랜드·홈 인디케이터 대응 — 전체 화면 모드에서만.
+   .bar·.pad 기본 규칙과 특이도가 같아 "뒤에 오는 쪽"이 이기므로
+   반드시 파일 끝에 두어야 한다 (앞에 두면 기본 규칙에 덮여 무효가 된다).
+   ============================================================ */
+@media (max-width: 639px), (min-width: 640px) and (max-height: 520px) {
+  #app {
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+  .bar {
+    height: calc(54px + env(safe-area-inset-top, 0px));
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .pad {
+    /* 카톡 등 인앱 브라우저는 safe-area를 0으로 보고한다 — 홈 인디케이터·브라우저 바에
+       마지막 버튼이 깔리지 않도록 최소 52px 바닥 여백을 보장한다 */
+    padding-bottom: max(52px, calc(30px + env(safe-area-inset-bottom, 0px)));
+  }
 }
