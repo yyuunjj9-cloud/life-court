@@ -116,9 +116,23 @@ export class PgStorage implements CaseStorage {
     this.initialization = this.initialize();
   }
   private async initialize() {
-    await this.pool.query(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS response JSONB,
-      ADD COLUMN IF NOT EXISTS share_token TEXT, ADD COLUMN IF NOT EXISTS owner_token TEXT`);
-    await this.pool.query(`CREATE TABLE IF NOT EXISTS case_counters (id TEXT PRIMARY KEY, value INTEGER NOT NULL)`);
+    // IF NOT EXISTS alone can still race on Postgres catalog entries when two
+    // instances create the same table. Serialize migrations per schema and keep
+    // the lock, DDL, and commit on the same connection.
+    const client = await this.pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query("SELECT pg_advisory_xact_lock(hashtext(current_schema()), hashtext('lifecourt-storage-init'))");
+      await client.query(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS response JSONB,
+        ADD COLUMN IF NOT EXISTS share_token TEXT, ADD COLUMN IF NOT EXISTS owner_token TEXT`);
+      await client.query(`CREATE TABLE IF NOT EXISTS case_counters (id TEXT PRIMARY KEY, value INTEGER NOT NULL)`);
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   }
   async ready() { await this.initialization; }
   async allocateSeq() {
