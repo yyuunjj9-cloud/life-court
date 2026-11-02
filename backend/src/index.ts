@@ -25,8 +25,8 @@ import { renderDefenseResponse, RESPONSE_OPTION_IDS } from "./domain/response";
 import { createStorage } from "./storage";
 import { checkStory } from "./domain/moderation";
 
-const CASE_TYPES: CaseType[] = ["work", "relationship", "meal", "messenger", "daily"];
-const RELATIONSHIPS: Relationship[] = ["self", "colleague", "friend", "boss", "anonymous"];
+const CASE_TYPES: CaseType[] = ["work", "relationship", "meal", "messenger", "money", "romance", "daily"];
+const RELATIONSHIPS: Relationship[] = ["self", "colleague", "friend", "family", "lover", "neighbor", "boss", "anonymous"];
 const TONES: Tone[] = ["lenient", "fair", "strict"];
 const FILING_KINDS: FilingKind[] = ["complaint", "accusation"];
 

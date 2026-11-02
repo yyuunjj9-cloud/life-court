@@ -4,8 +4,8 @@
  * 프론트는 API가 돌려준 문서를 표시만 한다.
  */
 
-export type CaseType = "work" | "relationship" | "meal" | "messenger" | "daily";
-export type Relationship = "self" | "colleague" | "friend" | "boss" | "anonymous";
+export type CaseType = "work" | "relationship" | "meal" | "messenger" | "money" | "romance" | "daily";
+export type Relationship = "self" | "colleague" | "friend" | "family" | "lover" | "neighbor" | "boss" | "anonymous";
 export type Tone = "lenient" | "fair" | "strict";
 export type Severity = 1 | 2 | 3 | 4 | 5;
 
@@ -43,6 +43,8 @@ export const CASE_TYPE_LABEL: Record<CaseType, string> = {
   relationship: "인간관계",
   meal: "식사",
   messenger: "메신저",
+  money: "돈·정산",
+  romance: "연애·썸",
   daily: "일상",
 };
 
@@ -50,6 +52,9 @@ export const RELATIONSHIP_LABEL: Record<Relationship, string> = {
   self: "본인",
   colleague: "동료",
   friend: "친구",
+  family: "가족",
+  lover: "연인·썸",
+  neighbor: "이웃",
   boss: "상사",
   anonymous: "익명 인물",
 };

@@ -5,8 +5,8 @@ CREATE TABLE IF NOT EXISTS cases (
   seq          INTEGER PRIMARY KEY,          -- 사건 시퀀스 (42부터 시작)
   case_no      TEXT NOT NULL,                -- 표시용 사건번호 예: "2026 생활 제042호"
   story        TEXT NOT NULL,                -- 사연 (10~300자)
-  case_type    TEXT NOT NULL,                -- work | relationship | meal | messenger | daily
-  relationship TEXT NOT NULL,                -- self | colleague | friend | boss | anonymous
+  case_type    TEXT NOT NULL,                -- work | relationship | meal | messenger | money | romance | daily
+  relationship TEXT NOT NULL,                -- self | colleague | friend | family | lover | neighbor | boss | anonymous
   severity     SMALLINT NOT NULL CHECK (severity BETWEEN 1 AND 5),
   tone         TEXT NOT NULL,                -- lenient | fair | strict
   filing_kind  TEXT NOT NULL,                -- complaint(고소) | accusation(고발)

@@ -11,6 +11,8 @@ const TYPES: { key: CaseType; icon: string; label: string }[] = [
   { key: "relationship", icon: "👥", label: "인간관계" },
   { key: "meal", icon: "🍴", label: "식사" },
   { key: "messenger", icon: "💬", label: "메신저" },
+  { key: "money", icon: "💸", label: "돈·정산" },
+  { key: "romance", icon: "💘", label: "연애·썸" },
   { key: "daily", icon: "🏠", label: "일상" },
 ];
 
@@ -18,6 +20,9 @@ const RELS: { key: Relationship; label: string }[] = [
   { key: "self", label: "본인" },
   { key: "colleague", label: "동료" },
   { key: "friend", label: "친구" },
+  { key: "family", label: "가족" },
+  { key: "lover", label: "연인·썸" },
+  { key: "neighbor", label: "이웃" },
   { key: "boss", label: "상사" },
   { key: "anonymous", label: "익명 인물" },
 ];
@@ -47,7 +52,8 @@ export default function TypePage() {
         <Steps current={2} />
         <p className="lbl">사건 유형</p>
         <div className="g3">{TYPES.slice(0, 3).map(typeButton)}</div>
-        <div className="g3 two">{TYPES.slice(3).map(typeButton)}</div>
+        <div className="g3 two">{TYPES.slice(3, 5).map(typeButton)}</div>
+        <div className="g3 two">{TYPES.slice(5).map(typeButton)}</div>
         <p className="lbl" style={{ marginTop: 24 }}>
           피고와의 관계
         </p>

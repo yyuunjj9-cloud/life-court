@@ -20,8 +20,8 @@ export interface SharedCase {
   display?: SharedDisplay;
 }
 
-const CASE_TYPES: readonly CaseType[] = ["work", "relationship", "meal", "messenger", "daily"];
-const RELATIONSHIPS: readonly Relationship[] = ["self", "colleague", "friend", "boss", "anonymous"];
+const CASE_TYPES: readonly CaseType[] = ["work", "relationship", "meal", "messenger", "money", "romance", "daily"];
+const RELATIONSHIPS: readonly Relationship[] = ["self", "colleague", "friend", "family", "lover", "neighbor", "boss", "anonymous"];
 const TONES: readonly Tone[] = ["lenient", "fair", "strict"];
 
 /**
