@@ -3,21 +3,28 @@ import type { Verdict } from "@/domain/judgment";
 import { parseShortShareId } from "@/lib/share";
 import { ShortSharedScreen } from "./short-shared-screen";
 
+export const dynamic = "force-dynamic";
+
 /** 서버 간 호출용 백엔드 주소 — 프록시(next rewrites)는 브라우저 전용이라 직접 때린다. */
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "https://life-court-api.onrender.com";
 
-/** 판결은 불변이므로 하루 캐시 — 콜드스타트를 요청마다 치르지 않는다. */
+/**
+ * 저장된 원본 판결 조회. 반드시 유한 시간 안에 끝나야 한다 —
+ * generateMetadata가 영원히 pending이면 SSR 스트림이 닫히지 않는다.
+ */
 async function fetchSharedVerdict(id: string): Promise<Verdict | null> {
   const parsed = parseShortShareId(id);
   if (!parsed) return null;
   try {
     const res = await fetch(`${API_BASE}/api/cases/${parsed.seq}?t=${parsed.token}`, {
-      next: { revalidate: 86400 },
+      cache: "no-store",
+      signal: AbortSignal.timeout(9000),
     });
     if (!res.ok) return null;
     const rec = (await res.json()) as { verdict?: Verdict };
     return rec.verdict ?? null;
-  } catch {
+  } catch (e) {
+    console.error(`[shared] case fetch failed: ${parsed.seq}`, e);
     return null;
   }
 }
