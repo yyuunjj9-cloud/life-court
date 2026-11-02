@@ -6,6 +6,7 @@
 import {
   DEFENDANTS,
   EVIDENCE_POOL,
+  excerptOf,
   hashSeed,
   mulberry32,
   pick,
@@ -54,10 +55,6 @@ export interface CountersuitDoc {
   accepted: boolean;
   rulingLabel: string;
   rulingNote: string;
-}
-
-function excerptOf(story: string): string {
-  return story.length > 40 ? `${story.slice(0, 40)}…` : story;
 }
 
 /* ---------- 고소장 / 고발장 ---------- */

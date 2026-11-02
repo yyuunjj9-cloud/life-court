@@ -1,5 +1,15 @@
 # 배포 구성 (2026-08-21)
 
+## 사건 권한 및 저장소 변경 (2026-11-02)
+
+- 사건번호는 `case_counters`의 원자적 UPSERT로 예약한다. 번호 미리보기는 예약하지 않는다. 실패한 접수는 번호 공백을 남길 수 있다.
+- 답변서는 `response IS NULL` 조건의 단일 UPDATE로 접수한다. 동시 제출 중 한 요청만 성공한다.
+- 접수 시 공유용·접수자용 토큰을 각각 192비트 난수로 발급한다. 공유 조회에는 접수자 토큰·원문 입력을 반환하지 않는다. 항소·맞고소는 `X-Owner-Token`이 필요하다.
+- 서버는 `response`, `share_token`, `owner_token` 컬럼과 `case_counters` 테이블을 준비한 후에만 요청을 받는다. 기존 판결 데이터는 수정하지 않는다.
+- **기존 해시 기반 `/s/번호-토큰` 링크는 보안 강화 후 사용할 수 없다.** 기존 브라우저에 보관된 문서는 이미지 저장·공유가 가능하지만, 접수자 토큰 없는 과거 사건의 추가 항소·맞고소는 제한된다. 새 사건부터 새 링크를 제공한다. 입력을 담는 구형 `/shared` 재현 링크는 별개다.
+- 배포는 백엔드부터 완료하고 health 확인 후 프론트를 배포한다. 전환 중 구버전 프론트는 새 공유 링크·추가 처분을 사용할 수 없으므로 새로고침해야 한다.
+- 검증: `cd backend && npm test`; 운영 DB를 대상으로 자동 테스트를 실행하지 않는다.
+
 ```
 브라우저 ──▶ Vercel (frontend) ──fetch──▶ Render (backend API) ──SQL──▶ Supabase Postgres
 ```
@@ -35,12 +45,14 @@
 ## 재배포 방법
 
 ```bash
-# 백엔드 (CLI 생성 서비스라 push 자동 배포가 연결돼 있지 않음)
+# 백엔드 수동 재배포 (2026-11-02 서비스 API 확인: main push 자동 배포도 활성화됨)
 render deploys create srv-da402fn40ujc73chjqdg --confirm
 
 # 프론트
 cd frontend && vercel deploy --prod --yes
 ```
+
+현재 Vercel도 GitHub main 브랜치에 연결되어 있다. API 계약을 바꿀 때는 백엔드 변경을 먼저 push하고 Render의 live/health 상태를 확인한 뒤 프론트 변경을 push한다.
 
 Render 환경변수 변경은 REST(PUT `/v1/services/<srv>/env-vars`, 전체 치환이므로 기존 값 병합) 후 재배포.
 

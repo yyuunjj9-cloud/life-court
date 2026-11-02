@@ -93,6 +93,25 @@ export function pick<T>(rand: () => number, arr: readonly T[]): T {
   return arr[Math.floor(rand() * arr.length)];
 }
 
+/**
+ * 판결문·서류에 인용할 사연 발췌.
+ * "심지어 본인은 회…"처럼 어절 중간에서 끊기지 않도록
+ * 문장 경계를 우선으로, 없으면 어절 경계에서 자른다.
+ */
+export function excerptOf(story: string, max = 90): string {
+  const s = story.trim();
+  if (s.length <= max) return s;
+  const head = s.slice(0, max + 1);
+  // 마지막 문장 경계(마침표·물음표·느낌표·말줄임) 위치
+  let cut = -1;
+  const punct = /[.!?…](?=\s|$)/g;
+  for (let m = punct.exec(head); m; m = punct.exec(head)) cut = m.index + 1;
+  if (cut >= max * 0.35) return s.slice(0, cut).trim();
+  const space = head.lastIndexOf(" ");
+  if (space >= max * 0.5) return `${s.slice(0, space).trim()}…`;
+  return `${s.slice(0, max)}…`;
+}
+
 /* ---------- 템플릿 풀 ---------- */
 
 /** 피고인의 궁색한 항변과 재판부가 이를 배척하는 이유. 판결 이유 단락에 삽입된다. */
@@ -1529,25 +1548,65 @@ export const EVIDENCE_POOL = [
 
 /**
  * 사연 본문과 가장 어울리는 시나리오를 고른다.
- * 키워드 적중 수가 가장 많은 시나리오를 선택하고, 동점이거나 적중이 없으면
- * 사연 해시 시드 난수로 그 후보들 중에서 고른다 — 같은 입력이면 항상 같은 결과.
+ * 구체적인 행위 표현과 문맥을 우선해 시나리오를 선택한다.
+ * 근거가 부족하거나 동점이면 일반 분쟁으로 남긴다. 무관한 죄목은 추첨하지 않는다.
  * 판결문·고소장·내용증명이 모두 이 함수를 쓰므로 한 사건의 죄목이 문서 간에 일치한다.
  */
 export function selectScenario(story: string, caseType: CaseType): CaseScenario {
-  const pool = SCENARIOS[caseType];
-  let best: CaseScenario[] = [];
-  let bestScore = 0;
-  for (const s of pool) {
-    const score = s.keywords.reduce((n, k) => (story.includes(k) ? n + 1 : n), 0);
-    if (score > bestScore) {
-      bestScore = score;
-      best = [s];
-    } else if (score === bestScore && score > 0) {
-      best.push(s);
+  const text = story.normalize("NFKC").toLowerCase().replace(/\s+/g, "");
+  const withFrequency = (scenario: CaseScenario): CaseScenario =>
+    /매번|상습|반복|여러번|계속|맨날|자꾸|항상/.test(text) ? scenario : {
+      ...scenario,
+      name: scenario.name.replace(/\s(?:반복|상습)(?=\s)/g, ""),
+      crime: scenario.crime.replace(/상습적?\s*/g, ""),
+    };
+  const fallback = (): CaseScenario => ({
+    name: `${CASE_TYPE_LABEL[caseType]} 분쟁 사건`,
+    crime: "생활 배려 의무 소홀 혐의",
+    orders: ["쌍방은 제출된 사연의 사실관계를 확인하고, 불편을 일으킨 행동과 재발 방지 방법을 구체적으로 협의할 것."],
+    defense: {
+      claim: "서로의 입장에 차이가 있을 수 있다",
+      rejection: "제출된 사연만으로 구체적인 행위와 책임을 단정하기 어려워 추가 사실 확인이 필요하다.",
+    },
+    keywords: [],
+  });
+  // A denial/quoted accusation is not evidence that the alleged act occurred.
+  // Keep disputed accounts general rather than reversing who did what.
+  if (/늦지않|지각하지않|읽씹하지않|업무연락.{0,6}하지않았|뜻이아니라|오해를받/.test(text)) return fallback();
+  // These expressions require the act as well as its context, rather than
+  // treating incidental words such as '새벽', '준비', or '대신' as an offense.
+  const anchors: [RegExp, string][] = [
+    [/(주말|휴일|연휴|토요일|일요일|휴가).*(업무|일하|지시|보고|연락)|(업무|지시|보고).*(주말|휴일|휴가)/, "휴일 업무 연락 사건"],
+    [/(퇴근직전|퇴근하려|퇴근시간).*(업무|일을|지시|시키|시켰)/, "퇴근 직전 업무 지시 사건"],
+    [/안읽씹|읽지도않|숫자1|1이안없어/, "안읽씹 장기 방치 사건"],
+    [/(읽씹|답장|답이없).*(인스타|스토리|sns)|(인스타|스토리|sns).*(읽씹|답장|답이없)/, "읽씹 중 SNS 활동 사건"],
+    [/(약속|만나|모임).*(늦|지각|기다)|(늦|지각).*(약속|모임)/, "약속 지각 반복 사건"],
+    [/문을쾅|문소리|문을세게닫|쾅닫/, "문 강타 사건"],
+    [/빨래를안널|세탁물.*방치|세탁기.*(방치|안꺼내)/, "세탁물 장기 방치 사건"],
+  ];
+  const all = Object.values(SCENARIOS).flat();
+  for (const [pattern, name] of anchors) {
+    if (pattern.test(text)) {
+      const found = all.find((scenario) => scenario.name === name);
+      if (found) return withFrequency(found);
     }
   }
-  const rand = mulberry32(hashSeed(`scenario|${caseType}|${story}`));
-  return pick(rand, bestScore > 0 ? best : pool);
+  const broad = new Set(["새벽", "밤에", "준비", "대신", "무시", "계산", "회의", "자료", "직전", "나가", "나갔", "기다리", "기다렸", "늦게", "늦었", "늦는", "허락없이", "몰래", "지적", "불평", "별로"]);
+  const ranked = Object.entries(SCENARIOS).flatMap(([type, scenarios]) => scenarios.map((scenario) => {
+    const hits = scenario.keywords.map((word) => word.toLowerCase().replace(/\s+/g, ""))
+      .filter((word) => text.includes(word));
+    // A specific phrase must support the selection. Broad/short fragments alone
+    // cannot invent a concrete incident. Overlapping synonyms count only once.
+    const specific = hits.filter((word) => word.length >= 3 && !broad.has(word));
+    const distinct = specific.filter((word) => !specific.some((other) => other !== word && other.includes(word)));
+    const score = distinct.reduce((sum, word) => sum + Math.min(word.length, 8), 0)
+      + (type === caseType && distinct.length ? 0.5 : 0);
+    return { scenario, score };
+  })).sort((a, b) => b.score - a.score);
+  if (ranked[0].score >= 3 && ranked[0].score - ranked[1].score >= 0.5) return withFrequency(ranked[0].scenario);
+
+  // Unknown or ambiguous input must stay faithful to the supplied story.
+  return fallback();
 }
 
 /** 주문 선택도 사연 해시로 결정해, 내용증명 요구사항과 판결 주문이 같은 문장이 되게 한다. */
@@ -1572,9 +1631,13 @@ const ORDER_TONE_SUFFIX: Record<Tone, readonly string[]> = {
 };
 
 /** 심각성 + 성향 → 판결 수위 점수(0~6) */
-function verdictScore(severity: Severity, tone: Tone): number {
+function verdictScore(severity: Severity, tone: Tone, story = ""): number {
   const toneOffset = tone === "lenient" ? -1 : tone === "strict" ? 1 : 0;
-  return Math.max(0, Math.min(6, severity + toneOffset));
+  const repeated = /매번|상습|계속|여러 번|반복|일부러|고의로/.test(story) ? 1 : 0;
+  const repaired = /진심으로 사과|사과했|사과를 했|바로 돌려|돌려줬|변상했|배상했|실수였|처음이/.test(story) ? 1 : 0;
+  // Story-only seed keeps severity and tone monotonic for a given account.
+  const variation = Math.floor(mulberry32(hashSeed(`ruling-v2|${story}`))() * 3) - 1;
+  return Math.max(0, Math.min(6, severity + toneOffset + repeated - repaired + variation));
 }
 
 const RESULTS: readonly { min: number; result: string; notes: readonly string[] }[] = [
@@ -1591,18 +1654,22 @@ export function formatCaseNo(seq: number, year = 2026): string {
 
 export function generateVerdict(input: CaseInput, caseSeq: number): Verdict {
   const rand = mulberry32(hashSeed(`${input.story}|${input.caseType}|${input.relationship}|${input.severity}|${input.tone}`));
-  const score = verdictScore(input.severity, input.tone);
+  const scenario = selectScenario(input.story, input.caseType);
+  const uncertain = scenario.keywords.length === 0;
+  const score = uncertain ? Math.min(2, verdictScore(input.severity, input.tone, input.story))
+    : verdictScore(input.severity, input.tone, input.story);
   const tier = RESULTS.find((r) => score >= r.min) ?? RESULTS[RESULTS.length - 1];
 
   // 사건명·죄명·주문·항변이 논리적으로 묶인 시나리오를 사연 키워드 기준으로 선택한다.
-  const scenario = selectScenario(input.story, input.caseType);
 
-  const excerpt = input.story.length > 40 ? `${input.story.slice(0, 40)}…` : input.story;
-  const reasoning = [
-    `피고인은 "${excerpt}"라는 취지의 행위에 이르렀다.`,
-    pick(rand, REASONING_OPENERS),
-    `피고인은 "${scenario.defense.claim}"라고 항변하였으나, ${scenario.defense.rejection}`,
-    pick(rand, REASONING_CLOSERS[input.tone]),
+  const excerpt = excerptOf(input.story);
+  const reasoning = uncertain
+    ? `원고는 "${excerpt}"라는 취지로 진술하였다. ${scenario.defense.rejection} 특정 죄목에 해당한다고 단정하지 아니하고, 쌍방의 사실 확인과 대화를 권고한다.`
+    : [
+    `원고는 "${excerpt}"라는 취지로 진술하였다.`,
+    `본건은 제출된 진술 중 「${scenario.crime}」와 관련된 행위를 중심으로 검토한다.`,
+    "실제 상대방의 해명은 제출되지 않았으므로, 사연 밖의 구체적인 행동이나 동기를 인정하지 아니한다.",
+    "원고가 기재한 사정과 사건의 심각성을 종합하여 주문과 같이 판단한다.",
   ].join(" ");
 
   return {
@@ -1610,10 +1677,12 @@ export function generateVerdict(input: CaseInput, caseSeq: number): Verdict {
     caseName: scenario.name,
     defendant: pick(rand, DEFENDANTS[input.relationship]),
     crime: scenario.crime,
-    order: `${pickScenarioOrder(input.story, scenario)} ${pick(rand, ORDER_TONE_SUFFIX[input.tone])}`,
+    order: score < 2 ? "피고인에게 유죄 처분을 하지 아니한다. 쌍방은 사실관계를 확인하고 대화로 불편을 해소할 것을 권고한다."
+      : `${pickScenarioOrder(input.story, scenario)} ${pick(rand, ORDER_TONE_SUFFIX[input.tone])}`,
     reasoning,
-    advice: pick(rand, ADVICE[input.caseType]),
-    evidence: [...EVIDENCE_POOL].sort(() => rand() - 0.5).slice(0, 3),
+    advice: uncertain ? "서운했던 행동과 원하는 해결 방법을 서로 확인하고, 확인되지 않은 사실을 단정하지 않을 것을 권고한다."
+      : `본건의 재발 방지를 위하여 다음 사항을 협의할 것을 권고한다. ${pickScenarioOrder(input.story, scenario)}`,
+    evidence: [`원고가 제출한 사연: "${excerpt}"`, "상대방의 진술과 객관적 증빙은 별도로 제출되지 아니하였다."],
     result: tier.result,
     resultNote: pick(rand, tier.notes),
   };
@@ -1639,7 +1708,7 @@ export function generateAppeal(input: CaseInput, verdict: Verdict): AppealVerdic
   const rand = mulberry32(hashSeed(`appeal|${verdict.caseNo}|${input.story}`));
   const alreadyAcquitted = verdict.result === "무죄" || verdict.result === "훈방 조치";
   // 이미 가벼운 처분이면 원심 유지, 그 외에는 수위가 낮을수록 파기 확률이 높다.
-  const overturnChance = alreadyAcquitted ? 0 : 0.85 - verdictScore(input.severity, input.tone) * 0.1;
+  const overturnChance = alreadyAcquitted ? 0 : 0.85 - verdictScore(input.severity, input.tone, input.story) * 0.1;
   const overturned = rand() < overturnChance;
 
   if (overturned) {

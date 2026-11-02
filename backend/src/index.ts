@@ -5,9 +5,9 @@
 
 import cors from "cors";
 import express from "express";
+import { randomBytes, timingSafeEqual } from "node:crypto";
 import {
   generateVerdict,
-  hashSeed,
   type CaseInput,
   type CaseType,
   type Relationship,
@@ -21,6 +21,7 @@ import {
   generateDemandLetter,
   type FilingKind,
 } from "./domain/documents";
+import { renderDefenseResponse, RESPONSE_OPTION_IDS } from "./domain/response";
 import { createStorage } from "./storage";
 
 const CASE_TYPES: CaseType[] = ["work", "relationship", "meal", "messenger", "daily"];
@@ -70,6 +71,14 @@ app.use(
   }),
 );
 app.use(express.json());
+app.param("seq", (_req, res, next, value) => {
+  const seq = Number(value);
+  if (!Number.isSafeInteger(seq) || seq < 1 || seq > 2_147_483_647) {
+    res.status(400).json({ error: "invalid case number" });
+    return;
+  }
+  next();
+});
 
 app.get("/api/health", async (_req, res) => {
   const dbOk = await storage.health();
@@ -116,7 +125,9 @@ app.post("/api/cases", async (req, res) => {
     res.status(400).json({ error: "invalid case input" });
     return;
   }
-  const seq = await storage.nextSeq();
+  const seq = await storage.allocateSeq();
+  const shareToken = randomBytes(24).toString("hex");
+  const ownerToken = randomBytes(24).toString("hex");
   const verdict = generateVerdict(input, seq);
   const complaint = generateComplaint(input, verdict, filingKind as FilingKind);
   await storage.create({
@@ -127,16 +138,21 @@ app.post("/api/cases", async (req, res) => {
     complaint,
     appeal: null,
     countersuit: null,
+    response: null,
+    shareToken,
+    ownerToken,
   });
-  res.status(201).json({ seq, verdict, complaint });
+  res.set("Cache-Control", "no-store");
+  res.status(201).json({ seq, verdict, complaint, shareToken, ownerToken });
 });
 
 /**
- * 공유 토큰: 사연 내용을 아는 사람만 만들 수 있다(프런트 share.ts와 동일 공식).
- * 사건번호가 순번이라도 토큰 없이는 타인의 기록을 열람할 수 없다.
+ * Independent 192-bit random bearer tokens. Share tokens cannot authorize owner actions.
+ * Legacy hash tokens deliberately fail closed; stored documents remain untouched.
  */
-function shareTokenFor(seq: number, story: string): string {
-  return hashSeed(`share|${seq}|${story}`).toString(36);
+function validToken(provided: unknown, expected: string | null): boolean {
+  if (typeof provided !== "string" || !expected || !/^[a-f0-9]{48}$/.test(provided)) return false;
+  return timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
 }
 
 app.get("/api/cases/:seq", async (req, res) => {
@@ -146,11 +162,44 @@ app.get("/api/cases/:seq", async (req, res) => {
     res.status(404).json({ error: "case not found" });
     return;
   }
-  if (String(req.query.t ?? "") !== shareTokenFor(seq, rec.input.story)) {
+  if (!validToken(req.query.t, rec.shareToken)) {
     res.status(403).json({ error: "invalid share token" });
     return;
   }
-  res.json(rec);
+  // 답변서는 id만 저장되므로 읽을 때 문구를 렌더링해 함께 내려준다.
+  res.set("Cache-Control", "no-store");
+  res.set("Referrer-Policy", "no-referrer");
+  res.json({ seq: rec.seq, verdict: rec.verdict, responseDoc: rec.response ? renderDefenseResponse(rec.response.option) : null });
+});
+
+/**
+ * 피고 측 답변서 제출 — 공유 링크 수신자가 선택지로만 응답한다(자유 텍스트 없음).
+ * 사건당 1회(선착)이며, 재판부 결정은 원심 판결을 변경하지 않는 부가 문서다.
+ */
+app.post("/api/cases/:seq/response", async (req, res) => {
+  const seq = Number(req.params.seq);
+  const rec = await storage.get(seq);
+  if (!rec) {
+    res.status(404).json({ error: "case not found" });
+    return;
+  }
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  if (!validToken(body.t, rec.shareToken)) {
+    res.status(403).json({ error: "invalid share token" });
+    return;
+  }
+  const option = String(body.option ?? "");
+  if (!RESPONSE_OPTION_IDS.includes(option)) {
+    res.status(400).json({ error: "invalid response option" });
+    return;
+  }
+  if (!(await storage.setResponse(seq, { option }))) {
+    const existing = (await storage.get(seq))?.response;
+    // 이미 답변된 사건 — 기존 답변을 그대로 돌려준다 (선착 1회).
+    res.status(409).json({ error: "already responded", responseDoc: existing ? renderDefenseResponse(existing.option) : null });
+    return;
+  }
+  res.status(201).json({ responseDoc: renderDefenseResponse(option) });
 });
 
 /** 항소심 판결 생성 */
@@ -159,6 +208,10 @@ app.post("/api/cases/:seq/appeal", async (req, res) => {
   const rec = await storage.get(seq);
   if (!rec) {
     res.status(404).json({ error: "case not found" });
+    return;
+  }
+  if (!validToken(req.get("X-Owner-Token"), rec.ownerToken)) {
+    res.status(403).json({ error: "invalid owner token" });
     return;
   }
   const appeal = rec.appeal ?? generateAppeal(rec.input, rec.verdict);
@@ -172,6 +225,10 @@ app.post("/api/cases/:seq/countersuit", async (req, res) => {
   const rec = await storage.get(seq);
   if (!rec) {
     res.status(404).json({ error: "case not found" });
+    return;
+  }
+  if (!validToken(req.get("X-Owner-Token"), rec.ownerToken)) {
+    res.status(403).json({ error: "invalid owner token" });
     return;
   }
   const countersuit = rec.countersuit ?? generateCountersuit(rec.input, rec.verdict);
@@ -190,6 +247,9 @@ app.post("/api/documents/demand", (req, res) => {
 });
 
 const port = Number(process.env.PORT ?? 4000);
-app.listen(port, () => {
-  console.log(`[life-court] API listening on :${port} (storage: ${storageKind})`);
+storage.ready().then(() => {
+  app.listen(port, () => console.log(`[life-court] API listening on :${port} (storage: ${storageKind})`));
+}).catch((error) => {
+  console.error("[life-court] storage initialization failed", error);
+  process.exitCode = 1;
 });
