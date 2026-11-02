@@ -6,11 +6,12 @@ import { useEffect, useState } from "react";
 import { DemandDocView } from "@/components/LegalDocs";
 import { formatKoreanDate } from "@/domain/date";
 import { useCaseStore } from "@/store/case-store";
+import { IntakeRejection } from "@/components/IntakeRejection";
 
 /* 13 내용증명 — 재판 전 경고장 */
 export default function DemandPage() {
   const router = useRouter();
-  const { demand, submitCase, hydrated } = useCaseStore();
+  const { demand, submitCase, hydrated, intakeIssue } = useCaseStore();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
 
@@ -38,7 +39,8 @@ export default function DemandPage() {
     <div className="scr">
       <div className="pad">
         <DemandDocView doc={demand} date={formatKoreanDate(new Date())} />
-        {error && <div className="help err">법원 서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.</div>}
+        {intakeIssue && <IntakeRejection issue={intakeIssue} onEdit={() => router.push("/intake/story")} />}
+        {error && !intakeIssue && <div className="help err">법원 서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.</div>}
         <div className="grow" />
         <div className="stack" style={{ marginTop: 14 }}>
           <button className="btn dark" type="button" disabled={pending} onClick={escalate}>

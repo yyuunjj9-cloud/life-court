@@ -5,7 +5,9 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { SaveVerdictImage } from "@/components/SaveVerdictImage";
 import { VerdictDoc } from "@/components/VerdictDoc";
 import type { Verdict } from "@/domain/judgment";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
+import type { ModerationIssue } from "@/domain/moderation";
+import { IntakeRejection } from "@/components/IntakeRejection";
 import { decodeSharedCase } from "@/lib/share";
 import { useCaseStore } from "@/store/case-store";
 
@@ -13,7 +15,7 @@ import { useCaseStore } from "@/store/case-store";
 function SharedScreenInner() {
   const router = useRouter();
   const params = useSearchParams();
-  const { resetCase } = useCaseStore();
+  const { resetCase, setStory } = useCaseStore();
 
   const shared = useMemo(() => {
     const d = params.get("d");
@@ -22,6 +24,7 @@ function SharedScreenInner() {
 
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [failed, setFailed] = useState(false);
+  const [issue, setIssue] = useState<ModerationIssue | null>(null);
 
   useEffect(() => {
     if (!shared) return;
@@ -31,8 +34,10 @@ function SharedScreenInner() {
       .then(({ verdict }) => {
         if (alive) setVerdict(verdict);
       })
-      .catch(() => {
-        if (alive) setFailed(true);
+      .catch((error) => {
+        if (!alive) return;
+        if (error instanceof ApiError && error.issue) setIssue(error.issue);
+        else setFailed(true);
       });
     return () => {
       alive = false;
@@ -43,6 +48,14 @@ function SharedScreenInner() {
     resetCase();
     router.push("/intake/story");
   };
+
+  if (issue) return <div className="scr"><div className="pad">
+    <IntakeRejection issue={issue} onEdit={() => {
+      resetCase();
+      if (shared) setStory(shared.input.story);
+      router.push("/intake/story");
+    }} />
+  </div></div>;
 
   if (!shared || failed) {
     return (

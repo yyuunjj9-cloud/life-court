@@ -28,12 +28,15 @@ const INNER = starPoints(130, 80, 103, 59, 0.78);
 
 const FONT = "'BurstHan','Black Han Sans','Malgun Gothic',sans-serif";
 
-export function Burst({ text, width = 170, variant = "objection" }: { text: string; width?: number; variant?: "objection" | "overruled" | "sustained" | "dismissed" }) {
+export function Burst({ text, width = 170, variant = "objection" }: { text: string; width?: number; variant?: "objection" | "overruled" | "sustained" | "dismissed" | "inadmissible" }) {
   const id = useId().replace(/:/g, "");
   const overruled = variant === "overruled";
   const sustained = variant === "sustained";
   const dismissed = variant === "dismissed";
-  const palette = dismissed
+  const inadmissible = variant === "inadmissible";
+  const palette = inadmissible
+    ? { edge: "#543C1F", bright: "#A48148", dark: "#76562C", ink: "#775429" }
+    : dismissed
     ? { edge: "#302722", bright: "#796554", dark: "#44382E", ink: "#514133" }
     : sustained
     ? { edge: "#11382C", bright: "#477D5D", dark: "#1B503B", ink: "#245A40" }
@@ -65,7 +68,7 @@ export function Burst({ text, width = 170, variant = "objection" }: { text: stri
       width={width}
       height={(width * 160) / 260}
       role="img"
-      aria-label={dismissed ? `${text} 맞고소 기각 또는 각하` : sustained ? `${text} 원심 파기, 무죄` : overruled ? `${text} 항소 기각` : text}
+      aria-label={inadmissible ? `${text} 진술 보완 요청` : dismissed ? `${text} 맞고소 기각 또는 각하` : sustained ? `${text} 원심 파기, 무죄` : overruled ? `${text} 항소 기각` : text}
     >
       <defs>
         <linearGradient id={`${id}-red`} x1="0" y1="0" x2="0" y2="1">
@@ -104,7 +107,7 @@ export function Burst({ text, width = 170, variant = "objection" }: { text: stri
           {text}
         </text>
         {latin && <text x="128" y="118" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="8.5" fontWeight="700" letterSpacing="1.1" fill={palette.ink}>
-          {dismissed ? "THIS CASE IS CLOSED" : sustained ? "OBJECTION ACCEPTED" : overruled ? "THE COURT HAS SPOKEN" : "I OBJECT, YOUR HONOR"}
+          {inadmissible ? "PLEASE REPHRASE" : dismissed ? "THIS CASE IS CLOSED" : sustained ? "OBJECTION ACCEPTED" : overruled ? "THE COURT HAS SPOKEN" : "I OBJECT, YOUR HONOR"}
         </text>}
       </g>
     </svg>

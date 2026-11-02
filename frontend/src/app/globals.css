@@ -1400,6 +1400,13 @@ p.sub {
   word-break: keep-all;
 }
 
+.intake-rejection { margin-top: 16px; padding: 16px; border: 1px solid #b99b64; border-left: 3px solid #8f7420; background: #f6edd8; color: var(--ink); }
+.rejection-stamp { display: flex; justify-content: center; margin: -5px 0 2px; }
+.intake-rejection h2 { margin: 0 0 8px; font-size: 17px; font-weight: 800; }
+.intake-rejection p { margin: 0 0 12px; font-size: 12px; line-height: 1.8; word-break: keep-all; }
+.intake-rejection .rejection-lead { font-weight: 700; }
+.intake-rejection .btn { margin-top: 4px; }
+
 .resp { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--paper-line); }
 .resp-intro, .resp-fine { color: var(--ink-soft); font-size: 12px; line-height: 1.8; word-break: keep-all; }
 .resp-opts { display: grid; gap: 8px; margin: 14px 0; }

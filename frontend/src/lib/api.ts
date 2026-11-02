@@ -11,6 +11,13 @@
 import type { AppealVerdict, CaseInput, Verdict } from "@/domain/judgment";
 import type { ComplaintDoc, CountersuitDoc, DemandLetterDoc, FilingKind } from "@/domain/documents";
 import type { DefenseResponseDoc } from "@/domain/response";
+import type { ModerationIssue } from "@/domain/moderation";
+
+export class ApiError extends Error {
+  constructor(path: string, public status: number, public issue: ModerationIssue | null = null) {
+    super(`API ${path} failed: ${status}`);
+  }
+}
 
 // trim(): 환경변수에 BOM(U+FEFF)이 섞여 들어와 직접 연결 URL이 깨진 사례가 있다.
 const DIRECT_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").trim();
@@ -77,6 +84,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     try {
       const res = await fetch(`${baseFor(attempt)}${path}`, {
         ...init,
+        signal: init?.signal ?? AbortSignal.timeout(12_000),
         headers: { "Content-Type": "application/json", ...init?.headers },
       });
       if (res.ok) {
@@ -85,11 +93,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       }
       if (!RETRYABLE_STATUS.has(res.status)) {
         setConn({ phase: "idle", startedAt: 0, attempt: 0 });
-        throw new Error(`API ${path} failed: ${res.status}`);
+        const payload = await res.json().catch(() => null);
+        throw new ApiError(path, res.status, payload?.code === "CONTENT_REJECTED" ? payload.issue ?? null : null);
       }
       lastError = new Error(`HTTP ${res.status}`);
     } catch (e) {
-      if (e instanceof Error && e.message.startsWith(`API ${path}`)) throw e;
+      if (e instanceof ApiError) throw e;
       lastError = e;
     }
     if (attempt < RETRY_DELAYS_MS.length) {
@@ -103,6 +112,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  checkStory: (story: string) => request<{ issue: ModerationIssue | null }>("/api/stories/check", {
+    method: "POST", body: JSON.stringify({ story }),
+  }),
   submitCase: (input: CaseInput, filingKind: FilingKind) =>
     request<{ seq: number; verdict: Verdict; complaint: ComplaintDoc; shareToken: string; ownerToken: string }>("/api/cases", {
       method: "POST",

@@ -13,3 +13,9 @@ test('four callouts provide distinct, accessible palettes without clipping long 
   assert.equal(new Set(ids).size, 12);
   assert.equal((markup.match(/textLength="205"/g) || []).length, 8);
 });
+test('intake rejection has a distinct calm variant and accessible Korean meaning', () => {
+  const markup = renderToStaticMarkup(React.createElement(Burst, { text: 'Inadmissible!', variant: 'inadmissible' }));
+  assert.match(markup, /진술 보완 요청/);
+  assert.match(markup, /PLEASE REPHRASE/);
+  assert.match(markup, /#775429/);
+});

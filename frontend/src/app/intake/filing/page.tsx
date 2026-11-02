@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Steps } from "@/components/Steps";
 import { useCaseStore } from "@/store/case-store";
 import type { FilingKind } from "@/domain/documents";
+import { IntakeRejection } from "@/components/IntakeRejection";
 
 const OPTIONS: { kind: FilingKind | "demand"; icon: string; name: string; desc: string }[] = [
   { kind: "complaint", icon: "📜", name: "고소장 접수", desc: "피해자 본인으로서 정식 고소합니다." },
@@ -15,7 +16,7 @@ const OPTIONS: { kind: FilingKind | "demand"; icon: string; name: string; desc: 
 /* 11 접수 방식 선택 — 고소 / 고발 / 내용증명 */
 export default function FilingPage() {
   const router = useRouter();
-  const { draft, submitCase, createDemand, hydrated } = useCaseStore();
+  const { draft, submitCase, createDemand, hydrated, intakeIssue } = useCaseStore();
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState(false);
   const incomplete = !draft.caseType || !draft.relationship || draft.story.trim().length < 10;
@@ -63,7 +64,8 @@ export default function FilingPage() {
             </button>
           ))}
         </div>
-        {error && <div className="help err">법원 서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.</div>}
+        {intakeIssue && <IntakeRejection issue={intakeIssue} onEdit={() => router.push("/intake/story")} />}
+        {error && !intakeIssue && <div className="help err">법원 서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.</div>}
         <div className="grow" />
         <button className="btn line" type="button" disabled={pending !== null} onClick={() => router.push("/intake/tone")}>
           이전

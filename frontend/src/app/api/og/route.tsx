@@ -18,6 +18,7 @@ export async function GET(req: Request) {
   const caseName = (searchParams.get("n") ?? "").slice(0, 30);
   const crime = (searchParams.get("c") ?? "").slice(0, 30);
   const result = (searchParams.get("r") ?? "").slice(0, 20);
+  const invite = searchParams.get("invite") === "1";
 
   const hasCase = caseName.length > 0 && crime.length > 0;
 
@@ -54,7 +55,7 @@ export async function GET(req: Request) {
           <div style={{ fontSize: 12, letterSpacing: 2, marginTop: 8, color: "#a8905c" }}>SMALL CASE. BIG DRAMA.</div>
         </div>
         {/* 결과 도장 */}
-        {result.length > 0 && (
+        {!invite && result.length > 0 && (
           <div
             style={{
               position: "absolute",
@@ -94,18 +95,24 @@ export async function GET(req: Request) {
         </div>
         <div
           style={{
-            fontSize: hasCase ? 76 : 88,
+            fontSize: invite ? 68 : hasCase ? 76 : 88,
             fontWeight: 800,
             color: "#e8c95c",
             marginBottom: 28,
             maxWidth: 1040,
             textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
           }}
         >
-          {hasCase ? `『${caseName}』` : "판 결 문"}
+          {invite ? <div style={{ display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 1.3 }}>
+            <div style={{ display: "flex" }}>그 사소한 억울함,</div>
+            <div style={{ display: "flex" }}>판결받고 가세요.</div>
+          </div> : hasCase ? `『${caseName}』` : "판 결 문"}
         </div>
         <div style={{ fontSize: 34, color: "#e3cf96", display: "flex" }}>
-          {hasCase ? `가상 죄명 · ${crime}` : "당신의 사소한 억울함을 엄숙하게 심리합니다."}
+          {invite ? "사연을 넣고, 판결문을 친구에게 보내보세요." : hasCase ? `가상 죄명 · ${crime}` : "당신의 사소한 억울함을 엄숙하게 심리합니다."}
         </div>
         <div
           style={{

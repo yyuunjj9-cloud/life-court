@@ -17,7 +17,8 @@ import type {
   Verdict,
 } from "@/domain/judgment";
 import type { ComplaintDoc, CountersuitDoc, DemandLetterDoc, FilingKind } from "@/domain/documents";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
+import type { ModerationIssue } from "@/domain/moderation";
 
 interface CaseDraft {
   story: string;
@@ -42,6 +43,7 @@ interface CaseState {
 
 interface CaseStore extends CaseState {
   hydrated: boolean;
+  intakeIssue: ModerationIssue | null;
   /** 임시저장된 초안의 저장 시각 (없으면 null) */
   savedDraftAt: number | null;
   setStory: (story: string) => void;
@@ -123,6 +125,7 @@ export function CaseProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<CaseState>(STATE_INIT);
   const [savedDraftAt, setSavedDraftAt] = useState<number | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [intakeIssue, setIntakeIssue] = useState<ModerationIssue | null>(null);
 
   useEffect(() => {
     try {
@@ -141,12 +144,15 @@ export function CaseProvider({ children }: { children: ReactNode }) {
   }, [state, hydrated]);
 
   const store = useMemo<CaseStore>(() => {
-    const patchDraft = (patch: Partial<CaseDraft>) =>
+    const patchDraft = (patch: Partial<CaseDraft>) => {
+      setIntakeIssue(null);
       setState((s) => ({ ...s, draft: { ...s.draft, ...patch } }));
+    };
 
     return {
       ...state,
       hydrated,
+      intakeIssue,
       savedDraftAt,
       setStory: (story) => patchDraft({ story }),
       setCaseType: (caseType) => patchDraft({ caseType }),
@@ -168,6 +174,7 @@ export function CaseProvider({ children }: { children: ReactNode }) {
       },
 
       submitCase: async (kind) => {
+        setIntakeIssue(null);
         const input = draftToInput(state.draft);
         if (!input) return false;
         try {
@@ -184,7 +191,8 @@ export function CaseProvider({ children }: { children: ReactNode }) {
             countersuit: null,
           }));
           return true;
-        } catch {
+        } catch (error) {
+          if (error instanceof ApiError) setIntakeIssue(error.issue);
           return false;
         }
       },
@@ -216,20 +224,22 @@ export function CaseProvider({ children }: { children: ReactNode }) {
       },
 
       createDemand: async () => {
+        setIntakeIssue(null);
         const input = draftToInput(state.draft);
         if (!input) return false;
         try {
           const { demand } = await api.createDemandLetter(input);
           setState((s) => ({ ...s, demand }));
           return true;
-        } catch {
+        } catch (error) {
+          if (error instanceof ApiError) setIntakeIssue(error.issue);
           return false;
         }
       },
 
-      resetCase: () => setState(STATE_INIT),
+      resetCase: () => { setIntakeIssue(null); setState(STATE_INIT); },
     };
-  }, [state, savedDraftAt, hydrated]);
+  }, [state, savedDraftAt, hydrated, intakeIssue]);
 
   return <CaseContext.Provider value={store}>{children}</CaseContext.Provider>;
 }
