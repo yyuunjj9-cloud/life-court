@@ -79,7 +79,12 @@ test('playful legal terms are disclosed as fictional and explained on the glossa
     assert.match(glossary, new RegExp(`term: "${term}",\\s*kind: "fiction"`), term);
   }
   assert.match(glossary, /형사소송법 제396조/);
-  assert.match(glossary, /가벼워지지 않습니다/);
+  assert.match(glossary, /가벼워지지 않도록 했습니다/);
+  // 단정하지 않는다 — 고지문은 호스팅·통계를 숨기지 않고, 대기 시간 상한을 약속하지 않는다.
+  assert.doesNotMatch(notice, /실제 법령이나 판례와 무관합니다|제3자에게 공유되지 않습니다/);
+  assert.match(notice, /서버·데이터베이스 호스팅/);
+  assert.doesNotMatch(source('components/WakeBanner.tsx'), /최대 \{MAX_WAIT_SEC\}초/);
+  assert.match(glossary, /실제와 다를 수 있으며/);
   // '같은 사연은 같은 판결'처럼 과장하지 않는다 — 조건(글자·선택·규칙)과 예외(항소·상고·맞고소)를 밝힌다.
   assert.doesNotMatch(glossary, /"같은 사연은 같은 판결을 받습니다\."/);
   assert.match(glossary, /글자 하나까지 같고[\s\S]*?사건번호도 반영해/);

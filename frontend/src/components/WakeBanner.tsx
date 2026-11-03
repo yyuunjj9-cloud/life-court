@@ -59,7 +59,8 @@ export function WakeBanner() {
     <div className="conn-banner">
       <span className="cb-text">
         <span className="cb-gavel">🔨</span> 법정 문을 여는 중… <b>{elapsedSec}초</b>
-        <span className="cb-detail"> (보통 30초, 최대 {MAX_WAIT_SEC}초)</span>
+        {/* 재시도가 이어지면 1분을 넘길 수도 있어 상한을 약속하지 않는다 */}
+        <span className="cb-detail"> (보통 30초~1분)</span>
       </span>
       <div className="cb-track">
         <div className="cb-fill" style={{ width: `${pct}%` }} />
