@@ -44,9 +44,11 @@ export interface CaseStorage {
   allocateSeq(): Promise<number>;
   ready(): Promise<void>;
   setResponse(seq: number, response: DefenseResponse): Promise<boolean>;
+  /** 맞고소는 사건당 한 번만 저장한다 — 동시 요청 중 하나만 true. */
+  setCountersuit(seq: number, countersuit: CountersuitDoc): Promise<boolean>;
   create(record: CaseRecord): Promise<void>;
   get(seq: number): Promise<CaseRecord | null>;
-  update(seq: number, patch: Partial<Pick<CaseRecord, "appeal" | "countersuit">>): Promise<void>;
+  update(seq: number, patch: Partial<Pick<CaseRecord, "appeal">>): Promise<void>;
   /** 전광판용 공개 가능 메타데이터. */
   board(): Promise<BoardData>;
   /** DB를 실제로 조회해 살아있는지 확인한다 (keep-alive가 Supabase 활동으로 집계되도록). */
@@ -73,6 +75,12 @@ export class MemoryStorage implements CaseStorage {
     rec.response = response;
     return true;
   }
+  async setCountersuit(seq: number, countersuit: CountersuitDoc) {
+    const rec = this.cases.get(seq);
+    if (!rec || rec.countersuit) return false;
+    rec.countersuit = countersuit;
+    return true;
+  }
   async create(record: CaseRecord) {
     this.seq = Math.max(this.seq, record.seq);
     this.cases.set(record.seq, record);
@@ -81,7 +89,7 @@ export class MemoryStorage implements CaseStorage {
   async get(seq: number) {
     return this.cases.get(seq) ?? null;
   }
-  async update(seq: number, patch: Partial<Pick<CaseRecord, "appeal" | "countersuit">>) {
+  async update(seq: number, patch: Partial<Pick<CaseRecord, "appeal">>) {
     const rec = this.cases.get(seq);
     if (rec) Object.assign(rec, patch);
   }
@@ -150,6 +158,12 @@ export class PgStorage implements CaseStorage {
       [seq, JSON.stringify(response)]);
     return r.rowCount === 1;
   }
+  async setCountersuit(seq: number, countersuit: CountersuitDoc) {
+    const r = await this.pool.query(
+      `UPDATE cases SET countersuit = $2 WHERE seq = $1 AND countersuit IS NULL RETURNING seq`,
+      [seq, JSON.stringify(countersuit)]);
+    return r.rowCount === 1;
+  }
 
   async nextSeq() {
     await this.ready();
@@ -206,14 +220,9 @@ export class PgStorage implements CaseStorage {
     };
   }
 
-  async update(seq: number, patch: Partial<Pick<CaseRecord, "appeal" | "countersuit">>) {
+  async update(seq: number, patch: Partial<Pick<CaseRecord, "appeal">>) {
     if (patch.appeal !== undefined)
       await this.pool.query(`UPDATE cases SET appeal = $2 WHERE seq = $1`, [seq, JSON.stringify(patch.appeal)]);
-    if (patch.countersuit !== undefined)
-      await this.pool.query(`UPDATE cases SET countersuit = $2 WHERE seq = $1`, [
-        seq,
-        JSON.stringify(patch.countersuit),
-      ]);
   }
 
   async board(): Promise<BoardData> {

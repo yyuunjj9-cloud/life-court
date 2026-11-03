@@ -66,6 +66,34 @@ test('share token grants only public fields and defense; owner token alone grant
   assert.deepEqual(reread.responseDoc, winner.responseDoc);
   assert.deepEqual(reread.verdict, created.verdict);
 });
+test('the countersuit game reads lines without filing, then stores one result for concurrent plays', async () => {
+  const { seq, shareToken, ownerToken } = await (await post('/api/cases', data)).json();
+  const brief = (token) => fetch(`${base}/api/cases/${seq}/countersuit/brief`, token ? { headers: { 'X-Owner-Token': token } } : {});
+  for (const token of [undefined, shareToken]) {
+    const denied = await brief(token);
+    assert.equal(denied.status, 403);
+    assert.ok(!('lines' in await denied.json()));
+  }
+  const first = await brief(ownerToken);
+  assert.equal(first.headers.get('cache-control'), 'no-store');
+  const { lines, done } = await first.json();
+  assert.equal(lines.length, 3);
+  assert.equal(done, undefined);
+  // 문장만 읽고 떠나면 맞고소가 접수되지 않는다.
+  assert.equal((await (await brief(ownerToken)).json()).done, undefined);
+  const owner = { 'X-Owner-Token': ownerToken };
+  for (const hits of [4, -1, 1.5, '1', null, true]) {
+    assert.equal((await post(`/api/cases/${seq}/countersuit`, { hits }, owner)).status, 400, `hits ${hits}`);
+  }
+  assert.equal((await post(`/api/cases/${seq}/countersuit`, { hits: 2 }, { 'X-Owner-Token': shareToken })).status, 403);
+  const plays = await Promise.all(Array.from({ length: 10 }, (_, n) => post(`/api/cases/${seq}/countersuit`, { hits: n % 4 }, owner)));
+  assert.ok(plays.every(r => r.status === 200));
+  const docs = await Promise.all(plays.map(r => r.json()));
+  for (const doc of docs) assert.deepEqual(doc, docs[0]);
+  assert.ok(Number.isInteger(docs[0].countersuit.objections.hits));
+  assert.deepEqual(await (await post(`/api/cases/${seq}/countersuit`, {}, owner)).json(), docs[0]);
+  assert.equal((await (await brief(ownerToken)).json()).done, true);
+});
 test('moderation rejects every generation path before assigning or storing a case', async () => {
   const beforeSeq = await (await fetch(base + '/api/meta/next-seq')).json();
   const blocked = { ...data, story: '친구가 씨발이라고 하며 저에게 화를 냈어요' };

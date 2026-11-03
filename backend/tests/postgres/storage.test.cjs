@@ -7,7 +7,7 @@ const path = require('node:path');
 const { Pool } = require('pg');
 const { PgStorage } = require('../../src/storage.ts');
 const { generateVerdict } = require('../../src/domain/judgment.ts');
-const { generateComplaint } = require('../../src/domain/documents.ts');
+const { generateComplaint, generateCountersuit } = require('../../src/domain/documents.ts');
 
 // Deliberately never fall back to DATABASE_URL or a remote/production database.
 const connectionString = process.env.TEST_DATABASE_URL;
@@ -107,6 +107,26 @@ test('100 concurrent Postgres responses have exactly one winner, preserved on ev
     assert.deepEqual((await store.get(seq)).verdict, original.verdict);
     assert.equal(await store.setResponse(seq, { option: 'counter' }), false);
     assert.equal(await store.setResponse(99999, { option: 'deny' }), false);
+  }
+});
+
+test('concurrent Postgres countersuits store exactly one document without touching the verdict', async () => {
+  const { openStore } = await fixture();
+  const workers = Array.from({ length: 3 }, openStore);
+  await Promise.all(workers.map(worker => worker.store.ready()));
+  const seq = await workers[0].store.allocateSeq();
+  const original = record(seq); await workers[0].store.create(original);
+  const results = await Promise.all(Array.from({ length: 30 }, async (_, n) => {
+    const doc = generateCountersuit(input, original.verdict, n % 4);
+    return { accepted: await workers[n % 3].store.setCountersuit(seq, doc), doc };
+  }));
+  const winners = results.filter(result => result.accepted);
+  assert.equal(winners.length, 1);
+  for (const { store } of workers) {
+    const stored = await store.get(seq);
+    assert.deepEqual(stored.countersuit, winners[0].doc);
+    assert.deepEqual(stored.verdict, original.verdict);
+    assert.equal(await store.setCountersuit(seq, winners[0].doc), false);
   }
 });
 

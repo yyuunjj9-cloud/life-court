@@ -55,6 +55,8 @@ export interface CountersuitDoc {
   accepted: boolean;
   rulingLabel: string;
   rulingNote: string;
+  /** 혼자 변론 게임 기록. 건너뛰었으면 없다. */
+  objections?: { hits: number; total: number };
 }
 
 /* ---------- 고소장 / 고발장 ---------- */
@@ -144,20 +146,55 @@ const COUNTER_FACT_CLOSERS = [
   "양측의 진술을 종합하면 쌍방 모두 성인군자는 아닌 것으로 보인다.",
 ] as const;
 
-/** 원심에서 가벼운 처분이 나왔을수록 맞고소가 인용되기 쉽다. */
-export function generateCountersuit(input: CaseInput, verdict: Verdict): CountersuitDoc {
+/** 혼자 변론 게임의 라운드 수 — 원고가 막아야 할 궤변의 개수. */
+export const COUNTER_ROUNDS = 3;
+
+/**
+ * 이의 제기 성공 횟수(0~3)별 맞고소 인용 확률 — [원심 무죄·훈방, 그 외].
+ * 건너뛰면 1회로 치므로 1회 행이 게임 이전의 확률과 같아야 한다.
+ */
+export const COUNTER_ACCEPT_CHANCE = [
+  [0.8, 0.25],
+  [0.7, 0.15],
+  [0.55, 0.08],
+  [0.35, 0.05],
+] as const;
+
+/** 인용 판단 → 죄목 → 사유 순서를 바꾸면 같은 사건의 맞고소 결과가 예전과 달라진다. */
+function drawCountersuit(input: CaseInput, verdict: Verdict) {
   const rand = mulberry32(hashSeed(`counter|${verdict.caseNo}|${input.story}`));
+  const roll = rand();
+  const crime = pick(rand, COUNTER_CRIMES);
+  const closer = pick(rand, COUNTER_FACT_CLOSERS);
+  return { rand, roll, crime, closer };
+}
+
+/** 혼자 변론 게임에서 원고가 막을 궤변 — 맞고소장과 같은 죄목·사유를 쓴다. */
+export function generateCountersuitBrief(input: CaseInput, verdict: Verdict): string[] {
+  const { crime, closer } = drawCountersuit(input, verdict);
+  return [
+    selectScenario(input.story, input.caseType).defense.claim,
+    // 맞고소 죄목은 모두 '죄'로 끝나 받침이 없다.
+    `피맞고소인은 ${crime}를 범했습니다`,
+    closer,
+  ];
+}
+
+/**
+ * 원심에서 가벼운 처분이 나왔을수록, 원고가 이의를 적게 막았을수록 맞고소가 인용되기 쉽다.
+ * hits가 없으면(건너뛰기·구형 화면) 1회로 보고 변론 기록은 남기지 않는다.
+ */
+export function generateCountersuit(input: CaseInput, verdict: Verdict, hits?: number): CountersuitDoc {
+  const { rand, roll, crime, closer } = drawCountersuit(input, verdict);
   const wasLenient = verdict.result === "무죄" || verdict.result === "훈방 조치";
-  const accepted = rand() < (wasLenient ? 0.7 : 0.15);
+  const accepted = roll < COUNTER_ACCEPT_CHANCE[hits ?? 1][wasLenient ? 0 : 1];
 
   const base = {
     counterComplainant: verdict.defendant,
     counterRespondent: "원고 (당신)",
-    crime: pick(rand, COUNTER_CRIMES),
-    facts: `피맞고소인은 "${excerptOf(input.story)}" 정도의 일로 맞고소인을 생활법원에 세웠는바, ${pick(
-      rand,
-      COUNTER_FACT_CLOSERS,
-    )}`,
+    crime,
+    facts: `피맞고소인은 "${excerptOf(input.story)}" 정도의 일로 맞고소인을 생활법원에 세웠는바, ${closer}`,
+    ...(hits === undefined ? {} : { objections: { hits, total: COUNTER_ROUNDS } }),
   };
 
   if (accepted) {

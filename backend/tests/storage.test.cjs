@@ -20,3 +20,11 @@ test('only one simultaneous response wins and its value is preserved', async () 
   assert.equal((await store.get(42)).response.option, '0');
   assert.equal(await store.setResponse(999, { option: 'deny' }), false);
 });
+test('only one simultaneous countersuit is stored', async () => {
+  const store = new MemoryStorage();
+  await store.create({ seq: 42, countersuit: null });
+  const results = await Promise.all(Array.from({ length: 10 }, (_, n) => store.setCountersuit(42, { crime: String(n) })));
+  assert.equal(results.filter(Boolean).length, 1);
+  assert.equal((await store.get(42)).countersuit.crime, '0');
+  assert.equal(await store.setCountersuit(999, { crime: 'x' }), false);
+});

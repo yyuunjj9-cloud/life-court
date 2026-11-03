@@ -17,8 +17,10 @@ import {
 } from "./domain/judgment";
 import { generateAppeal } from "./domain/judgment";
 import {
+  COUNTER_ROUNDS,
   generateComplaint,
   generateCountersuit,
+  generateCountersuitBrief,
   generateDemandLetter,
   type FilingKind,
 } from "./domain/documents";
@@ -253,7 +255,29 @@ app.post("/api/cases/:seq/appeal", async (req, res) => {
   res.json({ appeal });
 });
 
-/** 피고 측 맞고소장 생성 */
+/**
+ * 혼자 변론 게임의 궤변 3개. 조회만 하므로 맞고소를 접수하지 않는다.
+ * 이미 결과가 있으면 done으로 알려 게임 없이 결과를 보여주게 한다.
+ */
+app.get("/api/cases/:seq/countersuit/brief", async (req, res) => {
+  const seq = Number(req.params.seq);
+  const rec = await storage.get(seq);
+  if (!rec) {
+    res.status(404).json({ error: "case not found" });
+    return;
+  }
+  if (!validToken(req.get("X-Owner-Token"), rec.ownerToken)) {
+    res.status(403).json({ error: "invalid owner token" });
+    return;
+  }
+  res.set("Cache-Control", "no-store");
+  res.json({ lines: generateCountersuitBrief(rec.input, rec.verdict), ...(rec.countersuit ? { done: true } : {}) });
+});
+
+/**
+ * 피고 측 맞고소장 생성 — hits는 혼자 변론에서 막은 궤변 수(0~3), 건너뛰면 생략한다.
+ * 사건당 한 번만 저장하고, 늦은 요청은 먼저 저장된 문서를 돌려받는다.
+ */
 app.post("/api/cases/:seq/countersuit", async (req, res) => {
   const seq = Number(req.params.seq);
   const rec = await storage.get(seq);
@@ -265,9 +289,21 @@ app.post("/api/cases/:seq/countersuit", async (req, res) => {
     res.status(403).json({ error: "invalid owner token" });
     return;
   }
-  const countersuit = rec.countersuit ?? generateCountersuit(rec.input, rec.verdict);
-  if (!rec.countersuit) await storage.update(seq, { countersuit });
-  res.json({ countersuit });
+  const hits = ((req.body ?? {}) as Record<string, unknown>).hits;
+  if (hits !== undefined && !(Number.isInteger(hits) && (hits as number) >= 0 && (hits as number) <= COUNTER_ROUNDS)) {
+    res.status(400).json({ error: "invalid hits" });
+    return;
+  }
+  if (rec.countersuit) {
+    res.json({ countersuit: rec.countersuit });
+    return;
+  }
+  const countersuit = generateCountersuit(rec.input, rec.verdict, hits as number | undefined);
+  if (await storage.setCountersuit(seq, countersuit)) {
+    res.json({ countersuit });
+    return;
+  }
+  res.json({ countersuit: (await storage.get(seq))?.countersuit ?? countersuit });
 });
 
 /** 내용증명 생성 (사건 접수 전 단계 — 저장하지 않는다) */
