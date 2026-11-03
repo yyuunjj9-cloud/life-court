@@ -3,18 +3,19 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { toBlob, toJpeg } from "html-to-image";
-import { AppealDoc, VerdictDoc } from "@/components/VerdictDoc";
+import { AppealDoc, SupremeDoc, VerdictDoc } from "@/components/VerdictDoc";
 import { ComplaintDocView, CountersuitDocView, DemandDocView } from "@/components/LegalDocs";
 import { formatKoreanDate } from "@/domain/date";
 import { shortShareId } from "@/lib/share";
 import { useCaseStore } from "@/store/case-store";
 
 type Format = "png" | "jpg";
-type DocKind = "verdict" | "appeal" | "complaint" | "demand" | "countersuit";
+type DocKind = "verdict" | "appeal" | "supreme" | "complaint" | "demand" | "countersuit";
 
 const DOC_LABEL: Record<DocKind, string> = {
   verdict: "판결문",
   appeal: "항소심 판결문",
+  supreme: "상고심 판결문",
   complaint: "고소·고발장",
   demand: "내용증명",
   countersuit: "맞고소장",
@@ -24,6 +25,7 @@ const DOC_LABEL: Record<DocKind, string> = {
 const DOC_BACK: Record<DocKind, string> = {
   verdict: "/verdict",
   appeal: "/appeal",
+  supreme: "/supreme",
   complaint: "/complaint",
   demand: "/demand",
   countersuit: "/countersuit",
@@ -35,7 +37,7 @@ const SITE_URL = "https://life-court.vercel.app";
 function SaveScreen() {
   const router = useRouter();
   const params = useSearchParams();
-  const { verdict, appeal, complaint, countersuit, demand, shareToken, caseSeq, hydrated } = useCaseStore();
+  const { verdict, appeal, supreme, complaint, countersuit, demand, shareToken, caseSeq, hydrated } = useCaseStore();
   const [format, setFormat] = useState<Format>("png");
   const [saving, setSaving] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -45,13 +47,15 @@ function SaveScreen() {
 
   const raw = params.get("doc");
   const kind: DocKind =
-    raw === "appeal" || raw === "complaint" || raw === "demand" || raw === "countersuit" ? raw : "verdict";
+    raw === "appeal" || raw === "supreme" || raw === "complaint" || raw === "demand" || raw === "countersuit" ? raw : "verdict";
 
   const date = formatKoreanDate(new Date());
   const doc = (() => {
     switch (kind) {
       case "appeal":
         return verdict && appeal ? <AppealDoc verdict={verdict} appeal={appeal} date={date} /> : null;
+      case "supreme":
+        return verdict && supreme ? <SupremeDoc verdict={verdict} supreme={supreme} date={date} /> : null;
       case "complaint":
         return complaint ? <ComplaintDocView doc={complaint} date={date} /> : null;
       case "demand":

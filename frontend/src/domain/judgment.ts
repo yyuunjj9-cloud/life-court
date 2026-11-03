@@ -38,6 +38,12 @@ export interface AppealVerdict {
   overturned: boolean;
 }
 
+/** 대법원 상고심 — 원고가 원할 때만 한 번 연다. 결과는 확정이다. */
+export interface SupremeVerdict extends AppealVerdict {
+  /** 확정된 처분 */
+  finalResult: string;
+}
+
 export const CASE_TYPE_LABEL: Record<CaseType, string> = {
   work: "회사생활",
   relationship: "인간관계",

@@ -1,4 +1,4 @@
-import type { AppealVerdict, Verdict } from "@/domain/judgment";
+import type { AppealVerdict, SupremeVerdict, Verdict } from "@/domain/judgment";
 
 /** 제1심 판결문 문서 */
 export function VerdictDoc({ verdict }: { verdict: Verdict }) {
@@ -87,6 +87,49 @@ export function AppealDoc({ verdict, appeal, date }: { verdict: Verdict; appeal:
           <br />
           법원
         </span>
+      </div>
+    </div>
+  );
+}
+
+/** 대법원 상고심 판결문 — 어느 결과든 판결이 확정된다. */
+export function SupremeDoc({ verdict, supreme, date }: { verdict: Verdict; supreme: SupremeVerdict; date: string }) {
+  return (
+    <div className="vdoc">
+      <p className="vt appeal">상고심 판결문</p>
+      <p className="vs">오늘의 생활대법원 전원합의체</p>
+      <div className="vmeta">
+        <span className="k">사건번호</span>
+        <span className="v">{verdict.caseNo}</span>
+        <span className="k">사 건 명</span>
+        <span className="v">{verdict.caseName}</span>
+        <span className="k">피　　고</span>
+        <span className="v">{verdict.defendant}</span>
+      </div>
+      <div className="vsec">
+        <p className="k">상 고 심 주 문</p>
+        <p className="center-order">{supreme.order}</p>
+        <p className="t" style={{ textAlign: "center" }}>
+          {supreme.orderNote}
+        </p>
+      </div>
+      <div className="vsec">
+        <p className="k">상 고 심 판 결 이 유</p>
+        <p className="t">{supreme.reasoning}</p>
+      </div>
+      <div className="vfinal">
+        <span className="stamp">
+          확정
+        </span>
+        <p className="w" style={{ fontSize: 22 }}>
+          {supreme.finalResult}
+        </p>
+        <p className="n">본 판결로 사건은 확정되었으며, 더 이상 다툴 수 없다.</p>
+      </div>
+      <div className="vsign">
+        {date}
+        <br />
+        생활대법원 전원합의체
       </div>
     </div>
   );

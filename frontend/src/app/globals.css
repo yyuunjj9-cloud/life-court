@@ -691,6 +691,21 @@ p.sub {
   text-align: center;
   color: var(--ink-soft);
 }
+/* ---------- 대법원 상고 안내 (항소심 화면) ---------- */
+.supreme-offer {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.supreme-note {
+  font-family: var(--sans);
+  font-size: 11.5px;
+  line-height: 1.7;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
 /* ---------- 맞고소 혼자 변론 게임 ---------- */
 .csg-rules {
   margin: 14px 0 0;

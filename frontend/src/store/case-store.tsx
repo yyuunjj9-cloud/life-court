@@ -13,6 +13,7 @@ import type {
   CaseType,
   Relationship,
   Severity,
+  SupremeVerdict,
   Tone,
   Verdict,
 } from "@/domain/judgment";
@@ -37,6 +38,7 @@ interface CaseState {
   verdict: Verdict | null;
   complaint: ComplaintDoc | null;
   appeal: AppealVerdict | null;
+  supreme: SupremeVerdict | null;
   countersuit: CountersuitDoc | null;
   demand: DemandLetterDoc | null;
 }
@@ -59,6 +61,8 @@ interface CaseStore extends CaseState {
   submitCase: (kind: FilingKind) => Promise<boolean>;
   /** 항소심 판결을 요청한다. */
   fileAppeal: () => Promise<boolean>;
+  /** 대법원 상고심을 요청한다 — 항소심 뒤 원고가 원할 때만. */
+  fileSupreme: () => Promise<boolean>;
   /** 혼자 변론 게임의 궤변을 받아온다. 실패하면 null. */
   loadCountersuitBrief: () => Promise<{ lines: string[]; done?: true } | null>;
   /** 피고 측 맞고소장을 요청한다. hits는 혼자 변론에서 막은 궤변 수(건너뛰면 생략). */
@@ -86,6 +90,7 @@ const STATE_INIT: CaseState = {
   verdict: null,
   complaint: null,
   appeal: null,
+  supreme: null,
   countersuit: null,
   demand: null,
 };
@@ -190,6 +195,7 @@ export function CaseProvider({ children }: { children: ReactNode }) {
             verdict,
             complaint,
             appeal: null,
+            supreme: null,
             countersuit: null,
           }));
           return true;
@@ -206,6 +212,19 @@ export function CaseProvider({ children }: { children: ReactNode }) {
         try {
           const { appeal } = await api.fileAppeal(state.caseSeq, state.ownerToken);
           setState((s) => ({ ...s, appeal }));
+          return true;
+        } catch {
+          return false;
+        }
+      },
+
+      fileSupreme: async () => {
+        if (state.caseSeq === null || !state.appeal) return false;
+        if (state.supreme) return true;
+        if (!state.ownerToken) return false;
+        try {
+          const { supreme } = await api.fileSupreme(state.caseSeq, state.ownerToken);
+          setState((s) => ({ ...s, supreme }));
           return true;
         } catch {
           return false;

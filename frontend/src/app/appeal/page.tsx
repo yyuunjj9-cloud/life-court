@@ -11,7 +11,7 @@ import { useCaseStore } from "@/store/case-store";
 /* 07 항소 결과 */
 export default function AppealPage() {
   const router = useRouter();
-  const { verdict, appeal, fileAppeal, hydrated } = useCaseStore();
+  const { verdict, appeal, supreme, fileAppeal, hydrated } = useCaseStore();
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -54,6 +54,25 @@ export default function AppealPage() {
       </div>
       <div className="pad">
         <AppealDoc verdict={verdict} appeal={appeal} date={formatKoreanDate(new Date())} />
+        {/* 상고는 선택이다 — 누르지 않으면 항소심 판결로 끝난다. */}
+        <div className="supreme-offer">
+          {supreme ? (
+            <Link className="btn dark sm" href="/supreme">
+              상고심 판결문 보기 ({supreme.finalResult} 확정)
+            </Link>
+          ) : (
+            <>
+              <p className="supreme-note">
+                아직 억울하다면 생활대법원에 한 번 더 다툴 수 있습니다.
+                <br />
+                상고하지 않으면 항소심 판결로 사건이 끝납니다.
+              </p>
+              <Link className="btn line sm" href="/supreme">
+                대법원에 상고하기
+              </Link>
+            </>
+          )}
+        </div>
         <div className="grow" />
         <div className="btn-row" style={{ marginTop: 14 }}>
           <Link className="btn sm" href="/save?doc=appeal">

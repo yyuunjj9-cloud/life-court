@@ -8,7 +8,7 @@
  * - 재시도 진행 상황을 구독할 수 있어 UI가 진행 바를 그릴 수 있다.
  */
 
-import type { AppealVerdict, CaseInput, Verdict } from "@/domain/judgment";
+import type { AppealVerdict, CaseInput, SupremeVerdict, Verdict } from "@/domain/judgment";
 import type { ComplaintDoc, CountersuitDoc, DemandLetterDoc, FilingKind } from "@/domain/documents";
 import type { DefenseResponseDoc } from "@/domain/response";
 import type { ModerationIssue } from "@/domain/moderation";
@@ -123,6 +123,10 @@ export const api = {
 
   fileAppeal: (seq: number, ownerToken: string) =>
     request<{ appeal: AppealVerdict }>(`/api/cases/${seq}/appeal`, { method: "POST", headers: { "X-Owner-Token": ownerToken } }),
+
+  /** 대법원 상고 — 항소심 뒤 원고가 원할 때 한 번. */
+  fileSupreme: (seq: number, ownerToken: string) =>
+    request<{ supreme: SupremeVerdict }>(`/api/cases/${seq}/supreme`, { method: "POST", headers: { "X-Owner-Token": ownerToken } }),
 
   /** 혼자 변론 게임의 궤변 3개 — 조회만 하므로 맞고소가 접수되지 않는다. */
   countersuitBrief: (seq: number, ownerToken: string) =>
