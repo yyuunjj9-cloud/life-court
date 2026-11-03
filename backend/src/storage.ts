@@ -8,6 +8,7 @@ import { Pool } from "pg";
 import type { AppealVerdict, CaseInput, SupremeVerdict, Verdict } from "./domain/judgment";
 import type { ComplaintDoc, CountersuitDoc, FilingKind } from "./domain/documents";
 import type { DefenseResponse } from "./domain/response";
+import type { Idea, IdeaStatus } from "./domain/ideas";
 
 export interface CaseRecord {
   seq: number;
@@ -55,6 +56,13 @@ export interface CaseStorage {
   update(seq: number, patch: Partial<Pick<CaseRecord, "appeal">>): Promise<void>;
   /** 전광판용 공개 가능 메타데이터. */
   board(): Promise<BoardData>;
+  /** 메모판 아이디어 — 공개 요청은 pending, 비공개는 private로 들어온다. */
+  addIdea(text: string, status: "pending" | "private"): Promise<Idea>;
+  /** approved만 달라고 하면 공개 목록, 아니면 운영자용 전체 목록(최신순). */
+  listIdeas(onlyApproved: boolean, limit: number): Promise<Idea[]>;
+  countIdeas(status: IdeaStatus): Promise<number>;
+  /** 비공개 아이디어는 공개 상태로 바꿀 수 없다. 바꿨으면 true. */
+  reviewIdea(id: number, status: "approved" | "rejected"): Promise<boolean>;
   /** DB를 실제로 조회해 살아있는지 확인한다 (keep-alive가 Supabase 활동으로 집계되도록). */
   health(): Promise<boolean>;
 }
@@ -124,6 +132,24 @@ export class MemoryStorage implements CaseStorage {
   async health() {
     return true;
   }
+  private ideas: Idea[] = [];
+  async addIdea(text: string, status: "pending" | "private") {
+    const idea: Idea = { id: this.ideas.length + 1, text, status, createdAt: new Date().toISOString() };
+    this.ideas.push(idea);
+    return idea;
+  }
+  async listIdeas(onlyApproved: boolean, limit: number) {
+    return this.ideas.filter((i) => !onlyApproved || i.status === "approved").slice(-limit).reverse();
+  }
+  async countIdeas(status: IdeaStatus) {
+    return this.ideas.filter((i) => i.status === status).length;
+  }
+  async reviewIdea(id: number, status: "approved" | "rejected") {
+    const idea = this.ideas.find((i) => i.id === id);
+    if (!idea || idea.status === "private") return false;
+    idea.status = status;
+    return true;
+  }
 }
 
 /* ---------- Postgres ---------- */
@@ -145,6 +171,12 @@ export class PgStorage implements CaseStorage {
         ADD COLUMN IF NOT EXISTS share_token TEXT, ADD COLUMN IF NOT EXISTS owner_token TEXT,
         ADD COLUMN IF NOT EXISTS supreme JSONB`);
       await client.query(`CREATE TABLE IF NOT EXISTS case_counters (id TEXT PRIMARY KEY, value INTEGER NOT NULL)`);
+      await client.query(`CREATE TABLE IF NOT EXISTS ideas (
+        id SERIAL PRIMARY KEY,
+        text TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'rejected', 'private')),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        reviewed_at TIMESTAMPTZ)`);
       await client.query("COMMIT");
     } catch (error) {
       await client.query("ROLLBACK");
@@ -278,6 +310,34 @@ export class PgStorage implements CaseStorage {
     } catch {
       return false;
     }
+  }
+
+  private static idea(row: { id: number; text: string; status: IdeaStatus; created_at: Date }): Idea {
+    return { id: row.id, text: row.text, status: row.status, createdAt: row.created_at.toISOString() };
+  }
+  async addIdea(text: string, status: "pending" | "private") {
+    await this.ready();
+    const r = await this.pool.query(`INSERT INTO ideas (text, status) VALUES ($1, $2) RETURNING *`, [text, status]);
+    return PgStorage.idea(r.rows[0]);
+  }
+  async listIdeas(onlyApproved: boolean, limit: number) {
+    await this.ready();
+    const r = await this.pool.query(
+      `SELECT * FROM ideas WHERE $1::boolean = false OR status = 'approved' ORDER BY id DESC LIMIT $2`,
+      [onlyApproved, limit]);
+    return r.rows.map(PgStorage.idea);
+  }
+  async countIdeas(status: IdeaStatus) {
+    await this.ready();
+    const r = await this.pool.query<{ n: number }>(`SELECT COUNT(*)::int AS n FROM ideas WHERE status = $1`, [status]);
+    return r.rows[0].n;
+  }
+  async reviewIdea(id: number, status: "approved" | "rejected") {
+    await this.ready();
+    const r = await this.pool.query(
+      `UPDATE ideas SET status = $2, reviewed_at = now() WHERE id = $1 AND status <> 'private' RETURNING id`,
+      [id, status]);
+    return r.rowCount === 1;
   }
 }
 

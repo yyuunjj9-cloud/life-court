@@ -4,6 +4,8 @@ const { spawn } = require('node:child_process');
 const path = require('node:path');
 const net = require('node:net');
 let child, base;
+// 테스트 서버 전용 운영자 열쇠 — 운영 열쇠와 무관하다.
+const ADMIN = 'ad'.repeat(24);
 before(async () => {
   const port = await new Promise((resolve, reject) => {
     const server = net.createServer(); server.on('error', reject);
@@ -11,7 +13,8 @@ before(async () => {
   });
   base = `http://127.0.0.1:${port}`;
   child = spawn(process.execPath, ['-r', path.join(__dirname, 'register-source.cjs'), path.join(__dirname, '../src/index.ts')], {
-    env: { ...process.env, DATABASE_URL: '', PORT: String(port) }, stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, DATABASE_URL: '', PORT: String(port), ADMIN_TOKEN_SHA256: require('node:crypto').createHash('sha256').update(ADMIN).digest('hex') },
+    stdio: ['ignore', 'pipe', 'pipe'],
   });
   await new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('Test API failed to start')), 10000);
@@ -109,6 +112,37 @@ test('a supreme appeal is optional, needs the appeal first, and stores one resul
   // 공유 링크로는 상고심이 보이지 않는다 — 공개 범위는 그대로다.
   const shared = await (await fetch(`${base}/api/cases/${seq}?t=${shareToken}`)).json();
   assert.deepEqual(Object.keys(shared).sort(), ['responseDoc', 'seq', 'verdict']);
+});
+test('memo-board ideas stay hidden until the operator approves, and private ones never show', async () => {
+  const from = (ip) => ({ 'X-Forwarded-For': ip });
+  const publicIdea = await post('/api/ideas', { text: '피고도 항소하게 해 주세요', public: true }, from('10.0.0.1'));
+  assert.equal(publicIdea.status, 201);
+  assert.deepEqual(await publicIdea.json(), { status: 'pending' });
+  assert.deepEqual(await (await post('/api/ideas', { text: '운영자님만 보세요', public: false }, from('10.0.0.1'))).json(), { status: 'private' });
+  assert.deepEqual((await (await fetch(`${base}/api/ideas`)).json()).ideas, []);
+  for (const body of [{ text: '가', public: true }, { text: '가'.repeat(61), public: true }, { text: '좋아요', public: 'yes' }]) {
+    assert.equal((await post('/api/ideas', body, from('10.0.0.2'))).status, 400);
+  }
+  const rejected = await post('/api/ideas', { text: '씨발 이거 고쳐', public: true }, from('10.0.0.2'));
+  assert.equal(rejected.status, 422);
+  assert.ok(!JSON.stringify(await rejected.json()).includes('씨발'));
+  const admin = (headers = {}) => fetch(`${base}/api/ideas/admin`, { headers });
+  assert.equal((await admin()).status, 403);
+  assert.equal((await admin({ 'X-Admin-Token': 'bc'.repeat(24) })).status, 403);
+  const all = (await (await admin({ 'X-Admin-Token': ADMIN })).json()).ideas;
+  assert.deepEqual(all.map(i => [i.text, i.status]), [['운영자님만 보세요', 'private'], ['피고도 항소하게 해 주세요', 'pending']]);
+  const review = (id, status, token = ADMIN) => fetch(`${base}/api/ideas/${id}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': token }, body: JSON.stringify({ status }) });
+  assert.equal((await review(all[1].id, 'approved', 'bc'.repeat(24))).status, 403);
+  assert.equal((await review(all[0].id, 'approved')).status, 404, 'a private idea can never be published');
+  assert.equal((await review(all[1].id, 'approved')).status, 200);
+  assert.deepEqual((await (await fetch(`${base}/api/ideas`)).json()).ideas, [{ id: all[1].id, text: '피고도 항소하게 해 주세요' }]);
+  assert.equal((await review(all[1].id, 'rejected')).status, 200);
+  assert.deepEqual((await (await fetch(`${base}/api/ideas`)).json()).ideas, []);
+  // 같은 사람은 10분에 5장까지만 붙일 수 있다.
+  const burst = [];
+  for (let n = 0; n < 6; n++) burst.push((await post('/api/ideas', { text: `아이디어 ${n}번`, public: false }, from('10.0.0.3'))).status);
+  assert.deepEqual(burst, [201, 201, 201, 201, 201, 429]);
 });
 test('moderation rejects every generation path before assigning or storing a case', async () => {
   const beforeSeq = await (await fetch(base + '/api/meta/next-seq')).json();

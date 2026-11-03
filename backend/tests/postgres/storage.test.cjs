@@ -53,7 +53,8 @@ async function fixture(legacy = false) {
   const queryPool = openPool();
   const sql = legacy ? schemaSql
     .replace(/^\s*(response|share_token|owner_token|supreme)\s+[^\n]*\n/gm, '')
-    .replace(/CREATE TABLE IF NOT EXISTS case_counters\s*\([\s\S]*?\);/g, '') : schemaSql;
+    .replace(/CREATE TABLE IF NOT EXISTS case_counters\s*\([\s\S]*?\);/g, '')
+    .replace(/CREATE TABLE IF NOT EXISTS ideas\s*\([\s\S]*?\);/g, '') : schemaSql;
   await queryPool.query(sql);
   const openStore = () => { const pool = openPool(); return { pool, store: new PgStorage(pool) }; };
   return { queryPool, openStore };
@@ -155,6 +156,14 @@ test('three instances migrate a legacy schema concurrently while preserving exis
   assert.equal(stored.ownerToken, null);
   assert.equal(stored.shareToken, null);
   assert.equal(stored.supreme, null);
+  // 예전 스키마에도 메모판 아이디어 표가 만들어진다.
+  const idea = await workers[1].store.addIdea('피고도 항소하게 해 주세요', 'pending');
+  assert.deepEqual(await workers[2].store.listIdeas(true, 10), []);
+  assert.equal(await workers[0].store.reviewIdea(idea.id, 'approved'), true);
+  assert.deepEqual((await workers[2].store.listIdeas(true, 10)).map(i => i.text), ['피고도 항소하게 해 주세요']);
+  const secret = await workers[0].store.addIdea('운영자에게만', 'private');
+  assert.equal(await workers[0].store.reviewIdea(secret.id, 'approved'), false);
+  assert.equal(await workers[0].store.countIdeas('private'), 1);
   assert.deepEqual((await Promise.all(workers.map(worker => worker.store.allocateSeq()))).sort((a, b) => a - b), [91, 92, 93]);
 });
 

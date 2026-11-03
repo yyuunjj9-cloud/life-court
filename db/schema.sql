@@ -31,3 +31,13 @@ CREATE TABLE IF NOT EXISTS case_counters (
   id TEXT PRIMARY KEY,
   value INTEGER NOT NULL
 );
+
+-- 안내 페이지 업데이트 메모판의 이용자 아이디어. 공개 요청(pending)은 운영자가
+-- 승인(approved)해야만 보이고, 비공개(private)는 운영자만 본다.
+CREATE TABLE IF NOT EXISTS ideas (
+  id          SERIAL PRIMARY KEY,
+  text        TEXT NOT NULL,                 -- 2~60자, 금칙어 검사 통과분만 저장
+  status      TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'rejected', 'private')),
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  reviewed_at TIMESTAMPTZ
+);

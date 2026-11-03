@@ -27,6 +27,7 @@ import {
 import { renderDefenseResponse, RESPONSE_OPTION_IDS } from "./domain/response";
 import { createStorage } from "./storage";
 import { checkStory } from "./domain/moderation";
+import { IDEA_MAX, IDEA_MIN, validAdminToken } from "./domain/ideas";
 
 const CASE_TYPES: CaseType[] = ["work", "relationship", "meal", "messenger", "money", "romance", "daily"];
 const RELATIONSHIPS: Relationship[] = ["self", "colleague", "friend", "family", "lover", "neighbor", "boss", "anonymous"];
@@ -109,6 +110,83 @@ app.use(["/api/cases", "/api/cases/preview", "/api/documents/demand"], (req, res
   if (!issue) return next();
   res.set("Cache-Control", "no-store");
   res.status(422).json({ error: "content rejected", code: "CONTENT_REJECTED", issue });
+});
+
+/* ---------- 업데이트 메모판 아이디어 ---------- */
+
+/** 같은 사람이 짧은 시간에 여러 장을 붙이지 못하게 한다 — 10분에 5장. */
+const IDEA_WINDOW_MS = 10 * 60 * 1000;
+const IDEA_PER_WINDOW = 5;
+/** 운영자가 확인하지 못한 공개 요청이 이만큼 쌓이면 잠시 받지 않는다. */
+const IDEA_PENDING_CAP = 300;
+const ideaPosts = new Map<string, number[]>();
+
+function allowIdeaPost(client: string): boolean {
+  const now = Date.now();
+  const recent = (ideaPosts.get(client) ?? []).filter((t) => now - t < IDEA_WINDOW_MS);
+  if (recent.length >= IDEA_PER_WINDOW) return false;
+  recent.push(now);
+  ideaPosts.set(client, recent);
+  return true;
+}
+
+/** 공개 승인된 아이디어만. 원문 외의 정보(상태·작성 시각)는 내보내지 않는다. */
+app.get("/api/ideas", async (_req, res) => {
+  const ideas = await storage.listIdeas(true, 40);
+  res.set("Cache-Control", "public, max-age=30");
+  res.json({ ideas: ideas.map(({ id, text }) => ({ id, text })) });
+});
+
+app.post("/api/ideas", async (req, res) => {
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const text = typeof body.text === "string" ? body.text.trim().replace(/\s+/g, " ") : "";
+  if (text.length < IDEA_MIN || text.length > IDEA_MAX || typeof body.public !== "boolean") {
+    res.status(400).json({ error: "invalid idea" });
+    return;
+  }
+  res.set("Cache-Control", "no-store");
+  const issue = checkStory(text);
+  if (issue) {
+    res.status(422).json({ error: "content rejected", code: "CONTENT_REJECTED", issue });
+    return;
+  }
+  // Render는 실제 접속 주소를 X-Forwarded-For 첫 값으로 넘긴다.
+  const client = (req.get("x-forwarded-for") ?? req.ip ?? "").split(",")[0].trim();
+  if (!allowIdeaPost(client) || (body.public && (await storage.countIdeas("pending")) >= IDEA_PENDING_CAP)) {
+    res.status(429).json({ error: "too many ideas" });
+    return;
+  }
+  const idea = await storage.addIdea(text, body.public ? "pending" : "private");
+  res.status(201).json({ status: idea.status });
+});
+
+/** 운영자 전용 — 비공개 의견과 공개 요청을 모두 본다. */
+app.get("/api/ideas/admin", async (req, res) => {
+  if (!validAdminToken(req.get("X-Admin-Token"))) {
+    res.status(403).json({ error: "invalid admin token" });
+    return;
+  }
+  res.set("Cache-Control", "no-store");
+  res.json({ ideas: await storage.listIdeas(false, 200) });
+});
+
+/** 운영자 전용 — 공개 요청을 승인하거나 숨긴다. 비공개 의견은 공개할 수 없다. */
+app.patch("/api/ideas/:id", async (req, res) => {
+  if (!validAdminToken(req.get("X-Admin-Token"))) {
+    res.status(403).json({ error: "invalid admin token" });
+    return;
+  }
+  const id = Number(req.params.id);
+  const status = ((req.body ?? {}) as Record<string, unknown>).status;
+  if (!Number.isSafeInteger(id) || id < 1 || (status !== "approved" && status !== "rejected")) {
+    res.status(400).json({ error: "invalid review" });
+    return;
+  }
+  if (!(await storage.reviewIdea(id, status))) {
+    res.status(404).json({ error: "idea not found or private" });
+    return;
+  }
+  res.json({ id, status });
 });
 
 /** 다음 사건번호 미리보기 (09 접수 완료 화면용) */
