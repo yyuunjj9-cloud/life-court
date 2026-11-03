@@ -821,6 +821,43 @@ p.sub {
   text-align: center;
 }
 
+/* ---------- 운영자 화면 — 이용 현황 ---------- */
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.admin-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 11px;
+  border: 1px solid var(--paper-line);
+  background: #fbf4e3;
+  font-family: var(--sans);
+}
+.admin-stat .k {
+  font-size: 11px;
+  color: var(--muted);
+}
+.admin-stat b {
+  font-family: var(--serif);
+  font-size: 22px;
+  color: var(--ink);
+}
+.admin-stat .n {
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.admin-hint {
+  margin-top: 8px;
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
 /* ---------- 메모판 운영자 화면 ---------- */
 .admin-idea {
   padding: 11px 12px;

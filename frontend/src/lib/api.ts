@@ -221,7 +221,18 @@ export async function fetchIdeas(): Promise<PublicIdea[] | null> {
   return null;
 }
 
+/** 운영자 화면 이용 현황 — 숫자만 담는다. */
+export interface UsageStats {
+  cases: { total: number; today: number; week: number };
+  appeals: { total: number; raised: number };
+  supremes: { total: number; raised: number };
+  countersuits: { total: number; played: number; skipped: number; averageHits: number | null; perfect: number };
+  responses: { total: number; declined: number };
+  ideas: { pending: number; approved: number; private: number };
+}
+
 export const ideasApi = {
+  stats: (token: string) => request<UsageStats>("/api/admin/stats", { headers: { "X-Admin-Token": token } }),
   /** 공개 요청은 운영자 승인 전까지 보이지 않는다. 거절되면 ApiError(422)나 429가 난다. */
   submit: (text: string, isPublic: boolean, nickname: string) =>
     request<{ status: "pending" | "private" }>("/api/ideas", {

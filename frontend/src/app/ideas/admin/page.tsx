@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ideasApi, type AdminIdea } from "@/lib/api";
+import { ideasApi, type AdminIdea, type UsageStats } from "@/lib/api";
 
 const TOKEN_KEY = "lifecourt.adminToken";
 
@@ -11,6 +11,16 @@ const STATUS_LABEL: Record<AdminIdea["status"], string> = {
   rejected: "숨김",
   private: "운영자에게만",
 };
+
+function Stat({ label, value, note }: { label: string; value: string; note: string }) {
+  return (
+    <div className="admin-stat">
+      <span className="k">{label}</span>
+      <b>{value}</b>
+      <span className="n">{note}</span>
+    </div>
+  );
+}
 
 function readToken(): string | null {
   try {
@@ -24,6 +34,7 @@ function readToken(): string | null {
 export default function IdeasAdminPage() {
   const [token, setToken] = useState<string | null>(null);
   const [ideas, setIdeas] = useState<AdminIdea[] | null>(null);
+  const [stats, setStats] = useState<UsageStats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -42,7 +53,9 @@ export default function IdeasAdminPage() {
 
   const load = useCallback(async (key: string) => {
     try {
-      setIdeas((await ideasApi.adminList(key)).ideas);
+      const [list, usage] = await Promise.all([ideasApi.adminList(key), ideasApi.stats(key)]);
+      setIdeas(list.ideas);
+      setStats(usage);
       setError(null);
     } catch {
       setError("열쇠가 맞지 않거나 서버에 연결할 수 없습니다.");
@@ -67,7 +80,7 @@ export default function IdeasAdminPage() {
     return (
       <div className="scr">
         <div className="pad">
-          <h1 className="tt">메모판 운영</h1>
+          <h1 className="tt">운영자 화면</h1>
           <p className="sub">운영자 열쇠가 담긴 주소로 들어와야 합니다.</p>
         </div>
       </div>
@@ -79,9 +92,28 @@ export default function IdeasAdminPage() {
   return (
     <div className="scr">
       <div className="pad">
-        <h1 className="tt">메모판 운영</h1>
-        <p className="sub">확인 대기 {waiting}장 · 전체 {ideas?.length ?? 0}장</p>
+        <h1 className="tt">운영자 화면</h1>
         {error && <p className="help err">{error}</p>}
+        {stats && (
+          <>
+            <p className="lbl" style={{ marginTop: 16 }}>이용 현황</p>
+            <div className="admin-stats">
+              <Stat label="접수 사건" value={`${stats.cases.today}`} note={`7일 ${stats.cases.week} · 전체 ${stats.cases.total}`} />
+              <Stat label="항소" value={`${stats.appeals.total}`} note={`가중 ${stats.appeals.raised}`} />
+              <Stat label="상고" value={`${stats.supremes.total}`} note={`가중 ${stats.supremes.raised}`} />
+              <Stat
+                label="맞고소 게임"
+                value={`${stats.countersuits.played}`}
+                note={`건너뜀 ${stats.countersuits.skipped} · 평균 ${stats.countersuits.averageHits ?? "-"}회 · 완벽 ${stats.countersuits.perfect}`}
+              />
+              <Stat label="피고 답변서" value={`${stats.responses.total}`} note={`응소 거부 ${stats.responses.declined}`} />
+              <Stat label="아이디어" value={`${stats.ideas.pending}`} note={`대기 · 공개 ${stats.ideas.approved} · 비공개 ${stats.ideas.private}`} />
+            </div>
+            <p className="admin-hint">접수 사건의 큰 숫자는 오늘 건수입니다. 피고 답변서가 3건 이상이면 실제 피고 참여 단계의 착수 조건이 채워집니다.</p>
+          </>
+        )}
+        <p className="lbl" style={{ marginTop: 22 }}>메모판</p>
+        <p className="sub" style={{ marginTop: 0 }}>확인 대기 {waiting}장 · 전체 {ideas?.length ?? 0}장</p>
         <div className="stack" style={{ marginTop: 16 }}>
           {ideas?.map((idea) => (
             <div className="admin-idea" key={idea.id}>
