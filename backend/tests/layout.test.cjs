@@ -70,6 +70,11 @@ test('the memo board discloses how ideas are kept, and its admin screen stays ou
   assert.match(source('app/ideas/admin/page.tsx'), /history\.replaceState/);
 });
 
+test('the landing makes its punchline, "not fairly", stand out', () => {
+  assert.match(source('app/page.tsx'), /<em className="twist">공정하지 않게<\/em>/);
+  assert.match(css, /\.hero-s \.twist \{[\s\S]*?color: var\(--gold-bright\);/);
+});
+
 test('the board keeps its place while loading so the landing does not jump', () => {
   const page = source('app/page.tsx');
   // 응답 뒤에 끼워 넣으면 판결 예시와 버튼이 밀린다 — 자리는 항상 렌더링한다.

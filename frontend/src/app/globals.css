@@ -626,6 +626,15 @@ p.sub {
   color: var(--gold-soft);
   opacity: 0.85;
 }
+/* 첫 화면의 반전 포인트 — 금색 굵은 글씨에 이의 제기 빨간 물결 밑줄 */
+.hero-s .twist {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--gold-bright);
+  text-decoration: underline wavy rgba(214, 67, 47, 0.85);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+}
 .kicker {
   align-self: center;
   font-size: 10.5px;

@@ -110,7 +110,8 @@ export default function LandingPage() {
         <p className="hero-s">
           점심 메뉴부터 읽씹 사건까지
           <br />
-          생활법원이 공정하지 않게 심리합니다.
+          {/* 이 서비스의 반전 — 엄숙한 척하지만 공정하지는 않다 */}
+          생활법원이 <em className="twist">공정하지 않게</em> 심리합니다.
         </p>
         <div className="grow" />
         <div className="sample-verdict">
