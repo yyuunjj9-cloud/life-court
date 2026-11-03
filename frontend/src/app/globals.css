@@ -455,7 +455,10 @@ p.sub {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+/* 좁은 화면에서 '●'과 'LIVE'가 두 줄로 꺾여 전광판이 커지지 않게 한다 */
 .board-live {
+  flex: none;
+  white-space: nowrap;
   color: var(--objection-red);
   font-weight: 700;
   animation: board-blink 1.6s steps(2, start) infinite;
@@ -500,6 +503,8 @@ p.sub {
 .board-item {
   font-family: var(--mono);
   font-size: 11.5px;
+  /* 기기마다 고정폭 글꼴이 달라도 줄 높이를 같게 둔다 */
+  line-height: 16px;
   color: var(--gold-bright);
   text-shadow: 0 0 8px rgba(232, 201, 92, 0.45);
 }
@@ -837,8 +842,17 @@ p.sub {
   color: var(--objection-red);
 }
 
-/* 세로가 좁으면 전광판을 접어 판결 예시와 접수 버튼을 한 화면에 둔다 */
-@media (max-height: 760px) {
+/* 세로가 짧으면 전광판을 한 줄로 줄이고, 아주 짧을 때만 접는다 — 판결 예시와 접수 버튼을 한 화면에 둔다.
+   예전 기준(760px 미만이면 숨김)은 휴대폰 대부분에서 전광판을 늘 숨겼다. */
+@media (max-height: 659px) {
+  .scr.dark .board {
+    margin-bottom: 10px;
+  }
+  .scr.dark .board-head {
+    display: none;
+  }
+}
+@media (max-height: 599px) {
   .scr.dark .board {
     display: none;
   }

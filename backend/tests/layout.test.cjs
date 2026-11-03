@@ -57,6 +57,10 @@ test('the board keeps its place while loading so the landing does not jump', () 
   assert.match(page, /useState<BoardData \| null>\(boardCache\)/);
   assert.match(css, /\.board-track\.idle \{\s*animation: none;/);
   assert.match(css, /\.board-stat \{[\s\S]*?white-space: nowrap;/);
+  // 휴대폰 대부분(세로 600px 이상)에서 전광판이 보여야 한다. 예전 760px 기준은 휴대폰에서 늘 숨겼다.
+  assert.doesNotMatch(css, /max-height: 760px/);
+  assert.match(css, /@media \(max-height: 599px\) \{\s*\.scr\.dark \.board \{\s*display: none;/);
+  assert.match(css, /\.board-live \{[\s\S]*?white-space: nowrap;/);
   // 도장 연출이 옆으로 넘쳐도 가로 스크롤바가 생겨 화면 높이가 바뀌지 않는다.
   const scr = css.match(/^\.scr \{[\s\S]*?^\}/m)?.[0];
   assert.match(scr, /overflow-x: hidden;/);
