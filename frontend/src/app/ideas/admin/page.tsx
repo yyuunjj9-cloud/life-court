@@ -86,7 +86,7 @@ export default function IdeasAdminPage() {
           {ideas?.map((idea) => (
             <div className="admin-idea" key={idea.id}>
               <span className="meta">
-                #{idea.id} · {STATUS_LABEL[idea.status]} · {new Date(idea.createdAt).toLocaleString("ko-KR")}
+                #{idea.id} · {idea.nickname ?? "익명 시민"} · {STATUS_LABEL[idea.status]} · {new Date(idea.createdAt).toLocaleString("ko-KR")}
               </span>
               <p>{idea.text}</p>
               {idea.status !== "private" && (

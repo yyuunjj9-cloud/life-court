@@ -773,6 +773,7 @@ p.sub {
   flex-direction: column;
   gap: 9px;
 }
+.memo-form .memo-nick,
 .memo-form textarea {
   width: 100%;
   resize: none;

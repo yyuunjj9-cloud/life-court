@@ -57,7 +57,12 @@ test('the memo board discloses how ideas are kept, and its admin screen stays ou
   const board = source('components/MemoBoard.tsx');
   assert.match(board, /운영자 아이디어/);
   assert.match(board, /이용자 아이디어/);
-  assert.match(notice, /운영자가 확인한 뒤에만 게시/);
+  // 이용자 메모의 꼬리표는 운영자용 갈색(owner)을 쓰지 않는다. 닉네임은 글자로만 들어간다.
+  const userMemo = board.match(/className="memo user"[\s\S]*?<\/div>/)?.[0];
+  assert.ok(userMemo, 'user memo markup not found');
+  assert.doesNotMatch(userMemo, /owner|style=|dangerouslySetInnerHTML/);
+  assert.match(notice, /운영자가 확인한 뒤에만[^"]*게시/);
+  assert.match(notice, /닉네임에는 실명 등 개인정보를 적지 마세요/);
   const admin = source('app/ideas/admin/layout.tsx');
   assert.match(admin, /robots: \{ index: false, follow: false \}/);
   assert.match(admin, /referrer: "no-referrer"/);

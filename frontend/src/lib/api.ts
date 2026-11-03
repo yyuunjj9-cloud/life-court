@@ -200,6 +200,7 @@ export async function fetchOffenses(): Promise<Record<string, string[]> | null> 
 export interface PublicIdea {
   id: number;
   text: string;
+  nickname: string | null;
 }
 
 export interface AdminIdea extends PublicIdea {
@@ -222,8 +223,11 @@ export async function fetchIdeas(): Promise<PublicIdea[] | null> {
 
 export const ideasApi = {
   /** 공개 요청은 운영자 승인 전까지 보이지 않는다. 거절되면 ApiError(422)나 429가 난다. */
-  submit: (text: string, isPublic: boolean) =>
-    request<{ status: "pending" | "private" }>("/api/ideas", { method: "POST", body: JSON.stringify({ text, public: isPublic }) }),
+  submit: (text: string, isPublic: boolean, nickname: string) =>
+    request<{ status: "pending" | "private" }>("/api/ideas", {
+      method: "POST",
+      body: JSON.stringify({ text, public: isPublic, ...(nickname.trim() ? { nickname: nickname.trim() } : {}) }),
+    }),
   adminList: (token: string) =>
     request<{ ideas: AdminIdea[] }>("/api/ideas/admin", { headers: { "X-Admin-Token": token } }),
   review: (token: string, id: number, status: "approved" | "rejected") =>

@@ -13,12 +13,14 @@ const ROADMAP: { keyword: string; detail: string }[] = [
 ];
 
 const MAX = 60;
+const NICK_MAX = 10;
 
 /* 안내 페이지 — 업데이트 예정 메모판. 이용자 아이디어는 운영자가 승인한 것만 붙는다. */
 export function MemoBoard() {
   const [ideas, setIdeas] = useState<PublicIdea[]>([]);
   const [writing, setWriting] = useState(false);
   const [text, setText] = useState("");
+  const [nickname, setNickname] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export function MemoBoard() {
     setSending(true);
     setResult(null);
     try {
-      const { status } = await ideasApi.submit(trimmed, isPublic);
+      const { status } = await ideasApi.submit(trimmed, isPublic, nickname);
       setText("");
       setResult(status === "pending" ? "붙였습니다. 운영자가 확인한 뒤 메모판에 공개됩니다." : "운영자에게만 전달했습니다. 고맙습니다.");
     } catch (error) {
@@ -73,13 +75,25 @@ export function MemoBoard() {
         ))}
         {ideas.map((idea) => (
           <div className="memo user" key={idea.id}>
-            <span className="memo-tag">이용자 아이디어</span>
+            {/* 이용자 메모는 늘 파란 꼬리표다 — 닉네임은 글자로만 붙고 색·모양은 바꿀 수 없다. */}
+            <span className="memo-tag">이용자 아이디어 · {idea.nickname ?? "익명 시민"}</span>
             <span>{idea.text}</span>
           </div>
         ))}
       </div>
       {writing && (
         <div className="memo-form">
+          <input
+            className="memo-nick"
+            value={nickname}
+            maxLength={NICK_MAX}
+            placeholder="닉네임 (선택, 10자) — 비우면 익명 시민"
+            aria-label="닉네임"
+            onChange={(e) => {
+              setNickname(e.target.value);
+              setResult(null);
+            }}
+          />
           <textarea
             value={text}
             maxLength={MAX}
@@ -103,7 +117,9 @@ export function MemoBoard() {
             </span>
           </div>
           <p className="memo-help">
-            {isPublic ? "공개 요청한 메모는 운영자가 확인한 뒤에만 메모판에 붙습니다." : "운영자만 읽고 메모판에는 붙지 않습니다."}
+            {isPublic
+              ? "공개 요청한 메모는 운영자가 확인한 뒤에만 닉네임과 함께 메모판에 붙습니다. 실명 대신 별명을 써 주세요."
+              : "운영자만 읽고 메모판에는 붙지 않습니다."}
           </p>
           <button className="btn sm" type="button" disabled={text.trim().length < 2 || sending} onClick={submit}>
             {sending ? "붙이는 중..." : "메모 붙이기"}
