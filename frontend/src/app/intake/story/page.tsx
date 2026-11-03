@@ -33,6 +33,7 @@ export default function StoryPage() {
 
   const len = draft.story.trim().length;
   const invalid = len < MIN || len > MAX;
+  const ownStory = len > 0 && !EXAMPLES.includes(draft.story);
 
   const next = async () => {
     if (checking) return;
@@ -80,16 +81,27 @@ export default function StoryPage() {
             ? `재판부가 심리할 내용이 부족합니다. 사연을 조금만 더 들려주세요. (${MIN}자 이상)`
             : `${MIN}~${MAX}자 이내로 입력해주세요.`}
         </div>
-        {draft.story.trim().length === 0 && (
-          <div className="examples">
-            <p className="lbl">이런 사건은 어떠신가요?</p>
-            {EXAMPLES.map((ex) => (
-              <button className="example-chip" key={ex} type="button" onClick={() => setStory(ex)}>
-                {ex}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* 예시는 늘 같은 자리에 둔다 — 고르는 순간 목록이 사라지면 화면 아래가 통째로 바뀐다.
+            직접 쓴 진술이 있으면 덮어쓰지 않도록 예시를 잠근다. */}
+        <div className={ownStory ? "examples locked" : "examples"}>
+          <p className="lbl">{ownStory ? "직접 쓴 진술로 심리합니다" : "이런 사건은 어떠신가요?"}</p>
+          {EXAMPLES.map((ex) => (
+            <button
+              className="example-chip"
+              key={ex}
+              type="button"
+              aria-pressed={draft.story === ex}
+              disabled={ownStory}
+              onClick={() => {
+                setStory(ex);
+                setIssue(null);
+                setCheckFailed(false);
+              }}
+            >
+              {ex}
+            </button>
+          ))}
+        </div>
         <div className="grow" />
         <div className="stack">
           <div className="btn-row">

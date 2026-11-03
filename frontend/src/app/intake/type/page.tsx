@@ -46,10 +46,11 @@ export default function TypePage() {
       active = false;
     };
   }, []);
+  // 두 개만 보여 줘야 긴 죄목이 겹쳐도 두 줄 안에 들어가 아래 영역이 밀리지 않는다.
   const crimeHint = useMemo(() => {
     const crimes = draft.caseType ? offenses?.[draft.caseType] : undefined;
     if (!crimes || crimes.length === 0) return null;
-    const picks = [...crimes].sort(() => Math.random() - 0.5).slice(0, 3);
+    const picks = [...crimes].sort(() => Math.random() - 0.5).slice(0, 2);
     return { picks, rest: crimes.length - picks.length };
   }, [draft.caseType, offenses]);
 
@@ -73,12 +74,23 @@ export default function TypePage() {
         <p className="lbl">사건 유형</p>
         <div className="g3">{TYPES.slice(0, 3).map(typeButton)}</div>
         <div className="g4">{TYPES.slice(3).map(typeButton)}</div>
-        {crimeHint && (
-          <p className="crime-hint">
-            주요 죄목: {crimeHint.picks.join(" · ")}
-            {crimeHint.rest > 0 ? ` 外 ${crimeHint.rest}건` : ""}
-          </p>
-        )}
+        {/* 고르기 전에도 같은 자리를 차지해, 카드를 누를 때 관계 선택과 버튼이 밀리지 않는다 */}
+        <p className="crime-hint" aria-live="polite">
+          {crimeHint ? (
+            <>
+              주요 죄목:{" "}
+              {crimeHint.picks.map((crime, i) => (
+                <span key={crime}>
+                  {i > 0 && " · "}
+                  <span className="crime">{crime}</span>
+                </span>
+              ))}
+              {crimeHint.rest > 0 && <span className="crime"> 外 {crimeHint.rest}건</span>}
+            </>
+          ) : draft.caseType ? null : (
+            "유형을 고르면 다루는 죄목을 미리 볼 수 있습니다."
+          )}
+        </p>
         <p className="lbl" style={{ marginTop: 24 }}>
           피고와의 관계
         </p>

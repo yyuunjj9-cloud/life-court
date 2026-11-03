@@ -30,6 +30,26 @@ test('the board ticker keeps a readable speed and can be stopped', () => {
   assert.match(reduced, /\.board-track \{[\s\S]*?animation: none;/);
 });
 
+test('choosing a card or example never moves the rest of the intake screen', () => {
+  // 선택 시 생기거나 사라지는 영역이 없어야 아래가 밀리지 않는다.
+  const type = source('app/intake/type/page.tsx');
+  assert.doesNotMatch(type, /\{crimeHint && \(/);
+  assert.match(type, /\.slice\(0, 2\)/);
+  assert.match(css, /\.crime-hint \{[\s\S]*?min-height: 3\.2em;/);
+  const story = source('app/intake/story/page.tsx');
+  assert.doesNotMatch(story, /draft\.story\.trim\(\)\.length === 0 && \(/);
+  // 선택 표시는 크기·위치·굵기를 바꾸지 않고, 경고색인 빨강을 쓰지 않는다.
+  for (const selector of ['.ev[aria-pressed="true"]', '.pill[aria-pressed="true"]', '.example-chip[aria-pressed="true"]']) {
+    const rule = css.match(new RegExp(`^${selector.replace(/[.[\]"=]/g, (c) => '\\' + c)} \\{[\\s\\S]*?^\\}`, 'm'))?.[0];
+    assert.ok(rule, `${selector} rule not found`);
+    assert.doesNotMatch(rule, /transform|font-weight|objection-red/, selector);
+  }
+  const badge = css.match(/^\.ev\[aria-pressed="true"\]::after \{[\s\S]*?^\}/m)?.[0];
+  assert.doesNotMatch(badge, /top: -|right: -/);
+  // 휴대폰에서 탭 뒤에 남는 hover로 카드가 들려 있지 않게 한다.
+  assert.match(css, /@media \(hover: hover\) \{\s*\.filing-opt:hover/);
+});
+
 test('the board keeps its place while loading so the landing does not jump', () => {
   const page = source('app/page.tsx');
   // 응답 뒤에 끼워 넣으면 판결 예시와 버튼이 밀린다 — 자리는 항상 렌더링한다.

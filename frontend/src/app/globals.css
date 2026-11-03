@@ -57,6 +57,11 @@ body {
   word-break: keep-all;
   -webkit-font-smoothing: antialiased;
 }
+/* 모바일 기본 탭 하이라이트(파란 사각형)가 카드 모양과 어긋나 깨져 보인다 — 눌림은 각 요소의 스타일로 보여준다 */
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
 
 /* ---------- 앱 프레임 ---------- */
 #app {
@@ -350,12 +355,22 @@ p.sub {
   display: flex;
   gap: 8px;
 }
-/* 사연 입력 예시 칩 — 입력란이 비어 있을 때만 노출 */
+/* 사연 입력 예시 칩 — 늘 같은 자리에 두고, 직접 쓴 진술이 있으면 흐리게 잠근다 */
 .examples {
   margin-top: 16px;
   display: flex;
   flex-direction: column;
   gap: 7px;
+}
+.examples.locked .example-chip {
+  opacity: 0.45;
+  cursor: default;
+}
+.example-chip[aria-pressed="true"] {
+  border-color: var(--wood);
+  box-shadow: 0 0 0 1px var(--wood) inset;
+  background: #fbf4e3;
+  color: var(--ink);
 }
 .example-chip {
   font-family: var(--serif);
@@ -370,10 +385,14 @@ p.sub {
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
-.example-chip:hover,
-.example-chip:active {
-  border-color: var(--gold);
+.example-chip:not(:disabled):active {
   background: rgba(255, 252, 240, 0.9);
+}
+@media (hover: hover) {
+  .example-chip:not(:disabled):not([aria-pressed="true"]):hover {
+    border-color: var(--gold);
+    background: rgba(255, 252, 240, 0.9);
+  }
 }
 /* 선고 연출 — 판결문 열람 화면에서 결과어와 도장이 쾅 찍힌다 */
 .verdict-scr .vfinal .w {
@@ -963,27 +982,26 @@ p.sub {
   font-weight: 700;
   letter-spacing: 0.04em;
 }
+/* 선택 표시는 크기·위치를 바꾸지 않는다 — 들리거나 카드 밖으로 튀어나오면 줄이 어긋나 보인다.
+   빨강은 경고에 쓰는 색이라 선택에는 심각성 칸과 같은 나무색을 쓴다. */
 .ev[aria-pressed="true"] {
-  background: linear-gradient(180deg, #fdf6df, #f5e8c4);
-  border-color: var(--objection-red);
-  box-shadow: 0 0 0 1px var(--objection-red) inset, 0 4px 10px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
+  background: linear-gradient(180deg, #f8edd2, #efdfb6);
+  border-color: var(--wood);
+  box-shadow: 0 0 0 1px var(--wood) inset;
 }
 .ev[aria-pressed="true"]::after {
   content: "証";
   position: absolute;
-  top: -8px;
-  right: -6px;
-  width: 22px;
-  height: 22px;
+  top: 4px;
+  right: 4px;
+  width: 17px;
+  height: 17px;
   border-radius: 50%;
-  background: var(--objection-red);
-  color: #fff;
-  font-size: 11px;
+  background: var(--wood);
+  color: var(--gold-bright);
+  font-size: 9px;
   display: grid;
   place-items: center;
-  border: 1.5px solid #fbf4e3;
-  transform: rotate(10deg);
 }
 .g3.two {
   grid-template-columns: repeat(2, 1fr);
@@ -1005,6 +1023,12 @@ p.sub {
   color: var(--ink-soft);
   line-height: 1.6;
   opacity: 0.85;
+  /* 안내가 없거나 한 줄일 때도 두 줄 높이를 지켜 아래 영역이 오르내리지 않는다 */
+  min-height: 3.2em;
+}
+/* 죄목 이름은 중간에서 줄을 바꾸지 않는다 */
+.crime-hint .crime {
+  white-space: nowrap;
 }
 
 .pills {
@@ -1023,11 +1047,11 @@ p.sub {
   color: var(--ink-soft);
   cursor: pointer;
 }
+/* 굵기를 바꾸면 버튼 폭이 달라져 줄바꿈 위치가 바뀐다 — 색만 바꾼다 */
 .pill[aria-pressed="true"] {
-  border-color: var(--objection-red);
-  background: var(--objection-red);
-  color: #fbf4e3;
-  font-weight: 700;
+  border-color: var(--wood-deep);
+  background: var(--wood);
+  color: var(--gold-bright);
 }
 
 /* ============================================================
@@ -1454,10 +1478,13 @@ p.sub {
   font-family: var(--serif);
   transition: transform 0.1s;
 }
-.filing-opt:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
-  border-color: var(--objection-red);
+/* 휴대폰은 탭한 뒤에도 hover가 남으므로 마우스가 있는 기기에서만 띄운다 */
+@media (hover: hover) {
+  .filing-opt:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    border-color: var(--wood);
+  }
 }
 .filing-opt .fi {
   font-size: 26px;
