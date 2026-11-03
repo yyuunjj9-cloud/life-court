@@ -15,7 +15,7 @@ import {
   type Severity,
   type Tone,
 } from "./domain/judgment";
-import { generateAppeal } from "./domain/judgment";
+import { generateAppeal, generateSupreme } from "./domain/judgment";
 import {
   COUNTER_ROUNDS,
   generateComplaint,
@@ -173,6 +173,7 @@ app.post("/api/cases", async (req, res) => {
     verdict,
     complaint,
     appeal: null,
+    supreme: null,
     countersuit: null,
     response: null,
     shareToken,
@@ -253,6 +254,37 @@ app.post("/api/cases/:seq/appeal", async (req, res) => {
   const appeal = rec.appeal ?? generateAppeal(rec.input, rec.verdict);
   if (!rec.appeal) await storage.update(seq, { appeal });
   res.json({ appeal });
+});
+
+/**
+ * 대법원 상고 — 원고가 원할 때만 연다. 항소심이 있어야 하고 사건당 한 번이며, 결과는 확정이다.
+ * 늦은 동시 요청은 먼저 저장된 상고심을 돌려받는다.
+ */
+app.post("/api/cases/:seq/supreme", async (req, res) => {
+  const seq = Number(req.params.seq);
+  const rec = await storage.get(seq);
+  if (!rec) {
+    res.status(404).json({ error: "case not found" });
+    return;
+  }
+  if (!validToken(req.get("X-Owner-Token"), rec.ownerToken)) {
+    res.status(403).json({ error: "invalid owner token" });
+    return;
+  }
+  if (!rec.appeal) {
+    res.status(409).json({ error: "appeal required" });
+    return;
+  }
+  if (rec.supreme) {
+    res.json({ supreme: rec.supreme });
+    return;
+  }
+  const supreme = generateSupreme(rec.input, rec.verdict, rec.appeal);
+  if (await storage.setSupreme(seq, supreme)) {
+    res.json({ supreme });
+    return;
+  }
+  res.json({ supreme: (await storage.get(seq))?.supreme ?? supreme });
 });
 
 /**

@@ -6,7 +6,7 @@ const fs = require('node:fs');
 require.extensions['.ts'] = (module, filename) => module._compile(ts.transpileModule(
   fs.readFileSync(filename, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } },
 ).outputText, filename);
-const { selectScenario, generateVerdict, generateAppeal } = require('../src/domain/judgment.ts');
+const { selectScenario, generateVerdict, generateAppeal, generateSupreme } = require('../src/domain/judgment.ts');
 const { generateComplaint, generateDemandLetter } = require('../src/domain/documents.ts');
 const input = (story, extra = {}) => ({ story, caseType: 'daily', relationship: 'friend', severity: 3, tone: 'fair', ...extra });
 
@@ -135,6 +135,45 @@ test('a plaintiff appeal never lightens the verdict and raises it at most one st
     }
   }
   assert.ok(sustained > 0);
+});
+
+test('a supreme appeal starts from the appeal result, never lightens it, and always ends final', () => {
+  const ladder = ['무죄', '훈방 조치', '조건부 유죄', '유죄', '괘씸죄 가중 유죄'];
+  let raised = 0;
+  for (const [caseType, story] of require('./scenario-corpus.cjs')) {
+    for (const severity of [1, 3, 5]) {
+      for (const tone of ['lenient', 'fair', 'strict']) {
+        const data = input(story, { caseType, severity, tone });
+        const verdict = generateVerdict(data, 42);
+        const appeal = generateAppeal(data, verdict);
+        const before = appeal.overturned ? appeal.order.match(/^원심 파기\. (.+)\.$/)[1] : verdict.result;
+        if (appeal.overturned) assert.ok(appeal.orderNote.length > appeal.orderNote.indexOf(')') + 2, 'a raised appeal names its penalty');
+        const supreme = generateSupreme(data, verdict, appeal);
+        assert.deepEqual(generateSupreme(data, verdict, appeal), supreme);
+        assert.match(supreme.order, /판결 확정\.$/);
+        assert.doesNotMatch(supreme.order, /무죄/);
+        const after = ladder.indexOf(supreme.finalResult);
+        if (!supreme.overturned) {
+          assert.equal(supreme.finalResult, before);
+          continue;
+        }
+        raised++;
+        assert.equal(after, ladder.indexOf(before) + 1);
+        if (selectScenario(story, caseType).keywords.length === 0) assert.ok(after <= ladder.indexOf('훈방 조치'));
+      }
+    }
+  }
+  assert.ok(raised > 0);
+});
+
+test('a supreme appeal reads an old-rule appeal that acquitted from its order', () => {
+  const data = input('친구가 약속에 40분 늦고는 사과도 없이 메뉴부터 골랐어요', { caseType: 'relationship', severity: 4 });
+  const verdict = { ...generateVerdict(data, 42), result: '유죄' };
+  const legacy = { order: '원심 파기. 무죄.', orderNote: '', reasoning: '', overturned: true };
+  for (let seq = 42; seq < 80; seq++) {
+    const supreme = generateSupreme(data, { ...verdict, caseNo: `2026 생활 제${seq}호` }, legacy);
+    assert.ok(['무죄', '훈방 조치'].includes(supreme.finalResult), supreme.finalResult);
+  }
 });
 
 test('an appeal judges a stored general-dispute verdict by its stored crime, not today\'s rules', () => {

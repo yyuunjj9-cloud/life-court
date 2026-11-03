@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS cases (
   verdict      JSONB NOT NULL,               -- 제1심 판결문
   complaint    JSONB NOT NULL,               -- 고소장/고발장
   appeal       JSONB,                        -- 항소심 판결문 (항소 시)
+  supreme      JSONB,                        -- 대법원 상고심 판결문 (원고가 원할 때, 항소심 이후 1회)
   countersuit  JSONB,                        -- 맞고소장 (맞고소 시)
   response     JSONB,                        -- 피고 측 답변서 (공유 링크 수신자가 선택지로 제출)
   share_token  TEXT,                         -- 192-bit random bearer token (shared read/response)
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS cases (
 
 -- 기존 배포 DB에는 backend가 부팅 시 멱등 마이그레이션으로 추가한다:
 -- ALTER TABLE cases ADD COLUMN IF NOT EXISTS response JSONB;
+-- ALTER TABLE cases ADD COLUMN IF NOT EXISTS supreme JSONB;
 
 CREATE INDEX IF NOT EXISTS idx_cases_created_at ON cases (created_at DESC);
 

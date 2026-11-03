@@ -6,7 +6,7 @@ const { readFileSync } = require('node:fs');
 const path = require('node:path');
 const { Pool } = require('pg');
 const { PgStorage } = require('../../src/storage.ts');
-const { generateVerdict } = require('../../src/domain/judgment.ts');
+const { generateAppeal, generateSupreme, generateVerdict } = require('../../src/domain/judgment.ts');
 const { generateComplaint, generateCountersuit } = require('../../src/domain/documents.ts');
 
 // Deliberately never fall back to DATABASE_URL or a remote/production database.
@@ -26,7 +26,7 @@ const input = { story: '친구가 약속에 늦어서 한 시간을 기다렸어
 function record(seq) {
   const verdict = generateVerdict(input, seq);
   return { seq, input, filingKind: 'complaint', verdict, complaint: generateComplaint(input, verdict, 'complaint'),
-    appeal: null, countersuit: null, response: null, shareToken: randomBytes(24).toString('hex'), ownerToken: randomBytes(24).toString('hex') };
+    appeal: null, supreme: null, countersuit: null, response: null, shareToken: randomBytes(24).toString('hex'), ownerToken: randomBytes(24).toString('hex') };
 }
 before(async () => {
   assert.equal((await admin.query('SELECT current_database() AS name')).rows[0].name, 'lifecourt_test');
@@ -52,7 +52,7 @@ async function fixture(legacy = false) {
   };
   const queryPool = openPool();
   const sql = legacy ? schemaSql
-    .replace(/^\s*(response|share_token|owner_token)\s+[^\n]*\n/gm, '')
+    .replace(/^\s*(response|share_token|owner_token|supreme)\s+[^\n]*\n/gm, '')
     .replace(/CREATE TABLE IF NOT EXISTS case_counters\s*\([\s\S]*?\);/g, '') : schemaSql;
   await queryPool.query(sql);
   const openStore = () => { const pool = openPool(); return { pool, store: new PgStorage(pool) }; };
@@ -154,5 +154,27 @@ test('three instances migrate a legacy schema concurrently while preserving exis
   assert.deepEqual(stored.complaint, old.complaint);
   assert.equal(stored.ownerToken, null);
   assert.equal(stored.shareToken, null);
+  assert.equal(stored.supreme, null);
   assert.deepEqual((await Promise.all(workers.map(worker => worker.store.allocateSeq()))).sort((a, b) => a - b), [91, 92, 93]);
+});
+
+test('a Postgres supreme appeal needs an appeal first and is stored exactly once', async () => {
+  const { openStore } = await fixture();
+  const workers = Array.from({ length: 3 }, openStore);
+  await Promise.all(workers.map(worker => worker.store.ready()));
+  const seq = await workers[0].store.allocateSeq();
+  const original = record(seq); await workers[0].store.create(original);
+  const appeal = generateAppeal(input, original.verdict);
+  const supreme = generateSupreme(input, original.verdict, appeal);
+  assert.equal(await workers[0].store.setSupreme(seq, supreme), false, 'no supreme appeal before the appeal');
+  await workers[0].store.update(seq, { appeal });
+  const results = await Promise.all(Array.from({ length: 30 }, (_, n) =>
+    workers[n % 3].store.setSupreme(seq, { ...supreme, reasoning: String(n) })));
+  assert.equal(results.filter(Boolean).length, 1);
+  for (const { store } of workers) {
+    const stored = await store.get(seq);
+    assert.equal(stored.supreme.reasoning, String(results.indexOf(true)));
+    assert.deepEqual(stored.appeal, appeal);
+    assert.deepEqual(stored.verdict, original.verdict);
+  }
 });

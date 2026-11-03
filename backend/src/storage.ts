@@ -5,7 +5,7 @@
  */
 
 import { Pool } from "pg";
-import type { AppealVerdict, CaseInput, Verdict } from "./domain/judgment";
+import type { AppealVerdict, CaseInput, SupremeVerdict, Verdict } from "./domain/judgment";
 import type { ComplaintDoc, CountersuitDoc, FilingKind } from "./domain/documents";
 import type { DefenseResponse } from "./domain/response";
 
@@ -16,6 +16,8 @@ export interface CaseRecord {
   verdict: Verdict;
   complaint: ComplaintDoc;
   appeal: AppealVerdict | null;
+  /** 대법원 상고심 — 원고가 원할 때만, 항소심 이후 한 번 */
+  supreme: SupremeVerdict | null;
   countersuit: CountersuitDoc | null;
   /** 피고 측 답변서(선택지 기반, 사건당 1회) — 공유 링크 수신자가 제출 */
   response: DefenseResponse | null;
@@ -46,6 +48,8 @@ export interface CaseStorage {
   setResponse(seq: number, response: DefenseResponse): Promise<boolean>;
   /** 맞고소는 사건당 한 번만 저장한다 — 동시 요청 중 하나만 true. */
   setCountersuit(seq: number, countersuit: CountersuitDoc): Promise<boolean>;
+  /** 상고는 항소심이 있는 사건에 한 번만 저장한다 — 동시 요청 중 하나만 true. */
+  setSupreme(seq: number, supreme: SupremeVerdict): Promise<boolean>;
   create(record: CaseRecord): Promise<void>;
   get(seq: number): Promise<CaseRecord | null>;
   update(seq: number, patch: Partial<Pick<CaseRecord, "appeal">>): Promise<void>;
@@ -79,6 +83,12 @@ export class MemoryStorage implements CaseStorage {
     const rec = this.cases.get(seq);
     if (!rec || rec.countersuit) return false;
     rec.countersuit = countersuit;
+    return true;
+  }
+  async setSupreme(seq: number, supreme: SupremeVerdict) {
+    const rec = this.cases.get(seq);
+    if (!rec || !rec.appeal || rec.supreme) return false;
+    rec.supreme = supreme;
     return true;
   }
   async create(record: CaseRecord) {
@@ -132,7 +142,8 @@ export class PgStorage implements CaseStorage {
       await client.query("BEGIN");
       await client.query("SELECT pg_advisory_xact_lock(hashtext(current_schema()), hashtext('lifecourt-storage-init'))");
       await client.query(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS response JSONB,
-        ADD COLUMN IF NOT EXISTS share_token TEXT, ADD COLUMN IF NOT EXISTS owner_token TEXT`);
+        ADD COLUMN IF NOT EXISTS share_token TEXT, ADD COLUMN IF NOT EXISTS owner_token TEXT,
+        ADD COLUMN IF NOT EXISTS supreme JSONB`);
       await client.query(`CREATE TABLE IF NOT EXISTS case_counters (id TEXT PRIMARY KEY, value INTEGER NOT NULL)`);
       await client.query("COMMIT");
     } catch (error) {
@@ -162,6 +173,12 @@ export class PgStorage implements CaseStorage {
     const r = await this.pool.query(
       `UPDATE cases SET countersuit = $2 WHERE seq = $1 AND countersuit IS NULL RETURNING seq`,
       [seq, JSON.stringify(countersuit)]);
+    return r.rowCount === 1;
+  }
+  async setSupreme(seq: number, supreme: SupremeVerdict) {
+    const r = await this.pool.query(
+      `UPDATE cases SET supreme = $2 WHERE seq = $1 AND supreme IS NULL AND appeal IS NOT NULL RETURNING seq`,
+      [seq, JSON.stringify(supreme)]);
     return r.rowCount === 1;
   }
 
@@ -213,6 +230,7 @@ export class PgStorage implements CaseStorage {
       verdict: row.verdict,
       complaint: row.complaint,
       appeal: row.appeal ?? null,
+      supreme: row.supreme ?? null,
       countersuit: row.countersuit ?? null,
       response: row.response ?? null,
       shareToken: row.share_token ?? null,

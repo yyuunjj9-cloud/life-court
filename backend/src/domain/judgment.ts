@@ -37,6 +37,12 @@ export interface AppealVerdict {
   overturned: boolean;
 }
 
+/** 대법원 상고심 — 원고가 원할 때만 한 번 연다. 결과는 확정이다. */
+export interface SupremeVerdict extends AppealVerdict {
+  /** 확정된 처분 */
+  finalResult: string;
+}
+
 export const CASE_TYPE_LABEL: Record<CaseType, string> = {
   work: "회사생활",
   relationship: "인간관계",
@@ -2240,23 +2246,41 @@ const APPEAL_DISMISS_REASONS = [
 
 /** 원심 처분별 항소 인용 확률 — 이미 무거울수록 더 올리기 어렵다. 인덱스는 처분 사다리와 같다. */
 const APPEAL_SUSTAIN_CHANCE = [0.6, 0.55, 0.45, 0.3] as const;
+/** 상고 인용 확률 — 대법원은 항소심보다 더 신중하다. */
+const SUPREME_SUSTAIN_CHANCE = [0.4, 0.35, 0.3, 0.2] as const;
+
+/** 처분 사다리 — 가벼운 처분부터. */
+const LADDER = [...RESULTS].reverse().map((tier) => tier.result);
+
+/**
+ * 한 단계 더 무거운 처분을 내릴 수 있는 상한. 근거가 부족한 일반 분쟁은 원심과 같이 유죄 처분까지 올리지 않는다.
+ * 저장된 원심이 예전 규칙으로 만들어졌을 수 있으므로 지금 규칙으로 다시 고르지 않고 원심의 죄목을 본다.
+ */
+function raiseCeiling(verdict: Verdict): number {
+  return verdict.crime === GENERAL_CRIME ? LADDER.indexOf("훈방 조치") : LADDER.length - 1;
+}
+
+/** 처분이 무거워지면 그 등급과 사건 유형에 맞는 벌칙을 함께 알린다. */
+function raisedPenalty(rand: () => number, input: CaseInput, result: string): string {
+  const tier = RESULTS.find((r) => r.result === result);
+  if (!tier) return "";
+  return pickResultNote(rand, tier, scenarioType(selectScenario(input.story, input.caseType), input.caseType));
+}
 
 export function generateAppeal(input: CaseInput, verdict: Verdict): AppealVerdict {
   const rand = mulberry32(hashSeed(`appeal|${verdict.caseNo}|${input.story}`));
-  const ladder = [...RESULTS].reverse().map((tier) => tier.result);
+  const ladder = LADDER;
   const current = ladder.indexOf(verdict.result);
-  // 근거가 부족한 일반 분쟁은 원심과 같이 유죄 처분까지 올리지 않는다. 저장된 원심이
-  // 예전 규칙으로 만들어졌을 수 있으므로 지금 규칙으로 다시 고르지 않고 원심의 죄목을 본다.
-  const uncertain = verdict.crime === GENERAL_CRIME;
-  const ceiling = uncertain ? ladder.indexOf("훈방 조치") : ladder.length - 1;
+  const ceiling = raiseCeiling(verdict);
   const sustained = current >= 0 && current < ceiling && rand() < APPEAL_SUSTAIN_CHANCE[current];
 
   if (sustained) {
     const next = ladder[current + 1];
+    const reasoning = pick(rand, APPEAL_SUSTAIN_REASONS);
     return {
       order: `원심 파기. ${next}.`,
-      orderNote: `원고의 항소를 받아들여 처분을 한 단계 높인다. (원심 ${verdict.result} → 항소심 ${next})`,
-      reasoning: pick(rand, APPEAL_SUSTAIN_REASONS),
+      orderNote: `원고의 항소를 받아들여 처분을 한 단계 높인다. (원심 ${verdict.result} → 항소심 ${next}) ${raisedPenalty(rand, input, next)}`,
+      reasoning,
       overturned: true,
     };
   }
@@ -2267,6 +2291,56 @@ export function generateAppeal(input: CaseInput, verdict: Verdict): AppealVerdic
     orderNote: `${limit}원심 판결(${verdict.result})의 효력은 그대로 유지된다.`,
     reasoning: pick(rand, APPEAL_DISMISS_REASONS),
     overturned: false,
+  };
+}
+
+const SUPREME_SUSTAIN_REASONS = [
+  "생활대법원 전원합의체는 장시간의 토론 끝에 원고의 손을 들어 주기로 하였다. 반대 의견은 점심시간이 다가와 철회되었다.",
+  "항소심은 원고가 겪은 일의 사소함만 보고 그 반복 가능성을 보지 못하였다. 사소한 일도 대법원까지 오면 사소하지 않다.",
+  "상고 이유서의 행간에서 원고의 억울함이 충분히 소명되었다. 대법원은 이를 외면할 수 없다.",
+  "피고인이 지금쯤 안심하고 있을 것이라는 점을 고려하면, 처분을 한 단계 높여 경각심을 일깨울 필요가 있다.",
+];
+
+const SUPREME_DISMISS_REASONS = [
+  "생활대법원은 법리를 심사할 뿐 억울함의 크기를 다시 재지 않는다. 항소심의 판단에 법리 오해가 없으므로 상고를 기각한다.",
+  "상고 이유는 결국 항소심의 판단을 다투는 것에 불과하다. 원고의 끈기는 높이 평가하나 결론은 달라지지 않는다.",
+  "대법원은 원고가 여기까지 온 정성에 경의를 표한다. 다만 정성만으로 처분을 높일 수는 없다.",
+  "본 사건은 이미 두 번의 심리를 거쳤다. 이제 쌍방이 판결문을 내려놓고 일상으로 돌아갈 때이다.",
+];
+
+/** 항소심이 확정한 처분 — 예전 규칙의 항소(원심 파기 후 무죄)도 주문에 적힌 대로 읽는다. */
+function appealResult(verdict: Verdict, appeal: AppealVerdict): string {
+  const raised = appeal.order.match(/^원심 파기\. (.+?)\.$/)?.[1];
+  return appeal.overturned && raised && LADDER.includes(raised) ? raised : verdict.result;
+}
+
+/** 대법원 상고심 — 원고가 원할 때 한 번만 연다. 인용되면 처분이 한 단계 무거워지고, 어느 쪽이든 판결이 확정된다. */
+export function generateSupreme(input: CaseInput, verdict: Verdict, appeal: AppealVerdict): SupremeVerdict {
+  const rand = mulberry32(hashSeed(`supreme|${verdict.caseNo}|${input.story}`));
+  const before = appealResult(verdict, appeal);
+  const current = LADDER.indexOf(before);
+  const ceiling = raiseCeiling(verdict);
+  const sustained = current >= 0 && current < ceiling && rand() < SUPREME_SUSTAIN_CHANCE[current];
+
+  if (sustained) {
+    const next = LADDER[current + 1];
+    const reasoning = pick(rand, SUPREME_SUSTAIN_REASONS);
+    return {
+      order: `항소심 판결 파기. ${next}. 판결 확정.`,
+      orderNote: `원고의 상고를 받아들여 처분을 한 단계 높이고 판결을 확정한다. (항소심 ${before} → 상고심 ${next}) ${raisedPenalty(rand, input, next)}`,
+      reasoning,
+      overturned: true,
+      finalResult: next,
+    };
+  }
+  const limit = current === LADDER.length - 1 ? "항소심 처분이 이미 가장 무거운 처분이다. "
+    : current >= ceiling ? "제출된 사연만으로는 더 무거운 처분을 내릴 근거가 부족하다. " : "";
+  return {
+    order: "상고 기각. 항소심 판결 확정.",
+    orderNote: `${limit}항소심 판결(${before})이 그대로 확정된다.`,
+    reasoning: pick(rand, SUPREME_DISMISS_REASONS),
+    overturned: false,
+    finalResult: before,
   };
 }
 

@@ -94,6 +94,22 @@ test('the countersuit game reads lines without filing, then stores one result fo
   assert.deepEqual(await (await post(`/api/cases/${seq}/countersuit`, {}, owner)).json(), docs[0]);
   assert.equal((await (await brief(ownerToken)).json()).done, true);
 });
+test('a supreme appeal is optional, needs the appeal first, and stores one result', async () => {
+  const { seq, shareToken, ownerToken } = await (await post('/api/cases', data)).json();
+  const owner = { 'X-Owner-Token': ownerToken };
+  assert.equal((await post(`/api/cases/${seq}/supreme`, {}, owner)).status, 409);
+  assert.equal((await post(`/api/cases/${seq}/appeal`, {}, owner)).status, 200);
+  assert.equal((await post(`/api/cases/${seq}/supreme`, {})).status, 403);
+  assert.equal((await post(`/api/cases/${seq}/supreme`, {}, { 'X-Owner-Token': shareToken })).status, 403);
+  const plays = await Promise.all(Array.from({ length: 10 }, () => post(`/api/cases/${seq}/supreme`, {}, owner)));
+  assert.ok(plays.every(r => r.status === 200));
+  const docs = await Promise.all(plays.map(r => r.json()));
+  for (const doc of docs) assert.deepEqual(doc, docs[0]);
+  assert.match(docs[0].supreme.order, /판결 확정\.$/);
+  // 공유 링크로는 상고심이 보이지 않는다 — 공개 범위는 그대로다.
+  const shared = await (await fetch(`${base}/api/cases/${seq}?t=${shareToken}`)).json();
+  assert.deepEqual(Object.keys(shared).sort(), ['responseDoc', 'seq', 'verdict']);
+});
 test('moderation rejects every generation path before assigning or storing a case', async () => {
   const beforeSeq = await (await fetch(base + '/api/meta/next-seq')).json();
   const blocked = { ...data, story: '친구가 씨발이라고 하며 저에게 화를 냈어요' };
