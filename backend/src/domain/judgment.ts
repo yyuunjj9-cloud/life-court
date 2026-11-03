@@ -2331,8 +2331,9 @@ export function generateSupreme(input: CaseInput, verdict: Verdict, appeal: Appe
     const next = LADDER[current + 1];
     const reasoning = pick(rand, SUPREME_SUSTAIN_REASONS);
     return {
-      order: `항소심 판결 파기. ${next}. 판결 확정.`,
-      orderNote: `원고의 상고를 받아들여 처분을 한 단계 높이고 판결을 확정한다. (항소심 ${before} → 상고심 ${next}) ${raisedPenalty(rand, input, next)}`,
+      // 실제 대법원도 기록으로 충분하면 직접 판결한다(형사소송법 제396조 파기자판). 보통은 파기환송이다.
+      order: `항소심 판결 파기(파기자판). ${next}. 판결 확정.`,
+      orderNote: `원고의 상고를 받아들여, 사건을 돌려보내지 않고 대법원이 직접 처분을 한 단계 높여 판결을 확정한다. (항소심 ${before} → 상고심 ${next}) ${raisedPenalty(rand, input, next)}`,
       reasoning,
       overturned: true,
       finalResult: next,

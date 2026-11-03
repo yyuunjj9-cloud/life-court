@@ -73,6 +73,18 @@ test('same input stays deterministic; tone and severity remain monotonic', () =>
   }
 });
 
+test('a verdict never treats the absent defendant\'s side as proven fact', () => {
+  for (const [caseType, story] of require('./scenario-corpus.cjs')) {
+    for (const severity of [1, 3, 5]) {
+      const verdict = generateVerdict(input(story, { caseType, severity }), 42);
+      // 상대의 진술·증빙은 제출되지 않았음을 밝히고, 원고 사연만 증거로 둔다.
+      assert.ok(verdict.evidence.some((e) => /상대방의 진술과 객관적 증빙은 별도로 제출되지 아니하였다/.test(e)), story);
+      assert.equal(verdict.evidence.length, 2);
+      if (selectScenario(story, caseType).keywords.length > 0) assert.match(verdict.reasoning, /사연 밖의 구체적인 행동이나 동기를 인정하지 아니한다/, story);
+    }
+  }
+});
+
 test('landing sample matches what the generator really produces for that story', () => {
   const page = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../frontend/src/app/page.tsx'), 'utf8');
   const field = name => page.match(new RegExp(`${name}: "([^"]+)"`))?.[1];

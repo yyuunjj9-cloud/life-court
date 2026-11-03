@@ -700,6 +700,104 @@ p.sub {
   text-align: center;
   color: var(--ink-soft);
 }
+/* ---------- 용어 풀이 ---------- */
+.glossary-link {
+  display: block;
+  margin-top: 16px;
+  padding: 11px 12px;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  color: var(--ink);
+  text-decoration: none;
+  background: #fbf4e3;
+  border: 1px solid var(--gold-dim);
+  border-radius: 3px;
+}
+.glossary-legend {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin: 14px 0 12px;
+}
+.glossary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gl-item {
+  padding: 11px 12px;
+  background: #fbf4e3;
+  border: 1px solid var(--paper-line);
+}
+.gl-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+.gl-head b {
+  font-size: 14.5px;
+  color: var(--ink);
+}
+.gl-item p {
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+.gl-law {
+  display: inline-block;
+  margin-top: 6px;
+  font-family: var(--sans);
+  font-size: 10.5px;
+  color: var(--muted);
+}
+/* 실제·빌린·가상 용어를 색으로 구분한다 — 경고색 빨강은 쓰지 않는다 */
+.gl-kind {
+  flex: none;
+  font-family: var(--sans);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid;
+}
+.gl-kind.real {
+  color: #245a40;
+  border-color: #7fb293;
+  background: #e8f4ec;
+}
+.gl-kind.borrowed {
+  color: #21465f;
+  border-color: #86a8c2;
+  background: #e7eff6;
+}
+.gl-kind.fiction {
+  color: #775429;
+  border-color: #c9a87a;
+  background: #f6ecdc;
+}
+.principles {
+  padding-left: 20px;
+  list-style: decimal;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: var(--ink);
+}
+.principles li + li {
+  margin-top: 4px;
+}
+.gl-foot {
+  margin-top: 16px;
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--muted);
+}
+
 /* ---------- 안내 페이지 — 업데이트 예정 메모판 ---------- */
 .memo-board {
   margin-top: 22px;

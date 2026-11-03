@@ -70,6 +70,19 @@ test('the memo board discloses how ideas are kept, and its admin screen stays ou
   assert.match(source('app/ideas/admin/page.tsx'), /history\.replaceState/);
 });
 
+test('playful legal terms are disclosed as fictional and explained on the glossary page', () => {
+  const notice = source('app/notice/page.tsx');
+  assert.match(notice, /가상 용어이며 실제 법정 용어가 아닙니다/);
+  assert.match(notice, /href="\/glossary"/);
+  const glossary = source('app/glossary/page.tsx');
+  for (const term of ['훈방 조치', '조건부 유죄', '괘씸죄 가중 유죄']) {
+    assert.match(glossary, new RegExp(`term: "${term}",\\s*kind: "fiction"`), term);
+  }
+  assert.match(glossary, /형사소송법 제396조/);
+  assert.match(glossary, /가벼워지지 않습니다/);
+  assert.match(glossary, /법률 자문이 아닙니다/);
+});
+
 test('the landing makes its punchline, "not fairly", stand out', () => {
   assert.match(source('app/page.tsx'), /<em className="twist">공정하지 않게<\/em>/);
   assert.match(css, /\.hero-s \.twist \{[\s\S]*?color: var\(--gold-bright\);/);
