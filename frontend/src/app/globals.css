@@ -625,6 +625,21 @@ p.sub {
   text-align: center;
   color: var(--gold-soft);
 }
+/* 맞고소 — 문서 안 안내는 저장 이미지에도 남고, 공지는 화면에만 보인다 */
+.virtual-note {
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--ink-soft);
+}
+.court-notice {
+  margin-top: 12px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--ink-soft);
+}
 /* 세로가 좁으면 전광판을 접어 판결 예시와 접수 버튼을 한 화면에 둔다 */
 @media (max-height: 760px) {
   .scr.dark .board {

@@ -53,6 +53,7 @@ export default function CountersuitPage() {
       </div>
       <div className="pad">
         <CountersuitDocView doc={countersuit} date={formatKoreanDate(new Date())} />
+        <p className="court-notice">재판부 공지: 다음 개정부터 피고 본인 출석이 허용될 예정입니다.</p>
         <div className="grow" />
         <div className="btn-row" style={{ marginTop: 14 }}>
           <Link className="btn sm" href="/save?doc=countersuit">

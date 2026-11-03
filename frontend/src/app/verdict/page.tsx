@@ -53,7 +53,7 @@ export default function VerdictPage() {
         <Link className="counter-alert" href="/countersuit">
           <span className="ca-mark">急</span>
           <span className="ca-text">
-            피고 측이 <b>맞고소장</b>을 제출했습니다 — 확인하기
+            가상의 피고가 <b>맞고소장</b>을 냈습니다 — 확인하기
           </span>
           <span className="ca-arrow">›</span>
         </Link>

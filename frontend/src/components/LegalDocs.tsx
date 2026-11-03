@@ -106,7 +106,7 @@ export function CountersuitDocView({ doc, date }: { doc: CountersuitDoc; date: s
   return (
     <div className="vdoc">
       <p className="vt appeal">맞 고 소 장</p>
-      <p className="vs">오늘의 생활법원 민원접수과 (피고 측 제출)</p>
+      <p className="vs">오늘의 생활법원 민원접수과 (가상 피고 측 제출)</p>
       <div className="vmeta">
         <span className="k">맞고소인</span>
         <span className="v">{doc.counterComplainant}</span>
@@ -135,6 +135,7 @@ export function CountersuitDocView({ doc, date }: { doc: CountersuitDoc; date: s
         <br />
         생활법원 맞고소 전담 재판부
       </div>
+      <p className="virtual-note">이 맞고소는 혼자 즐기는 가상 연출이며 상대방에게 전달되지 않습니다.</p>
     </div>
   );
 }
