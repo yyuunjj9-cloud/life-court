@@ -80,6 +80,9 @@ test('playful legal terms are disclosed as fictional and explained on the glossa
   }
   assert.match(glossary, /형사소송법 제396조/);
   assert.match(glossary, /가벼워지지 않습니다/);
+  // '같은 사연은 같은 판결'처럼 과장하지 않는다 — 조건(글자·선택·규칙)과 예외(항소·상고·맞고소)를 밝힌다.
+  assert.doesNotMatch(glossary, /"같은 사연은 같은 판결을 받습니다\."/);
+  assert.match(glossary, /글자 하나까지 같고[\s\S]*?사건번호도 반영해/);
   assert.match(glossary, /법률 자문이 아닙니다/);
 });
 

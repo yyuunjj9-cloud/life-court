@@ -73,6 +73,19 @@ test('same input stays deterministic; tone and severity remain monotonic', () =>
   }
 });
 
+test('the same story and choices give the same first verdict under any case number, as the glossary promises', () => {
+  const strip = ({ caseNo, ...rest }) => rest;
+  for (const [caseType, story] of require('./scenario-corpus.cjs')) {
+    const data = input(story, { caseType });
+    const first = strip(generateVerdict(data, 42));
+    for (const seq of [43, 500, 9999]) assert.deepEqual(strip(generateVerdict(data, seq)), first, story);
+  }
+  // 용어 풀이에 적은 대로, 항소 결과는 사건번호에 따라 달라질 수 있다(약속을 넘지 않는지 확인).
+  const data = input('친구가 약속에 40분 늦고는 사과도 없이 메뉴부터 골랐어요', { caseType: 'relationship' });
+  const orders = new Set(Array.from({ length: 60 }, (_, n) => generateAppeal(data, generateVerdict(data, 100 + n)).order));
+  assert.ok(orders.size > 1);
+});
+
 test('a verdict never treats the absent defendant\'s side as proven fact', () => {
   for (const [caseType, story] of require('./scenario-corpus.cjs')) {
     for (const severity of [1, 3, 5]) {
