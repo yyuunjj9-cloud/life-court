@@ -759,6 +759,10 @@ p.sub {
   letter-spacing: 0.08em;
   color: #4b6a92;
 }
+/* 운영자 메모는 이용자 메모(파랑)와 구분되는 갈색 표시 */
+.memo-tag.owner {
+  color: #8a5a2b;
+}
 .memo-form {
   margin-top: 14px;
   padding: 12px;

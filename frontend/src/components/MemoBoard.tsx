@@ -66,6 +66,7 @@ export function MemoBoard() {
       <div className="memo-grid">
         {ROADMAP.map((m, i) => (
           <div className={`memo m${i % 3}`} key={m.keyword}>
+            <span className="memo-tag owner">운영자 아이디어</span>
             <b>{m.keyword}</b>
             <span>{m.detail}</span>
           </div>

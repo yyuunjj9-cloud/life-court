@@ -53,6 +53,10 @@ test('choosing a card or example never moves the rest of the intake screen', () 
 test('the memo board discloses how ideas are kept, and its admin screen stays out of search', () => {
   const notice = source('app/notice/page.tsx');
   assert.match(notice, /<MemoBoard \/>/);
+  // 운영자가 낸 예정 메모와 이용자 메모를 구분해 표시한다.
+  const board = source('components/MemoBoard.tsx');
+  assert.match(board, /운영자 아이디어/);
+  assert.match(board, /이용자 아이디어/);
   assert.match(notice, /운영자가 확인한 뒤에만 게시/);
   const admin = source('app/ideas/admin/layout.tsx');
   assert.match(admin, /robots: \{ index: false, follow: false \}/);
