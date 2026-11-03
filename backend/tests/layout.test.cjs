@@ -50,6 +50,17 @@ test('choosing a card or example never moves the rest of the intake screen', () 
   assert.match(css, /@media \(hover: hover\) \{\s*\.filing-opt:hover/);
 });
 
+test('the memo board discloses how ideas are kept, and its admin screen stays out of search', () => {
+  const notice = source('app/notice/page.tsx');
+  assert.match(notice, /<MemoBoard \/>/);
+  assert.match(notice, /운영자가 확인한 뒤에만 게시/);
+  const admin = source('app/ideas/admin/layout.tsx');
+  assert.match(admin, /robots: \{ index: false, follow: false \}/);
+  assert.match(admin, /referrer: "no-referrer"/);
+  // 열쇠는 주소창에서 바로 지운다.
+  assert.match(source('app/ideas/admin/page.tsx'), /history\.replaceState/);
+});
+
 test('the board keeps its place while loading so the landing does not jump', () => {
   const page = source('app/page.tsx');
   // 응답 뒤에 끼워 넣으면 판결 예시와 버튼이 밀린다 — 자리는 항상 렌더링한다.

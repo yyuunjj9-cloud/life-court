@@ -195,6 +195,45 @@ export async function fetchOffenses(): Promise<Record<string, string[]> | null> 
   return null;
 }
 
+/* ---------- 업데이트 메모판 아이디어 ---------- */
+
+export interface PublicIdea {
+  id: number;
+  text: string;
+}
+
+export interface AdminIdea extends PublicIdea {
+  status: "pending" | "approved" | "rejected" | "private";
+  createdAt: string;
+}
+
+/** 운영자가 승인한 아이디어. 장식처럼 조용히 실패한다. */
+export async function fetchIdeas(): Promise<PublicIdea[] | null> {
+  for (const base of [PROXY_BASE, DIRECT_BASE]) {
+    try {
+      const res = await fetch(`${base}/api/ideas`);
+      if (res.ok) return ((await res.json()) as { ideas: PublicIdea[] }).ideas;
+    } catch {
+      /* 다음 경로 시도 */
+    }
+  }
+  return null;
+}
+
+export const ideasApi = {
+  /** 공개 요청은 운영자 승인 전까지 보이지 않는다. 거절되면 ApiError(422)나 429가 난다. */
+  submit: (text: string, isPublic: boolean) =>
+    request<{ status: "pending" | "private" }>("/api/ideas", { method: "POST", body: JSON.stringify({ text, public: isPublic }) }),
+  adminList: (token: string) =>
+    request<{ ideas: AdminIdea[] }>("/api/ideas/admin", { headers: { "X-Admin-Token": token } }),
+  review: (token: string, id: number, status: "approved" | "rejected") =>
+    request<{ id: number; status: string }>(`/api/ideas/${id}`, {
+      method: "PATCH",
+      headers: { "X-Admin-Token": token },
+      body: JSON.stringify({ status }),
+    }),
+};
+
 /**
  * 랜딩 전광판 데이터. request()와 달리 재시도·연결 배너를 발동하지 않는다 —
  * 콜드스타트 중이면 전광판 없이 랜딩을 보여주는 게 낫다.

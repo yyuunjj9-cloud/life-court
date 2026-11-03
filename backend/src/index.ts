@@ -133,7 +133,8 @@ function allowIdeaPost(client: string): boolean {
 /** 공개 승인된 아이디어만. 원문 외의 정보(상태·작성 시각)는 내보내지 않는다. */
 app.get("/api/ideas", async (_req, res) => {
   const ideas = await storage.listIdeas(true, 40);
-  res.set("Cache-Control", "public, max-age=30");
+  // 승인한 운영자가 곧바로 확인할 수 있을 만큼만 짧게 캐시한다.
+  res.set("Cache-Control", "public, max-age=10");
   res.json({ ideas: ideas.map(({ id, text }) => ({ id, text })) });
 });
 

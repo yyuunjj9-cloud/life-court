@@ -691,6 +691,143 @@ p.sub {
   text-align: center;
   color: var(--ink-soft);
 }
+/* ---------- 안내 페이지 — 업데이트 예정 메모판 ---------- */
+.memo-board {
+  margin-top: 22px;
+}
+.memo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.memo-head h2 {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.memo-pencil {
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--ink-soft);
+  background: #fff7c9;
+  border: 1px solid #e3d27a;
+  border-radius: 3px;
+  padding: 6px 10px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.memo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+/* 포스트잇 — 살짝 기울여 붙인 느낌을 주되, 기울기는 고정이라 화면이 흔들리지 않는다 */
+.memo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 74px;
+  padding: 11px 10px 10px;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #4a3a1c;
+  background: #fff3a8;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
+  transform: rotate(-1.2deg);
+}
+.memo b {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--ink);
+}
+.memo.m1 {
+  background: #ffd9c2;
+  transform: rotate(1deg);
+}
+.memo.m2 {
+  background: #d7efc6;
+  transform: rotate(-0.6deg);
+}
+.memo.user {
+  background: #d9e8fb;
+  transform: rotate(0.8deg);
+}
+.memo-tag {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: #4b6a92;
+}
+.memo-form {
+  margin-top: 14px;
+  padding: 12px;
+  background: #fff7c9;
+  border: 1px solid #e3d27a;
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.memo-form textarea {
+  width: 100%;
+  resize: none;
+  border: 1px solid var(--paper-line);
+  background: #fffdf0;
+  padding: 8px;
+  font-family: var(--sans);
+  /* 16px 미만이면 iOS가 포커스 시 화면을 확대한다 */
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.memo-options {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.memo-options .pill {
+  padding: 6px 12px;
+}
+.memo-count {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.memo-help,
+.memo-result {
+  font-family: var(--sans);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.memo-result {
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* ---------- 메모판 운영자 화면 ---------- */
+.admin-idea {
+  padding: 11px 12px;
+  border: 1px solid var(--paper-line);
+  background: #fbf4e3;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.admin-idea p {
+  font-family: var(--sans);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+.admin-idea .meta {
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--muted);
+}
+
 /* ---------- 대법원 상고 안내 (항소심 화면) ---------- */
 .supreme-offer {
   margin-top: 14px;
