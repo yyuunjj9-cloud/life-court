@@ -168,6 +168,34 @@ test('three instances migrate a legacy schema concurrently while preserving exis
   assert.deepEqual((await Promise.all(workers.map(worker => worker.store.allocateSeq()))).sort((a, b) => a - b), [91, 92, 93]);
 });
 
+test('Postgres usage stats count each stage from stored documents', async () => {
+  const { openStore } = await fixture();
+  const { store } = openStore(); await store.ready();
+  const empty = await store.usageStats();
+  assert.equal(empty.cases.total, 0);
+  assert.equal(empty.countersuits.averageHits, null);
+  for (const hits of [3, 1, undefined]) {
+    const seq = await store.allocateSeq();
+    const rec = record(seq); await store.create(rec);
+    await store.setCountersuit(seq, generateCountersuit(input, rec.verdict, hits));
+    if (hits === 3) {
+      const appeal = generateAppeal(input, rec.verdict);
+      await store.update(seq, { appeal });
+      await store.setSupreme(seq, generateSupreme(input, rec.verdict, appeal));
+      await store.setResponse(seq, { option: 'decline' });
+    }
+  }
+  await store.addIdea('메모', 'pending');
+  await store.addIdea('비밀', 'private');
+  const stats = await store.usageStats();
+  assert.deepEqual(stats.cases, { total: 3, today: 3, week: 3 });
+  assert.deepEqual(stats.countersuits, { total: 3, played: 2, skipped: 1, averageHits: 2, perfect: 1 });
+  assert.equal(stats.appeals.total, 1);
+  assert.equal(stats.supremes.total, 1);
+  assert.deepEqual(stats.responses, { total: 1, declined: 1 });
+  assert.deepEqual(stats.ideas, { pending: 1, approved: 0, private: 1 });
+});
+
 test('a Postgres supreme appeal needs an appeal first and is stored exactly once', async () => {
   const { openStore } = await fixture();
   const workers = Array.from({ length: 3 }, openStore);

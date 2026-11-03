@@ -157,6 +157,22 @@ test('memo-board ideas stay hidden until the operator approves, and private ones
   for (let n = 0; n < 6; n++) burst.push((await post('/api/ideas', { text: `아이디어 ${n}번`, public: false }, from('10.0.0.3'))).status);
   assert.deepEqual(burst, [201, 201, 201, 201, 201, 429]);
 });
+test('usage stats are numbers only and need the operator key', async () => {
+  assert.equal((await fetch(`${base}/api/admin/stats`)).status, 403);
+  assert.equal((await fetch(`${base}/api/admin/stats`, { headers: { 'X-Admin-Token': 'bc'.repeat(24) } })).status, 403);
+  const { seq, ownerToken } = await (await post('/api/cases', data)).json();
+  await post(`/api/cases/${seq}/countersuit`, { hits: 3 }, { 'X-Owner-Token': ownerToken });
+  const res = await fetch(`${base}/api/admin/stats`, { headers: { 'X-Admin-Token': ADMIN } });
+  assert.equal(res.headers.get('cache-control'), 'no-store');
+  const stats = await res.json();
+  assert.ok(stats.cases.total >= 1 && stats.cases.today >= 1 && stats.cases.week >= stats.cases.today);
+  assert.ok(stats.countersuits.played >= 1 && stats.countersuits.perfect >= 1);
+  assert.equal(stats.countersuits.skipped, stats.countersuits.total - stats.countersuits.played);
+  assert.ok(stats.appeals.total >= stats.appeals.raised && stats.supremes.total >= stats.supremes.raised);
+  // 사연 원문이나 토큰은 내보내지 않는다.
+  const body = JSON.stringify(stats);
+  assert.ok(!body.includes(data.story) && !body.includes(ownerToken));
+});
 test('moderation rejects every generation path before assigning or storing a case', async () => {
   const beforeSeq = await (await fetch(base + '/api/meta/next-seq')).json();
   const blocked = { ...data, story: '친구가 씨발이라고 하며 저에게 화를 냈어요' };

@@ -6,7 +6,7 @@ const fs = require('node:fs');
 require.extensions['.ts'] = (module, filename) => module._compile(ts.transpileModule(
   fs.readFileSync(filename, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } },
 ).outputText, filename);
-const { selectScenario, generateVerdict, generateAppeal, generateSupreme } = require('../src/domain/judgment.ts');
+const { selectScenario, generateVerdict, generateAppeal, generateSupreme, caseYear, formatCaseNo } = require('../src/domain/judgment.ts');
 const { generateComplaint, generateDemandLetter } = require('../src/domain/documents.ts');
 const input = (story, extra = {}) => ({ story, caseType: 'daily', relationship: 'friend', severity: 3, tone: 'fair', ...extra });
 
@@ -79,6 +79,16 @@ test('landing sample matches what the generator really produces for that story',
   const verdict = generateVerdict(input(field('story'), { caseType: 'relationship' }), 42);
   assert.equal(verdict.crime, field('crime'));
   assert.ok(verdict.order.startsWith(field('order')));
+});
+
+test('case numbers carry the Korean year of filing instead of a fixed 2026', () => {
+  // 한국 시간 1월 1일 0시(= UTC 12월 31일 15시)에 연도가 바뀐다.
+  assert.equal(caseYear(new Date('2026-12-31T14:59:59Z')), 2026);
+  assert.equal(caseYear(new Date('2026-12-31T15:00:00Z')), 2027);
+  assert.equal(formatCaseNo(42, 2027), '2027 생활 제042호');
+  assert.match(generateVerdict(input('친구가 약속에 40분 늦고는 사과도 없이 메뉴부터 골랐어요'), 42).caseNo, new RegExp(`^${caseYear()} 생활 제042호$`));
+  const frontend = require('../../frontend/src/domain/judgment.ts');
+  assert.equal(frontend.caseYear(new Date('2026-12-31T15:00:00Z')), 2027);
 });
 
 test('penalties are as varied as the scenarios and fit the case type', () => {

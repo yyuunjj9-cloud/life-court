@@ -2187,7 +2187,12 @@ function pickResultNote(rand: () => number, tier: (typeof RESULTS)[number], type
   return pick(rand, [...(PENALTIES_BY_TYPE[tier.result]?.[type] ?? []), ...tier.notes]);
 }
 
-export function formatCaseNo(seq: number, year = 2026): string {
+/** 접수 연도 — 서버 위치와 상관없이 한국 시간 기준으로 정한다(1월 1일 0시에 바뀐다). */
+export function caseYear(now = new Date()): number {
+  return Number(new Intl.DateTimeFormat("en", { timeZone: "Asia/Seoul", year: "numeric" }).format(now));
+}
+
+export function formatCaseNo(seq: number, year = caseYear()): string {
   return `${year} 생활 제${String(seq).padStart(3, "0")}호`;
 }
 

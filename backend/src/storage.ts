@@ -41,6 +41,16 @@ export interface BoardData {
   topCrime: string | null;
 }
 
+/** 운영자 화면용 이용 현황 — 사연 원문 없이 숫자만 담는다. */
+export interface UsageStats {
+  cases: { total: number; today: number; week: number };
+  appeals: { total: number; raised: number };
+  supremes: { total: number; raised: number };
+  countersuits: { total: number; played: number; skipped: number; averageHits: number | null; perfect: number };
+  responses: { total: number; declined: number };
+  ideas: { pending: number; approved: number; private: number };
+}
+
 export interface CaseStorage {
   /** 다음 사건 번호(시퀀스). 제042호부터 시작. */
   nextSeq(): Promise<number>;
@@ -63,6 +73,7 @@ export interface CaseStorage {
   countIdeas(status: IdeaStatus): Promise<number>;
   /** 비공개 아이디어는 공개 상태로 바꿀 수 없다. 바꿨으면 true. */
   reviewIdea(id: number, status: "approved" | "rejected"): Promise<boolean>;
+  usageStats(): Promise<UsageStats>;
   /** DB를 실제로 조회해 살아있는지 확인한다 (keep-alive가 Supabase 활동으로 집계되도록). */
   health(): Promise<boolean>;
 }
@@ -149,6 +160,29 @@ export class MemoryStorage implements CaseStorage {
     if (!idea || idea.status === "private") return false;
     idea.status = status;
     return true;
+  }
+  async usageStats(): Promise<UsageStats> {
+    const all = [...this.cases.values()];
+    const at = (r: CaseRecord) => this.createdAt.get(r.seq) ?? 0;
+    const dayStart = new Date().setHours(0, 0, 0, 0);
+    const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
+    const played = all.filter((r) => r.countersuit?.objections);
+    const hits = played.map((r) => r.countersuit!.objections!.hits);
+    const count = (status: IdeaStatus) => this.ideas.filter((i) => i.status === status).length;
+    return {
+      cases: { total: all.length, today: all.filter((r) => at(r) >= dayStart).length, week: all.filter((r) => at(r) >= weekAgo).length },
+      appeals: { total: all.filter((r) => r.appeal).length, raised: all.filter((r) => r.appeal?.overturned).length },
+      supremes: { total: all.filter((r) => r.supreme).length, raised: all.filter((r) => r.supreme?.overturned).length },
+      countersuits: {
+        total: all.filter((r) => r.countersuit).length,
+        played: played.length,
+        skipped: all.filter((r) => r.countersuit && !r.countersuit.objections).length,
+        averageHits: hits.length ? Math.round((hits.reduce((a, b) => a + b, 0) / hits.length) * 100) / 100 : null,
+        perfect: hits.filter((h) => h === 3).length,
+      },
+      responses: { total: all.filter((r) => r.response).length, declined: all.filter((r) => r.response?.option === "decline").length },
+      ideas: { pending: count("pending"), approved: count("approved"), private: count("private") },
+    };
   }
 }
 
@@ -332,6 +366,43 @@ export class PgStorage implements CaseStorage {
     await this.ready();
     const r = await this.pool.query<{ n: number }>(`SELECT COUNT(*)::int AS n FROM ideas WHERE status = $1`, [status]);
     return r.rows[0].n;
+  }
+  async usageStats(): Promise<UsageStats> {
+    await this.ready();
+    const [c, i] = await Promise.all([
+      this.pool.query(`SELECT
+          COUNT(*)::int AS total,
+          COUNT(*) FILTER (WHERE created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Seoul') AT TIME ZONE 'Asia/Seoul')::int AS today,
+          COUNT(*) FILTER (WHERE created_at >= now() - interval '7 days')::int AS week,
+          COUNT(appeal)::int AS appeals,
+          COUNT(*) FILTER (WHERE (appeal->>'overturned')::boolean)::int AS appeals_raised,
+          COUNT(supreme)::int AS supremes,
+          COUNT(*) FILTER (WHERE (supreme->>'overturned')::boolean)::int AS supremes_raised,
+          COUNT(countersuit)::int AS countersuits,
+          COUNT(countersuit->'objections')::int AS played,
+          AVG((countersuit->'objections'->>'hits')::numeric) AS average_hits,
+          COUNT(*) FILTER (WHERE (countersuit->'objections'->>'hits')::int = 3)::int AS perfect,
+          COUNT(response)::int AS responses,
+          COUNT(*) FILTER (WHERE response->>'option' = 'decline')::int AS declined
+        FROM cases`),
+      this.pool.query<{ status: IdeaStatus; n: number }>(`SELECT status, COUNT(*)::int AS n FROM ideas GROUP BY status`),
+    ]);
+    const s = c.rows[0];
+    const idea = (status: IdeaStatus) => i.rows.find((r) => r.status === status)?.n ?? 0;
+    return {
+      cases: { total: s.total, today: s.today, week: s.week },
+      appeals: { total: s.appeals, raised: s.appeals_raised },
+      supremes: { total: s.supremes, raised: s.supremes_raised },
+      countersuits: {
+        total: s.countersuits,
+        played: s.played,
+        skipped: s.countersuits - s.played,
+        averageHits: s.average_hits === null ? null : Math.round(Number(s.average_hits) * 100) / 100,
+        perfect: s.perfect,
+      },
+      responses: { total: s.responses, declined: s.declined },
+      ideas: { pending: idea("pending"), approved: idea("approved"), private: idea("private") },
+    };
   }
   async reviewIdea(id: number, status: "approved" | "rejected") {
     await this.ready();

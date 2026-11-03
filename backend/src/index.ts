@@ -175,6 +175,16 @@ app.get("/api/ideas/admin", async (req, res) => {
   res.json({ ideas: await storage.listIdeas(false, 200) });
 });
 
+/** 운영자 전용 — 이용 현황 숫자. 사연 원문이나 토큰은 담지 않는다. */
+app.get("/api/admin/stats", async (req, res) => {
+  if (!validAdminToken(req.get("X-Admin-Token"))) {
+    res.status(403).json({ error: "invalid admin token" });
+    return;
+  }
+  res.set("Cache-Control", "no-store");
+  res.json(await storage.usageStats());
+});
+
 /** 운영자 전용 — 공개 요청을 승인하거나 숨긴다. 비공개 의견은 공개할 수 없다. */
 app.patch("/api/ideas/:id", async (req, res) => {
   if (!validAdminToken(req.get("X-Admin-Token"))) {
