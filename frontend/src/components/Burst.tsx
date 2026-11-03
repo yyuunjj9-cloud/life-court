@@ -68,7 +68,7 @@ export function Burst({ text, width = 170, variant = "objection" }: { text: stri
       width={width}
       height={(width * 160) / 260}
       role="img"
-      aria-label={inadmissible ? `${text} 진술 보완 요청` : dismissed ? `${text} 맞고소 기각 또는 각하` : sustained ? `${text} 원심 파기, 무죄` : overruled ? `${text} 항소 기각` : text}
+      aria-label={inadmissible ? `${text} 진술 보완 요청` : dismissed ? `${text} 맞고소 기각 또는 각하` : sustained ? `${text} 원고 항소 인용` : overruled ? `${text} 항소 기각` : text}
     >
       <defs>
         <linearGradient id={`${id}-red`} x1="0" y1="0" x2="0" y2="1">

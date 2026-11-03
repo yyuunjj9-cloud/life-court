@@ -1873,6 +1873,9 @@ export const EVIDENCE_POOL = [
   "심호흡 횟수 집계표 1부",
 ] as const;
 
+/** 구체적 행위를 특정하지 못한 사연에 붙는 죄목. 항소도 이 값으로 근거 부족 여부를 판단한다. */
+export const GENERAL_CRIME = "생활 배려 의무 소홀 혐의";
+
 /**
  * 사연 본문과 가장 어울리는 시나리오를 고른다.
  * 구체적인 행위 표현과 문맥을 우선해 시나리오를 선택한다.
@@ -1889,7 +1892,7 @@ export function selectScenario(story: string, caseType: CaseType): CaseScenario 
     };
   const fallback = (): CaseScenario => ({
     name: `${CASE_TYPE_LABEL[caseType]} 분쟁 사건`,
-    crime: "생활 배려 의무 소홀 혐의",
+    crime: GENERAL_CRIME,
     orders: ["쌍방은 제출된 사연의 사실관계를 확인하고, 불편을 일으킨 행동과 재발 방지 방법을 구체적으로 협의할 것."],
     defense: {
       claim: "서로의 입장에 차이가 있을 수 있다",
@@ -1900,6 +1903,10 @@ export function selectScenario(story: string, caseType: CaseType): CaseScenario 
   // A denial/quoted accusation is not evidence that the alleged act occurred.
   // Keep disputed accounts general rather than reversing who did what.
   if (/늦지않|지각하지않|읽씹하지않|업무연락.{0,6}하지않았|뜻이아니라|오해를받/.test(text)) return fallback();
+  // When the storyteller is the one blamed ("내가 늦었는데 화를 내요", "~했다고 혼냈어요"),
+  // the act was not the other party's. Naming it as their offense reverses who did what.
+  // Complaining ("내가 뭐라 했다고 화를 내요") is not the act itself, so it is left out.
+  if (/(내가|제가)(?!.{0,6}(뭐라|말했|말하|물어|싫다|따지|따졌|지적|부탁|얘기)).{0,24}(는데|더니|다고).{0,12}(화를?내|화냈|뭐라|혼냈|혼나|서운해|소문|난리)/.test(text)) return fallback();
   // These expressions require the act as well as its context, rather than
   // treating incidental words such as '새벽', '준비', or '대신' as an offense.
   const anchors: [RegExp, string][] = [
@@ -1932,7 +1939,8 @@ export function selectScenario(story: string, caseType: CaseType): CaseScenario 
   const broad = new Set(["새벽", "밤에", "준비", "대신", "무시", "계산", "회의", "자료", "직전", "나가", "나갔", "기다리", "기다렸", "늦게", "늦었", "늦는", "허락없이", "몰래", "지적", "불평", "별로", "시키", "시켰", "스포"]);
   // Two-letter words that name the misconduct itself, unlike topics such as '회식'.
   const distinctive = new Set(["잠수", "뒷담", "험담", "훈수", "파토", "도배", "단답", "재촉", "과시", "비밀"]);
-  const grievance = /안|못|맨날|매번|계속|자꾸|혼자|나만|저만|나한테|강제|억지|싫|짜증|억울|태웠|뜯었|했는데|도대체/.test(text)
+  // '안'은 부정어일 때만 센다 — '안녕', '안부', '안에서'는 불만이 아니다.
+  const grievance = /안(해|했|하|줘|줬|주|와|왔|오|갚|읽|보|봐|봤|내|냈|끄|꺼|치|씻|돌려|사|샀|먹|일어나|나와|받|눌|누르|되|돼)|못|맨날|매번|계속|자꾸|혼자|나만|저만|나한테|강제|억지|싫|짜증|억울|태웠|뜯었|했는데|도대체/.test(text)
     && !/미안|죄송|고장|괜찮|떨어졌|제가|내가/.test(text);
   const ranked = Object.entries(SCENARIOS).flatMap(([type, scenarios]) => scenarios.map((scenario) => {
     const hits = scenario.keywords.map((word) => word.toLowerCase().replace(/\s+/g, ""))
@@ -1977,7 +1985,8 @@ const ORDER_TONE_SUFFIX: Record<Tone, readonly string[]> = {
 /** 심각성 + 성향 → 판결 수위 점수(0~6) */
 function verdictScore(severity: Severity, tone: Tone, story = ""): number {
   const toneOffset = tone === "lenient" ? -1 : tone === "strict" ? 1 : 0;
-  const repeated = /매번|상습|계속|여러 번|반복|일부러|고의로/.test(story) ? 1 : 0;
+  // 죄목에 '상습'을 남기는 표현(selectScenario의 withFrequency)과 같은 목록을 써야 이름과 수위가 어긋나지 않는다.
+  const repeated = /매번|상습|반복|여러번|계속|맨날|자꾸|항상|일부러|고의로/.test(story.replace(/\s+/g, "")) ? 1 : 0;
   const repaired = /진심으로 사과|사과했|사과를 했|바로 돌려|돌려줬|변상했|배상했|실수였|처음이/.test(story) ? 1 : 0;
   // Story-only seed keeps severity and tone monotonic for a given account.
   const variation = Math.floor(mulberry32(hashSeed(`ruling-v2|${story}`))() * 3) - 1;
@@ -2032,41 +2041,50 @@ export function generateVerdict(input: CaseInput, caseSeq: number): Verdict {
   };
 }
 
-const APPEAL_OVERTURN_REASONS = [
-  "원심은 피고인의 행위를 과도하게 해석하였다. 본 사안은 개인의 취향과 컨디션에 따라 변동될 수 있는 영역으로, 이를 형사적으로 책임지게 하는 것은 생활의 자유를 침해할 우려가 있다.",
-  "항소심 재판부가 사건 기록을 다시 검토한 결과, 피고인의 행위는 비난 가능성은 있으나 처벌 가능성까지 인정하기는 어렵다고 판단하였다. 생활의 사소한 마찰까지 유죄로 다루는 것은 재판부의 품위에 맞지 않는다.",
-  "항소심 재판부는 피고인이 제출한 반성문의 글씨체에서 진정성을 발견하였다. 생활법정의 형벌은 교화가 목적이므로, 이미 교화된 자에게 형을 유지할 실익이 없다.",
-  "원심은 원고 측 진술에 다소 의존하여 심리한 측면이 있다. 모든 생활 분쟁에는 양면이 있다는 대원칙에 비추어, 의심스러울 때는 피고인의 이익으로 판단한다.",
-  "항소심에서 새로 제출된 '피고인도 사실 힘들었음' 취지의 정상 자료를 종합하면, 본 사안은 처벌보다 화해가 어울리는 사건이다.",
+// 항소인은 항소하기 버튼을 누르는 원고다. 인용되면 처분이 무거워지고, 피고에게 유리하게 바뀌는 일은 없다.
+const APPEAL_SUSTAIN_REASONS = [
+  "원심은 원고가 겪은 불편을 지나치게 가볍게 평가하였다. 생활의 사소한 마찰도 쌓이면 사소하지 않다는 것이 항소심 재판부의 견해이다.",
+  "항소심 재판부가 사건 기록을 다시 검토한 결과, 원심의 처분만으로는 재발 방지 효과를 기대하기 어렵다고 판단하였다.",
+  "원고의 항소 이유서에서 억울함의 진정성이 확인되었다. 생활법정은 억울함을 외면하지 않는다.",
+  "원심은 관용을 베풀었으나 그 뜻이 피고인에게 전달되었는지 확인되지 않았다. 이에 처분을 한 단계 높여 그 뜻을 분명히 한다.",
 ];
 
-const APPEAL_UPHOLD_REASONS = [
-  "항소심 재판부가 기록을 재검토하였으나 원심의 판단은 경험칙과 사회 통념에 비추어 정당하다. 피고인의 항소 이유는 변명의 반복에 불과하므로 받아들이지 않는다.",
-  "원심 판결에 사실 오인이나 양형 부당의 위법이 발견되지 않는다. 오히려 항소심 심리 과정에서 피고인의 태도가 재판부를 한 번 더 실망시켰음을 부기한다.",
-  "피고인은 항소 이유서에서조차 반성 대신 해명으로 일관하였다. 원심의 양형은 오히려 관대하였다고 판단된다.",
-  "항소심 심리 결과 원심이 미처 파악하지 못한 추가 정황이 드러났으나, 그중 피고인에게 유리한 것은 하나도 없었다.",
+const APPEAL_DISMISS_REASONS = [
+  "항소심 재판부가 기록을 재검토하였으나 원심의 판단은 경험칙과 사회 통념에 비추어 적정하다. 원고의 억울함은 인정하되 처분을 높일 사정은 발견되지 않았다.",
+  "원심 판결에 사실 오인이나 양형 부당의 위법이 발견되지 않는다. 원고는 이미 정당한 판결을 받았음을 알린다.",
+  "항소심은 더 엄한 처분보다 원심 주문의 이행이 먼저라고 판단하였다.",
   "원심 판결문을 재검토한 결과 위법을 발견하지 못하였고, 오히려 명문이라는 평가에 도달하였음을 부기한다.",
+  "생활법정의 처분은 교화가 목적이며, 원심의 처분으로도 그 목적은 충분히 달성될 수 있다.",
 ];
+
+/** 원심 처분별 항소 인용 확률 — 이미 무거울수록 더 올리기 어렵다. 인덱스는 처분 사다리와 같다. */
+const APPEAL_SUSTAIN_CHANCE = [0.6, 0.55, 0.45, 0.3] as const;
 
 export function generateAppeal(input: CaseInput, verdict: Verdict): AppealVerdict {
   const rand = mulberry32(hashSeed(`appeal|${verdict.caseNo}|${input.story}`));
-  const alreadyAcquitted = verdict.result === "무죄" || verdict.result === "훈방 조치";
-  // 이미 가벼운 처분이면 원심 유지, 그 외에는 수위가 낮을수록 파기 확률이 높다.
-  const overturnChance = alreadyAcquitted ? 0 : 0.85 - verdictScore(input.severity, input.tone, input.story) * 0.1;
-  const overturned = rand() < overturnChance;
+  const ladder = [...RESULTS].reverse().map((tier) => tier.result);
+  const current = ladder.indexOf(verdict.result);
+  // 근거가 부족한 일반 분쟁은 원심과 같이 유죄 처분까지 올리지 않는다. 저장된 원심이
+  // 예전 규칙으로 만들어졌을 수 있으므로 지금 규칙으로 다시 고르지 않고 원심의 죄목을 본다.
+  const uncertain = verdict.crime === GENERAL_CRIME;
+  const ceiling = uncertain ? ladder.indexOf("훈방 조치") : ladder.length - 1;
+  const sustained = current >= 0 && current < ceiling && rand() < APPEAL_SUSTAIN_CHANCE[current];
 
-  if (overturned) {
+  if (sustained) {
+    const next = ladder[current + 1];
     return {
-      order: "원심 파기. 무죄.",
-      orderNote: "다만, 향후 동종 상황에서 적극적인 의견 제시와 배려에 임할 것을 권고한다.",
-      reasoning: pick(rand, APPEAL_OVERTURN_REASONS),
+      order: `원심 파기. ${next}.`,
+      orderNote: `원고의 항소를 받아들여 처분을 한 단계 높인다. (원심 ${verdict.result} → 항소심 ${next})`,
+      reasoning: pick(rand, APPEAL_SUSTAIN_REASONS),
       overturned: true,
     };
   }
+  const limit = current === ladder.length - 1 ? "원심이 이미 가장 무거운 처분이다. "
+    : current >= ceiling ? "제출된 사연만으로는 원심보다 무거운 처분을 내릴 근거가 부족하다. " : "";
   return {
     order: "항소 기각. 원심 유지.",
-    orderNote: `원심 판결(${verdict.result})의 효력은 그대로 유지된다.`,
-    reasoning: pick(rand, APPEAL_UPHOLD_REASONS),
+    orderNote: `${limit}원심 판결(${verdict.result})의 효력은 그대로 유지된다.`,
+    reasoning: pick(rand, APPEAL_DISMISS_REASONS),
     overturned: false,
   };
 }

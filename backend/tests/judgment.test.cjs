@@ -6,7 +6,7 @@ const fs = require('node:fs');
 require.extensions['.ts'] = (module, filename) => module._compile(ts.transpileModule(
   fs.readFileSync(filename, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } },
 ).outputText, filename);
-const { selectScenario, generateVerdict } = require('../src/domain/judgment.ts');
+const { selectScenario, generateVerdict, generateAppeal } = require('../src/domain/judgment.ts');
 const { generateComplaint, generateDemandLetter } = require('../src/domain/documents.ts');
 const input = (story, extra = {}) => ({ story, caseType: 'daily', relationship: 'friend', severity: 3, tone: 'fair', ...extra });
 
@@ -79,4 +79,41 @@ test('landing sample matches what the generator really produces for that story',
   const verdict = generateVerdict(input(field('story'), { caseType: 'relationship' }), 42);
   assert.equal(verdict.crime, field('crime'));
   assert.ok(verdict.order.startsWith(field('order')));
+});
+
+test('a plaintiff appeal never lightens the verdict and raises it at most one step', () => {
+  const ladder = ['무죄', '훈방 조치', '조건부 유죄', '유죄', '괘씸죄 가중 유죄'];
+  let sustained = 0;
+  for (const [caseType, story] of require('./scenario-corpus.cjs')) {
+    for (const severity of [1, 2, 3, 4, 5]) {
+      for (const tone of ['lenient', 'fair', 'strict']) {
+        const data = input(story, { caseType, severity, tone });
+        const verdict = generateVerdict(data, 42);
+        const appeal = generateAppeal(data, verdict);
+        assert.deepEqual(generateAppeal(data, verdict), appeal);
+        assert.doesNotMatch(appeal.order, /무죄/);
+        const before = ladder.indexOf(verdict.result);
+        if (!appeal.overturned) {
+          assert.equal(appeal.order, '항소 기각. 원심 유지.');
+          continue;
+        }
+        sustained++;
+        const after = ladder.indexOf(appeal.order.match(/^원심 파기\. (.+)\.$/)[1]);
+        assert.equal(after, before + 1);
+        if (selectScenario(story, caseType).keywords.length === 0) assert.ok(after <= ladder.indexOf('훈방 조치'));
+        if (before === ladder.length - 1) assert.fail('the heaviest verdict cannot be raised');
+      }
+    }
+  }
+  assert.ok(sustained > 0);
+});
+
+test('an appeal judges a stored general-dispute verdict by its stored crime, not today\'s rules', () => {
+  const data = input('회식비 N빵 하는데 술 안 마신 나까지 똑같이 내래요', { caseType: 'money' });
+  for (let seq = 100; seq < 140; seq++) {
+    const stored = { ...generateVerdict(data, seq), crime: '생활 배려 의무 소홀 혐의', result: '훈방 조치' };
+    const appeal = generateAppeal(data, stored);
+    assert.equal(appeal.overturned, false);
+    assert.match(appeal.orderNote, /근거가 부족하다/);
+  }
 });
