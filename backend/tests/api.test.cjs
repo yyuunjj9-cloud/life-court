@@ -23,6 +23,15 @@ after(() => child?.kill());
 const post = (url, body, headers = {}) => fetch(base + url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body) });
 const data = { story: '상사가 주말에 업무 보고를 하라고 연락했어요', caseType: 'work', relationship: 'boss', severity: 3, tone: 'fair', filingKind: 'complaint' };
 
+test('offense preview lists crimes for every case type', async () => {
+  const res = await fetch(`${base}/api/meta/offenses`);
+  assert.equal(res.status, 200);
+  const { offenses } = await res.json();
+  for (const type of ['work', 'relationship', 'meal', 'messenger', 'money', 'romance', 'daily']) {
+    assert.ok(Array.isArray(offenses[type]) && offenses[type].length >= 5, `missing offenses for ${type}`);
+  }
+});
+
 test('concurrent creation assigns unique cases and independent secure tokens', async () => {
   const responses = await Promise.all(Array.from({ length: 30 }, () => post('/api/cases', data)));
   assert.ok(responses.every(r => r.status === 201));

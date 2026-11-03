@@ -774,6 +774,22 @@ p.sub {
   width: 67%;
   margin: 9px auto 0;
 }
+.g4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 9px;
+  margin-top: 9px;
+}
+/* 선택한 유형이 다루는 죄목 미리보기 */
+.crime-hint {
+  margin-top: 10px;
+  text-align: center;
+  font-family: var(--serif);
+  font-size: 11px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  opacity: 0.85;
+}
 
 .pills {
   display: flex;

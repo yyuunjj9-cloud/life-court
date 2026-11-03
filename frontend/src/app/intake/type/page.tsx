@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Steps } from "@/components/Steps";
 import { DraftSaveButton } from "@/components/DraftSaveButton";
 import { useCaseStore } from "@/store/case-store";
+import { fetchOffenses } from "@/lib/api";
 import type { CaseType, Relationship } from "@/domain/judgment";
 
 const TYPES: { key: CaseType; icon: string; label: string }[] = [
@@ -33,6 +35,24 @@ export default function TypePage() {
   const { draft, setCaseType, setRelationship } = useCaseStore();
   const ready = draft.caseType !== null && draft.relationship !== null;
 
+  // 유형별 죄목 미리보기 — 장식용이라 실패하면 조용히 생략한다.
+  const [offenses, setOffenses] = useState<Record<string, string[]> | null>(null);
+  useEffect(() => {
+    let active = true;
+    fetchOffenses().then((data) => {
+      if (active) setOffenses(data);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+  const crimeHint = useMemo(() => {
+    const crimes = draft.caseType ? offenses?.[draft.caseType] : undefined;
+    if (!crimes || crimes.length === 0) return null;
+    const picks = [...crimes].sort(() => Math.random() - 0.5).slice(0, 3);
+    return { picks, rest: crimes.length - picks.length };
+  }, [draft.caseType, offenses]);
+
   const typeButton = (t: (typeof TYPES)[number]) => (
     <button
       key={t.key}
@@ -52,8 +72,13 @@ export default function TypePage() {
         <Steps current={2} />
         <p className="lbl">사건 유형</p>
         <div className="g3">{TYPES.slice(0, 3).map(typeButton)}</div>
-        <div className="g3 two">{TYPES.slice(3, 5).map(typeButton)}</div>
-        <div className="g3 two">{TYPES.slice(5).map(typeButton)}</div>
+        <div className="g4">{TYPES.slice(3).map(typeButton)}</div>
+        {crimeHint && (
+          <p className="crime-hint">
+            주요 죄목: {crimeHint.picks.join(" · ")}
+            {crimeHint.rest > 0 ? ` 外 ${crimeHint.rest}건` : ""}
+          </p>
+        )}
         <p className="lbl" style={{ marginTop: 24 }}>
           피고와의 관계
         </p>

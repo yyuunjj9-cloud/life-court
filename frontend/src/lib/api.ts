@@ -168,6 +168,21 @@ export interface BoardData {
 }
 
 /**
+ * 유형별 죄목 미리보기. 전광판처럼 장식용이라 재시도·연결 배너 없이 조용히 실패한다.
+ */
+export async function fetchOffenses(): Promise<Record<string, string[]> | null> {
+  for (const base of [PROXY_BASE, DIRECT_BASE]) {
+    try {
+      const res = await fetch(`${base}/api/meta/offenses`);
+      if (res.ok) return ((await res.json()) as { offenses: Record<string, string[]> }).offenses;
+    } catch {
+      /* 다음 경로 시도 */
+    }
+  }
+  return null;
+}
+
+/**
  * 랜딩 전광판 데이터. request()와 달리 재시도·연결 배너를 발동하지 않는다 —
  * 콜드스타트 중이면 전광판 없이 랜딩을 보여주는 게 낫다.
  */

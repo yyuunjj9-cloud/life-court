@@ -8,6 +8,7 @@ import express from "express";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import {
   generateVerdict,
+  SCENARIOS,
   type CaseInput,
   type CaseType,
   type Relationship,
@@ -124,6 +125,16 @@ app.get("/api/board", async (_req, res) => {
   } catch {
     res.status(503).json({ error: "board unavailable" });
   }
+});
+
+/** 유형별 죄목 목록 — 접수 전 미리보기용 공개 메타데이터. 템플릿 고정값이라 길게 캐시한다. */
+app.get("/api/meta/offenses", (_req, res) => {
+  res.set("Cache-Control", "public, max-age=3600");
+  res.json({
+    offenses: Object.fromEntries(
+      Object.entries(SCENARIOS).map(([type, scenarios]) => [type, scenarios.map((scenario) => scenario.crime)]),
+    ),
+  });
 });
 
 /**
