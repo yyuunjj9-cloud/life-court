@@ -15,6 +15,8 @@
 }
 
 :root {
+  /* 브라우저 자동 다크 모드가 색을 바꾸지 않게 한다 (외침 글자가 흰색처럼 보이던 원인) */
+  color-scheme: only light;
   --wood-deep: #241207;
   --wood: #3b2113;
   --wood-warm: #5c3620;

@@ -83,6 +83,11 @@ test('playful legal terms are disclosed as fictional and explained on the glossa
   assert.match(glossary, /법률 자문이 아닙니다/);
 });
 
+test('phone auto dark modes cannot recolor the app', () => {
+  assert.match(css, /:root \{[\s\S]*?color-scheme: only light;/);
+  assert.match(source('app/layout.tsx'), /colorScheme: "only light"/);
+});
+
 test('the landing makes its punchline, "not fairly", stand out', () => {
   assert.match(source('app/page.tsx'), /<em className="twist">공정하지 않게<\/em>/);
   assert.match(css, /\.hero-s \.twist \{[\s\S]*?color: var\(--gold-bright\);/);
