@@ -63,7 +63,7 @@ export default function CountersuitPage() {
           {countersuit.objections && (
             <p className="csg-outcome">
               {countersuit.accepted
-                ? "억울한 쪽이 음료를 사게 되었습니다"
+                ? "적반하장이 통했습니다. 아래 벌칙을 이행하세요"
                 : countersuit.objections.hits === countersuit.objections.total
                   ? "완벽 변론! 적반하장 진압 완료"
                   : "적반하장 진압 완료"}

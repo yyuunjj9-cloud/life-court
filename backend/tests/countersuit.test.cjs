@@ -42,6 +42,20 @@ test('blocking more objections never makes a countersuit succeed, and the same p
   }
 });
 
+test('a lost countersuit hands out varied penalties, not always a drink', () => {
+  const penalties = new Map();
+  for (const { input, verdict } of cases) {
+    for (const hits of [0, 1, 2]) {
+      const doc = generateCountersuit(input, verdict, hits);
+      if (doc.accepted) penalties.set(doc.rulingNote, (penalties.get(doc.rulingNote) ?? 0) + 1);
+    }
+  }
+  assert.ok(penalties.size >= 8, [...penalties.keys()].join('\n'));
+  const total = [...penalties.values()].reduce((a, b) => a + b, 0);
+  const drinks = [...penalties].filter(([note]) => /음료/.test(note)).reduce((a, [, n]) => a + n, 0);
+  assert.ok(drinks / total < 0.25, `drink penalties ${drinks}/${total}`);
+});
+
 test('blocking all three objections always dismisses the countersuit', () => {
   for (const { input, verdict } of cases) {
     for (const tone of ['lenient', 'fair', 'strict']) {

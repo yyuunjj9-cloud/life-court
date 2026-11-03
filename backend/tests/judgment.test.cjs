@@ -81,6 +81,35 @@ test('landing sample matches what the generator really produces for that story',
   assert.ok(verdict.order.startsWith(field('order')));
 });
 
+test('penalties are as varied as the scenarios and fit the case type', () => {
+  const notes = new Map();
+  let drinks = 0, total = 0;
+  for (const [caseType, story] of require('./scenario-corpus.cjs')) {
+    for (const severity of [1, 2, 3, 4, 5]) {
+      for (const tone of ['lenient', 'fair', 'strict']) {
+        const verdict = generateVerdict(input(story, { caseType, severity, tone }), 100);
+        total++;
+        if (/음료|커피/.test(verdict.order + verdict.resultNote)) drinks++;
+        notes.set(verdict.resultNote, verdict.result);
+      }
+    }
+  }
+  // 예전에는 처분 문구가 10개뿐이었고 조건부 유죄의 절반이 '음료 1잔'이었다.
+  assert.ok(notes.size >= 80, `only ${notes.size} distinct penalty notes`);
+  assert.ok(drinks / total < 0.02, `drinks appear in ${drinks}/${total} verdicts`);
+  for (const [note, result] of notes) {
+    if (result === '조건부 유죄') assert.match(note, /^단, .*유예/, note);
+    assert.doesNotMatch(note, /음료/, note);
+  }
+  // 메신저 사건의 조건부 유죄는 메신저다운 조건을 받을 수 있다.
+  const messenger = new Set();
+  for (let seq = 0; seq < 200; seq++) {
+    const verdict = generateVerdict(input(`친구가 안읽씹해서 숫자 1이 안 없어져요 ${seq}번째`, { caseType: 'messenger', severity: 3, tone: 'fair' }), seq);
+    if (verdict.result === '조건부 유죄') messenger.add(verdict.resultNote);
+  }
+  assert.ok([...messenger].some((note) => /메시지|답장|단체방/.test(note)), [...messenger].join('\n'));
+});
+
 test('a plaintiff appeal never lightens the verdict and raises it at most one step', () => {
   const ladder = ['무죄', '훈방 조치', '조건부 유죄', '유죄', '괘씸죄 가중 유죄'];
   let sustained = 0;
