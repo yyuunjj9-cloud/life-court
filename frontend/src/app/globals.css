@@ -253,8 +253,8 @@ html.inapp #app {
   padding: 22px 20px 30px;
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
+  /* 수축을 막아야 한다 — .scr 높이로 줄어들면 내용이 .pad 밖으로 넘쳐 하단 여백이 스크롤 끝에서 사라진다 */
+  flex: 1 0 auto;
 }
 .grow {
   flex: 1 1 auto;
