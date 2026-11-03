@@ -157,7 +157,8 @@ test('three instances migrate a legacy schema concurrently while preserving exis
   assert.equal(stored.shareToken, null);
   assert.equal(stored.supreme, null);
   // 예전 스키마에도 메모판 아이디어 표가 만들어진다.
-  const idea = await workers[1].store.addIdea('피고도 항소하게 해 주세요', 'pending');
+  const idea = await workers[1].store.addIdea('피고도 항소하게 해 주세요', 'pending', '야근 요정');
+  assert.equal(idea.nickname, '야근 요정');
   assert.deepEqual(await workers[2].store.listIdeas(true, 10), []);
   assert.equal(await workers[0].store.reviewIdea(idea.id, 'approved'), true);
   assert.deepEqual((await workers[2].store.listIdeas(true, 10)).map(i => i.text), ['피고도 항소하게 해 주세요']);

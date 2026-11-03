@@ -136,9 +136,22 @@ test('memo-board ideas stay hidden until the operator approves, and private ones
   assert.equal((await review(all[1].id, 'approved', 'bc'.repeat(24))).status, 403);
   assert.equal((await review(all[0].id, 'approved')).status, 404, 'a private idea can never be published');
   assert.equal((await review(all[1].id, 'approved')).status, 200);
-  assert.deepEqual((await (await fetch(`${base}/api/ideas`)).json()).ideas, [{ id: all[1].id, text: '피고도 항소하게 해 주세요' }]);
+  assert.deepEqual((await (await fetch(`${base}/api/ideas`)).json()).ideas, [{ id: all[1].id, text: '피고도 항소하게 해 주세요', nickname: null }]);
   assert.equal((await review(all[1].id, 'rejected')).status, 200);
   assert.deepEqual((await (await fetch(`${base}/api/ideas`)).json()).ideas, []);
+  // 닉네임은 선택이고, 운영자로 오해할 이름이나 기호·이모지는 쓸 수 없다.
+  for (const nickname of ['운영자', '운 영 자', '운.영.자', '공식관리자', 'ＡＤＭＩＮ', '생활법원', '🟤갈색', '<b>왕</b>', '씨발']) {
+    const res = await post('/api/ideas', { text: '닉네임 시험', public: true, nickname }, from(`10.1.0.${nickname.length}`));
+    assert.equal(res.status, 422, nickname);
+  }
+  assert.equal((await post('/api/ideas', { text: '닉네임 시험', public: true, nickname: '가'.repeat(11) }, from('10.1.1.1'))).status, 400);
+  assert.equal((await post('/api/ideas', { text: '닉네임 시험', public: true, nickname: 7 }, from('10.1.1.1'))).status, 400);
+  assert.equal((await post('/api/ideas', { text: '별명 단 메모', public: true, nickname: '  야근 요정 ' }, from('10.1.1.2'))).status, 201);
+  const named = (await (await admin({ 'X-Admin-Token': ADMIN })).json()).ideas.find(i => i.text === '별명 단 메모');
+  assert.equal(named.nickname, '야근 요정');
+  assert.equal((await review(named.id, 'approved')).status, 200);
+  assert.deepEqual((await (await fetch(`${base}/api/ideas`)).json()).ideas, [{ id: named.id, text: '별명 단 메모', nickname: '야근 요정' }]);
+  await review(named.id, 'rejected');
   // 같은 사람은 10분에 5장까지만 붙일 수 있다.
   const burst = [];
   for (let n = 0; n < 6; n++) burst.push((await post('/api/ideas', { text: `아이디어 ${n}번`, public: false }, from('10.0.0.3'))).status);

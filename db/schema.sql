@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS case_counters (
 CREATE TABLE IF NOT EXISTS ideas (
   id          SERIAL PRIMARY KEY,
   text        TEXT NOT NULL,                 -- 2~60자, 금칙어 검사 통과분만 저장
+  nickname    TEXT,                          -- 선택 별명 (10자, 운영 측으로 오해할 이름 금지)
   status      TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'rejected', 'private')),
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   reviewed_at TIMESTAMPTZ

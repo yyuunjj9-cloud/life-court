@@ -57,7 +57,7 @@ export interface CaseStorage {
   /** 전광판용 공개 가능 메타데이터. */
   board(): Promise<BoardData>;
   /** 메모판 아이디어 — 공개 요청은 pending, 비공개는 private로 들어온다. */
-  addIdea(text: string, status: "pending" | "private"): Promise<Idea>;
+  addIdea(text: string, status: "pending" | "private", nickname?: string | null): Promise<Idea>;
   /** approved만 달라고 하면 공개 목록, 아니면 운영자용 전체 목록(최신순). */
   listIdeas(onlyApproved: boolean, limit: number): Promise<Idea[]>;
   countIdeas(status: IdeaStatus): Promise<number>;
@@ -133,8 +133,8 @@ export class MemoryStorage implements CaseStorage {
     return true;
   }
   private ideas: Idea[] = [];
-  async addIdea(text: string, status: "pending" | "private") {
-    const idea: Idea = { id: this.ideas.length + 1, text, status, createdAt: new Date().toISOString() };
+  async addIdea(text: string, status: "pending" | "private", nickname: string | null = null) {
+    const idea: Idea = { id: this.ideas.length + 1, text, nickname, status, createdAt: new Date().toISOString() };
     this.ideas.push(idea);
     return idea;
   }
@@ -177,6 +177,7 @@ export class PgStorage implements CaseStorage {
         status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'rejected', 'private')),
         created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
         reviewed_at TIMESTAMPTZ)`);
+      await client.query(`ALTER TABLE ideas ADD COLUMN IF NOT EXISTS nickname TEXT`);
       await client.query("COMMIT");
     } catch (error) {
       await client.query("ROLLBACK");
@@ -312,12 +313,12 @@ export class PgStorage implements CaseStorage {
     }
   }
 
-  private static idea(row: { id: number; text: string; status: IdeaStatus; created_at: Date }): Idea {
-    return { id: row.id, text: row.text, status: row.status, createdAt: row.created_at.toISOString() };
+  private static idea(row: { id: number; text: string; nickname: string | null; status: IdeaStatus; created_at: Date }): Idea {
+    return { id: row.id, text: row.text, nickname: row.nickname ?? null, status: row.status, createdAt: row.created_at.toISOString() };
   }
-  async addIdea(text: string, status: "pending" | "private") {
+  async addIdea(text: string, status: "pending" | "private", nickname: string | null = null) {
     await this.ready();
-    const r = await this.pool.query(`INSERT INTO ideas (text, status) VALUES ($1, $2) RETURNING *`, [text, status]);
+    const r = await this.pool.query(`INSERT INTO ideas (text, status, nickname) VALUES ($1, $2, $3) RETURNING *`, [text, status, nickname]);
     return PgStorage.idea(r.rows[0]);
   }
   async listIdeas(onlyApproved: boolean, limit: number) {

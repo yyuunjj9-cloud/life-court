@@ -27,7 +27,7 @@ import {
 import { renderDefenseResponse, RESPONSE_OPTION_IDS } from "./domain/response";
 import { createStorage } from "./storage";
 import { checkStory } from "./domain/moderation";
-import { IDEA_MAX, IDEA_MIN, validAdminToken } from "./domain/ideas";
+import { IDEA_MAX, IDEA_MIN, NICKNAME_MAX, nicknameIssue, validAdminToken } from "./domain/ideas";
 
 const CASE_TYPES: CaseType[] = ["work", "relationship", "meal", "messenger", "money", "romance", "daily"];
 const RELATIONSHIPS: Relationship[] = ["self", "colleague", "friend", "family", "lover", "neighbor", "boss", "anonymous"];
@@ -135,18 +135,22 @@ app.get("/api/ideas", async (_req, res) => {
   const ideas = await storage.listIdeas(true, 40);
   // 승인한 운영자가 곧바로 확인할 수 있을 만큼만 짧게 캐시한다.
   res.set("Cache-Control", "public, max-age=10");
-  res.json({ ideas: ideas.map(({ id, text }) => ({ id, text })) });
+  res.json({ ideas: ideas.map(({ id, text, nickname }) => ({ id, text, nickname })) });
 });
 
 app.post("/api/ideas", async (req, res) => {
   const body = (req.body ?? {}) as Record<string, unknown>;
   const text = typeof body.text === "string" ? body.text.trim().replace(/\s+/g, " ") : "";
-  if (text.length < IDEA_MIN || text.length > IDEA_MAX || typeof body.public !== "boolean") {
+  const nickname = typeof body.nickname === "string" ? body.nickname.trim().replace(/\s+/g, " ") : "";
+  if (text.length < IDEA_MIN || text.length > IDEA_MAX || typeof body.public !== "boolean"
+    || (body.nickname !== undefined && typeof body.nickname !== "string") || nickname.length > NICKNAME_MAX) {
     res.status(400).json({ error: "invalid idea" });
     return;
   }
   res.set("Cache-Control", "no-store");
-  const issue = checkStory(text);
+  const nameProblem = nickname ? nicknameIssue(nickname) : null;
+  const issue = checkStory(text) ?? (nickname ? checkStory(nickname) : null)
+    ?? (nameProblem ? { code: "invalid_nickname" as const, message: nameProblem } : null);
   if (issue) {
     res.status(422).json({ error: "content rejected", code: "CONTENT_REJECTED", issue });
     return;
@@ -157,7 +161,7 @@ app.post("/api/ideas", async (req, res) => {
     res.status(429).json({ error: "too many ideas" });
     return;
   }
-  const idea = await storage.addIdea(text, body.public ? "pending" : "private");
+  const idea = await storage.addIdea(text, body.public ? "pending" : "private", nickname || null);
   res.status(201).json({ status: idea.status });
 });
 
