@@ -6,6 +6,13 @@ import { Burst } from "@/components/Burst";
 import { fetchBoard, type BoardData } from "@/lib/api";
 import { useCaseStore } from "@/store/case-store";
 
+/** 접수 전에 결과물을 맛보게 하는 예시 — 실제 판결 생성 결과와 같은지 테스트로 고정한다. */
+const SAMPLE = {
+  story: "친구가 약속에 40분 늦고는 사과도 없이 배고프다며 메뉴부터 골랐어요.",
+  crime: "약속 지각죄",
+  order: "피고인은 지각 1회당 음료 1잔의 벌칙에 서면 동의할 것.",
+};
+
 /* 01 랜딩 — 어두운 법정 */
 export default function LandingPage() {
   const router = useRouter();
@@ -62,7 +69,7 @@ export default function LandingPage() {
           if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(30);
         }}
       >
-        <Burst text="Objection!" width={170} />
+        <Burst text="Objection!" width={104} />
       </div>
       <div className="pad">
         <span className="kicker">大 생활법원</span>
@@ -77,8 +84,11 @@ export default function LandingPage() {
           생활법원이 공정하지 않게 심리합니다.
         </p>
         <div className="grow" />
-        <div className="seal">
-          <span className="g">⚖</span>
+        <div className="sample-verdict">
+          <span className="sv-tag">판결 예시</span>
+          <p className="sv-story">“{SAMPLE.story}”</p>
+          <p className="sv-crime">{SAMPLE.crime}</p>
+          <p className="sv-order">{SAMPLE.order}</p>
         </div>
         <div className="grow" />
         {board && board.recent.length > 0 && (
@@ -107,6 +117,7 @@ export default function LandingPage() {
           <button className="btn" type="button" onClick={startNew}>
             {hasVerdict || hasDraft ? "새 사건 접수하기" : "사건 접수하기"}
           </button>
+          <p className="cta-note">가입 없이, 한 줄이면 충분합니다.</p>
           {hasVerdict && (
             <button className="btn dark sm" type="button" onClick={() => router.push("/verdict")}>
               진행 중인 사건 보기

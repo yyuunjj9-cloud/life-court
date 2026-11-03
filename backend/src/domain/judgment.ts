@@ -190,7 +190,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         claim: "팀의 성과는 곧 모두의 성과다",
         rejection: "'모두의 성과'를 발표한 입은 피고인 하나뿐이었음이 확인되어 받아들이지 않는다.",
       },
-      keywords: ["가로채", "공로", "내 공", "아이디어", "성과", "숟가락", "자기가 한 것처럼"],
+      keywords: ["가로채", "공로", "내 공", "아이디어", "성과", "숟가락", "자기가 한 것처럼", "자기가 만든 것처럼", "본인이 한 것처럼", "자기 이름으로"],
     },
     {
       name: "회의 무한 연장 사건",
@@ -740,7 +740,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         claim: "잊은 게 아니라 못 본 것이다",
         rejection: "정산 요청 메시지에 '웃겨요' 반응을 남긴 기록이 확인되어 받아들이지 않는다.",
       },
-      keywords: ["더치", "정산", "엔빵", "송금", "계좌", "돈을 안", "안 갚", "밥값"],
+      keywords: ["더치페이", "더치", "정산", "엔빵", "송금", "계좌", "돈을 안", "안 갚", "밥값"],
     },
     {
       name: "'한 입만' 상습 청구 사건",
@@ -766,7 +766,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         claim: "더 좋은 선택지를 기다렸을 뿐이다",
         rejection: "더 좋은 선택지를 제시할 책임은 기각한 자에게 귀속되므로 이유 없다.",
       },
-      keywords: ["추천", "다 싫다", "그건 싫", "별로라며", "퇴짜"],
+      keywords: ["추천", "다 싫다", "다 싫대", "다 싫어", "그건 싫", "별로라며", "퇴짜"],
     },
     {
       name: "공용 찌개 개인 수저 혼입 사건",
@@ -1316,7 +1316,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         claim: "자연 건조 중이었다",
         rejection: "세탁기 내부는 자연 건조의 장소로 인정된 바 없으므로 이를 배척한다.",
       },
-      keywords: ["세탁기", "빨래를 안 널", "널지", "건조기", "꿉꿉"],
+      keywords: ["빨래를 안 널", "널지", "건조기", "꿉꿉"],
     },
     {
       name: "스포일러 유포 사건",
@@ -1329,7 +1329,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         claim: "이미 다 아는 내용인 줄 알았다",
         rejection: "원고가 1화 시청 중임을 피고인이 육안으로 확인하고도 발화하였으므로 이유 없다.",
       },
-      keywords: ["스포", "결말", "범인", "미리 말해", "아직 안 봤는데"],
+      keywords: ["스포일러", "스포", "결말", "범인", "미리 말해", "아직 안 봤는데"],
     },
     {
       name: "이불 무단 점유 사건",
@@ -1447,6 +1447,32 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         rejection: "당시 모든 창문이 닫혀 있었음이 확인되어 바람의 소행 주장을 받아들이지 않는다.",
       },
       keywords: ["문을 쾅", "문소리", "세게 닫", "쾅 닫", "바람이 그런"],
+    },
+    {
+      name: "물건 무단 폐기 사건",
+      crime: "물건 무단 폐기죄",
+      orders: [
+        "피고인은 폐기한 물건의 소중함을 인정하고 원고에게 정식으로 사과할 것.",
+        "피고인은 향후 타인의 물건을 버리기 전 소유자의 서면 동의를 받을 것.",
+      ],
+      defense: {
+        claim: "안 쓰는 물건인 줄 알았다",
+        rejection: "물건의 쓸모는 소유자가 판단할 사항이므로 이를 받아들이지 않는다.",
+      },
+      keywords: ["맘대로 버", "마음대로 버", "허락 없이 버", "말없이 버"],
+    },
+    {
+      name: "자리 새치기 사건",
+      crime: "선착순 질서 교란죄",
+      orders: [
+        "피고인은 다음 이용 시 앞선 사람에게 차례를 양보하고 맨 뒤에서 기다릴 것.",
+        "피고인은 향후 자리를 맡기 위해 소지품을 투척하지 말 것.",
+      ],
+      defense: {
+        claim: "제가 먼저 본 자리였다",
+        rejection: "본 것만으로 선점이 성립한다는 법리는 재판부가 알지 못하므로 이를 배척한다.",
+      },
+      keywords: ["새치기", "자리를 뺏", "가방을 던", "가방 던"],
     },
   ],
   money: [
@@ -1579,6 +1605,19 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         rejection: "피고인 역시 같은 봉지의 음식을 수령하였음이 확인되어 받아들이지 않는다.",
       },
       keywords: ["배달비", "배달료", "배달팁"],
+    },
+    {
+      name: "균등 분담 강요 사건",
+      crime: "균등 분담 강요죄",
+      orders: [
+        "피고인은 정산 시 각자 먹고 마신 내역을 기준으로 금액을 다시 산정할 것.",
+        "피고인은 향후 N분의 1 정산 전 불참 항목이 있는 사람의 의견을 들을 것.",
+      ],
+      defense: {
+        claim: "원래 다 같이 나누는 게 정이다",
+        rejection: "마시지도 않은 술값에 정을 담을 수는 없으므로 이를 받아들이지 않는다.",
+      },
+      keywords: ["똑같이 내", "똑같이 나누", "안 마셨는데", "안 먹었는데 똑같이"],
     },
   ],
   romance: [
@@ -1864,8 +1903,19 @@ export function selectScenario(story: string, caseType: CaseType): CaseScenario 
   // These expressions require the act as well as its context, rather than
   // treating incidental words such as '새벽', '준비', or '대신' as an offense.
   const anchors: [RegExp, string][] = [
-    [/(주말|휴일|연휴|토요일|일요일|휴가).*(업무|일하|지시|보고|연락)|(업무|지시|보고).*(주말|휴일|휴가)/, "휴일 업무 연락 사건"],
-    [/(퇴근직전|퇴근하려|퇴근시간).*(업무|일을|지시|시키|시켰)/, "퇴근 직전 업무 지시 사건"],
+    [/(주말|휴일|연휴|토요일|일요일|휴가).*(업무|일하|일시|지시|보고|연락)|(업무|지시|보고).*(주말|휴일|휴가)/, "휴일 업무 연락 사건"],
+    [/야근.{0,4}(시키|시켜|시켰)/, "퇴근 직전 업무 지시 사건"],
+    [/답장.{0,6}늦/, "메시지 읽씹 방치 사건"],
+    [/돈.{0,6}(빌려|꿔).*(안갚|안줘|안줌|안주|안보내)/, "차용금 상환 지연 사건"],
+    [/(밥값|커피값|술값|택시비|식비|돈).{0,14}준다(더니|고).*(안줘|안줌|안주|안보내|소식이없|감감|답이없)/, "식사 정산 지연 사건"],
+    [/(내|제)(옷|가방|신발|화장품|노트북|물건).{0,10}(허락없이|말없이|맘대로|마음대로|몰래).{0,10}(입|쓰|썼|신|가져|들고)/, "물건 무단 사용 사건"],
+    [/(내|제)(감자튀김|닭다리|치킨|음식|디저트|과자|간식|몫).{0,6}(다먹|먹어버|뺏어)/, "마지막 한 입 침탈 사건"],
+    [/(회의|미팅|발표).{0,8}(직전|\d+분전|시작전).{0,20}(자료|보고서|검토).{0,10}(요청|달라|시키|시켰|보내)/, "회의 직전 자료 요청 사건"],
+    [/(퇴근직전|퇴근하려|퇴근시간|퇴근\d+분전).*(업무|일을|지시|시키|시켰|던지|던져|해달라)/, "퇴근 직전 업무 지시 사건"],
+    [/(n빵|엔빵|똑같이).*(안마신|안먹은|안시킨|마시지도않|먹지도않)|(안마신|안먹은|안시킨|마시지도않|먹지도않).*(n빵|엔빵|똑같이)/, "균등 분담 강요 사건"],
+    [/(맘대로|마음대로|허락없이|말없이|물어보지도않고).{0,14}(버렸|버린|버림)|아끼던.{0,8}(버렸|버린|버림)/, "물건 무단 폐기 사건"],
+    [/새치기|(지하철|버스|기차).*자리.*(달려와|가방을?던|밀치고)/, "자리 새치기 사건"],
+    [/(윗집|위층|옆집|아랫집|이웃집|층간).*(세탁기|청소기|쿵|시끄|소음|발소리|뛰어)|(밤|새벽|심야|자정).{0,8}(세탁기|청소기)/, "심야 생활 소음 사건"],
     [/안읽씹|읽지도않|숫자1|1이안없어/, "안읽씹 장기 방치 사건"],
     [/(읽씹|답장|답이없).*(인스타|스토리|sns)|(인스타|스토리|sns).*(읽씹|답장|답이없)/, "읽씹 중 SNS 활동 사건"],
     [/(약속|만나|모임).*(늦|지각|기다)|(늦|지각).*(약속|모임)/, "약속 지각 반복 사건"],
@@ -1879,15 +1929,21 @@ export function selectScenario(story: string, caseType: CaseType): CaseScenario 
       if (found) return withFrequency(found);
     }
   }
-  const broad = new Set(["새벽", "밤에", "준비", "대신", "무시", "계산", "회의", "자료", "직전", "나가", "나갔", "기다리", "기다렸", "늦게", "늦었", "늦는", "허락없이", "몰래", "지적", "불평", "별로"]);
+  const broad = new Set(["새벽", "밤에", "준비", "대신", "무시", "계산", "회의", "자료", "직전", "나가", "나갔", "기다리", "기다렸", "늦게", "늦었", "늦는", "허락없이", "몰래", "지적", "불평", "별로", "시키", "시켰", "스포"]);
+  // Two-letter words that name the misconduct itself, unlike topics such as '회식'.
+  const distinctive = new Set(["잠수", "뒷담", "험담", "훈수", "파토", "도배", "단답", "재촉", "과시", "비밀"]);
+  const grievance = /안|못|맨날|매번|계속|자꾸|혼자|나만|저만|나한테|강제|억지|싫|짜증|억울|태웠|뜯었|했는데|도대체/.test(text)
+    && !/미안|죄송|고장|괜찮|떨어졌|제가|내가/.test(text);
   const ranked = Object.entries(SCENARIOS).flatMap(([type, scenarios]) => scenarios.map((scenario) => {
     const hits = scenario.keywords.map((word) => word.toLowerCase().replace(/\s+/g, ""))
       .filter((word) => text.includes(word));
     // A specific phrase must support the selection. Broad/short fragments alone
-    // cannot invent a concrete incident. Overlapping synonyms count only once.
-    const specific = hits.filter((word) => word.length >= 3 && !broad.has(word));
+    // cannot invent a concrete incident: a two-letter topic also needs the type
+    // the user chose and a complaint in the story. Overlapping synonyms count only once.
+    const specific = hits.filter((word) => !broad.has(word)
+      && (word.length >= 3 || distinctive.has(word) || (word.length === 2 && type === caseType && grievance)));
     const distinct = specific.filter((word) => !specific.some((other) => other !== word && other.includes(word)));
-    const score = distinct.reduce((sum, word) => sum + Math.min(word.length, 8), 0)
+    const score = distinct.reduce((sum, word) => sum + Math.max(Math.min(word.length, 8), 3), 0)
       + (type === caseType && distinct.length ? 0.5 : 0);
     return { scenario, score };
   })).sort((a, b) => b.score - a.score);

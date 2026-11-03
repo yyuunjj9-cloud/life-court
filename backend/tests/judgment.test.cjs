@@ -72,3 +72,11 @@ test('same input stays deterministic; tone and severity remain monotonic', () =>
     }
   }
 });
+
+test('landing sample matches what the generator really produces for that story', () => {
+  const page = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../frontend/src/app/page.tsx'), 'utf8');
+  const field = name => page.match(new RegExp(`${name}: "([^"]+)"`))?.[1];
+  const verdict = generateVerdict(input(field('story'), { caseType: 'relationship' }), 42);
+  assert.equal(verdict.crime, field('crime'));
+  assert.ok(verdict.order.startsWith(field('order')));
+});

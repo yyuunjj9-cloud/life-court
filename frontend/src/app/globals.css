@@ -586,28 +586,50 @@ p.sub {
   padding: 6px 4px;
   margin-top: 6px;
 }
-.seal {
-  width: 104px;
-  height: 104px;
-  margin: 0 auto;
-  border-radius: 50%;
+/* 판결 예시 — 읽을 부담 없이 결과물의 말투만 보여주는 작은 문서 */
+.sample-verdict {
   position: relative;
-  background: radial-gradient(circle at 34% 28%, var(--gold-bright) 0%, var(--gold) 52%, var(--gold-dim) 100%);
-  border: 4px double rgba(244, 233, 208, 0.8);
-  box-shadow: 0 0 34px rgba(201, 162, 39, 0.5), inset 0 0 14px rgba(60, 40, 6, 0.55);
-  display: grid;
-  place-items: center;
+  padding: 14px 16px 13px;
+  text-align: center;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--parchment), var(--parchment-deep));
+  border: 1px solid var(--gold-dim);
+  border-radius: 3px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
 }
-.seal::after {
-  content: "";
-  position: absolute;
-  inset: 8px;
-  border-radius: 50%;
-  border: 1px dashed rgba(60, 40, 6, 0.55);
+.sv-tag {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 10.5px;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  color: var(--ink-soft);
 }
-.seal .g {
-  font-size: 40px;
-  line-height: 1;
+.sv-story {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+.sv-crime {
+  margin: 8px 0 4px;
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 700;
+}
+.sv-order {
+  font-size: 13px;
+  line-height: 1.55;
+}
+.cta-note {
+  font-size: 12px;
+  text-align: center;
+  color: var(--gold-soft);
+}
+/* 세로가 좁으면 전광판을 접어 판결 예시와 접수 버튼을 한 화면에 둔다 */
+@media (max-height: 760px) {
+  .scr.dark .board {
+    display: none;
+  }
 }
 .disclaim {
   font-family: var(--sans);
@@ -625,8 +647,9 @@ p.sub {
 /* "이의 있음!" 버스트 */
 .objection {
   position: absolute;
-  top: 31%;
-  right: 12px;
+  /* 제목 위 빈 공간 — 아래로 내리면 판결 예시를 가린다 */
+  top: 2px;
+  right: 6px;
   transform: rotate(8deg);
   z-index: 6;
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
