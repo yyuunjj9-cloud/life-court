@@ -59,8 +59,10 @@ interface CaseStore extends CaseState {
   submitCase: (kind: FilingKind) => Promise<boolean>;
   /** 항소심 판결을 요청한다. */
   fileAppeal: () => Promise<boolean>;
-  /** 피고 측 맞고소장을 요청한다. */
-  fileCountersuit: () => Promise<boolean>;
+  /** 혼자 변론 게임의 궤변을 받아온다. 실패하면 null. */
+  loadCountersuitBrief: () => Promise<{ lines: string[]; done?: true } | null>;
+  /** 피고 측 맞고소장을 요청한다. hits는 혼자 변론에서 막은 궤변 수(건너뛰면 생략). */
+  fileCountersuit: (hits?: number) => Promise<boolean>;
   /** 내용증명을 생성한다(사건 접수 아님). */
   createDemand: () => Promise<boolean>;
   /** 새 사건 접수를 위해 초기화한다. */
@@ -210,12 +212,21 @@ export function CaseProvider({ children }: { children: ReactNode }) {
         }
       },
 
-      fileCountersuit: async () => {
+      loadCountersuitBrief: async () => {
+        if (state.caseSeq === null || !state.ownerToken) return null;
+        try {
+          return await api.countersuitBrief(state.caseSeq, state.ownerToken);
+        } catch {
+          return null;
+        }
+      },
+
+      fileCountersuit: async (hits) => {
         if (state.caseSeq === null) return false;
         if (state.countersuit) return true;
         if (!state.ownerToken) return false;
         try {
-          const { countersuit } = await api.fileCountersuit(state.caseSeq, state.ownerToken);
+          const { countersuit } = await api.fileCountersuit(state.caseSeq, state.ownerToken, hits);
           setState((s) => ({ ...s, countersuit }));
           return true;
         } catch {

@@ -16,6 +16,9 @@ const SAMPLE = {
 /** 전광판 속도(px/s) — 내용 길이와 무관하게 일정해야 긴 죄목이 몰려도 읽을 수 있다. */
 const BOARD_SPEED = 60;
 
+/** 홈에 다시 올 때 마지막 전광판을 바로 보여준다 — 응답을 기다리는 동안 빈 칸이 되지 않게. */
+let boardCache: BoardData | null = null;
+
 /* 01 랜딩 — 어두운 법정 */
 export default function LandingPage() {
   const router = useRouter();
@@ -27,12 +30,17 @@ export default function LandingPage() {
   const hasVerdict = Boolean(verdict);
   const hasDraft = !hasVerdict && draft.story.trim().length > 0;
 
-  // 전광판 — 서버가 잠들어 있으면 조용히 생략된다.
-  const [board, setBoard] = useState<BoardData | null>(null);
+  // 전광판 — 자리는 처음부터 잡아 두고 내용만 바꾼다. 응답이 온 뒤에 끼워 넣으면
+  // 판결 예시와 버튼이 뒤늦게 밀린다. 서버가 잠들어 있으면 안내 문구로 대신한다.
+  const [board, setBoard] = useState<BoardData | null>(boardCache);
+  const [boardFailed, setBoardFailed] = useState(false);
   useEffect(() => {
     let alive = true;
     fetchBoard().then((b) => {
-      if (alive) setBoard(b);
+      if (b) boardCache = b;
+      if (!alive) return;
+      if (b) setBoard(b);
+      else setBoardFailed(true);
     });
     return () => {
       alive = false;
@@ -61,6 +69,12 @@ export default function LandingPage() {
   const resume = () => {
     if (loadDraft()) router.push("/intake/story");
   };
+
+  const boardIdle = board
+    ? board.recent.length === 0 && "오늘의 첫 사건을 기다리고 있습니다"
+    : boardFailed
+      ? "심리 현황은 잠시 후 공개됩니다"
+      : "심리 현황 집계 중…";
 
   const savedLabel =
     savedDraftAt !== null
@@ -106,13 +120,16 @@ export default function LandingPage() {
           <p className="sv-order">{SAMPLE.order}</p>
         </div>
         <div className="grow" />
-        {board && board.recent.length > 0 && (
-          <div className="board" aria-label="실시간 심리 현황">
-            <div className="board-head">
-              <span className="board-live">● LIVE</span>
-              금일 심리 {board.todayCount}건 · 누적 {board.totalCount}건
-              {board.topCrime ? ` · 최다 죄목 ${board.topCrime}` : ""}
-            </div>
+        <div className="board" aria-label="실시간 심리 현황">
+          <div className="board-head">
+            <span className="board-live">● LIVE</span>
+            <span className="board-stat">
+              {board
+                ? `금일 심리 ${board.todayCount}건 · 누적 ${board.totalCount}건${board.topCrime ? ` · 최다 죄목 ${board.topCrime}` : ""}`
+                : "실시간 심리 현황"}
+            </span>
+          </div>
+          {board && !boardIdle ? (
             <div
               className="board-ticker"
               onPointerDown={() => setBoardHeld(true)}
@@ -135,8 +152,17 @@ export default function LandingPage() {
                 ))}
               </div>
             </div>
-          </div>
-        )}
+          ) : (
+            // 흐르는 줄과 같은 구조로 높이를 맞추고, 움직임만 멈춘다.
+            <div className="board-ticker">
+              <div className="board-track idle">
+                <div className="board-group">
+                  <span className="board-item">{boardIdle}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
         <div className="stack">
           <button className="btn" type="button" onClick={startNew}>
             {hasVerdict || hasDraft ? "새 사건 접수하기" : "사건 접수하기"}

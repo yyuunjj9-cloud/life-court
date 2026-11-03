@@ -29,3 +29,16 @@ test('the board ticker keeps a readable speed and can be stopped', () => {
   const reduced = css.match(/@media \(prefers-reduced-motion: reduce\) \{[\s\S]*?^\}/m)?.[0];
   assert.match(reduced, /\.board-track \{[\s\S]*?animation: none;/);
 });
+
+test('the board keeps its place while loading so the landing does not jump', () => {
+  const page = source('app/page.tsx');
+  // 응답 뒤에 끼워 넣으면 판결 예시와 버튼이 밀린다 — 자리는 항상 렌더링한다.
+  assert.doesNotMatch(page, /\{board && board\.recent\.length > 0 && \(/);
+  assert.match(page, /useState<BoardData \| null>\(boardCache\)/);
+  assert.match(css, /\.board-track\.idle \{\s*animation: none;/);
+  assert.match(css, /\.board-stat \{[\s\S]*?white-space: nowrap;/);
+  // 도장 연출이 옆으로 넘쳐도 가로 스크롤바가 생겨 화면 높이가 바뀌지 않는다.
+  const scr = css.match(/^\.scr \{[\s\S]*?^\}/m)?.[0];
+  assert.match(scr, /overflow-x: hidden;/);
+  assert.match(scr, /overflow-y: auto;/);
+});

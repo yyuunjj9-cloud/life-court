@@ -119,6 +119,14 @@ export function CountersuitDocView({ doc, date }: { doc: CountersuitDoc; date: s
         <p className="k">맞 고 소 사 실</p>
         <p className="t">{doc.facts}</p>
       </div>
+      {doc.objections && (
+        <div className="vsec">
+          <p className="k">변 론 기 록</p>
+          <p className="t">
+            이의 제기 {doc.objections.total}회 중 {doc.objections.hits}회 인용
+          </p>
+        </div>
+      )}
       <div className="vfinal">
         <span className="stamp">
           생활

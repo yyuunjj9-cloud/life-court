@@ -28,7 +28,13 @@ const INNER = starPoints(130, 80, 103, 59, 0.78);
 
 const FONT = "'BurstHan','Black Han Sans','Malgun Gothic',sans-serif";
 
-export function Burst({ text, width = 170, variant = "objection" }: { text: string; width?: number; variant?: "objection" | "overruled" | "sustained" | "dismissed" | "inadmissible" }) {
+export function Burst({ text, width = 170, variant = "objection", label }: {
+  text: string;
+  width?: number;
+  variant?: "objection" | "overruled" | "sustained" | "dismissed" | "inadmissible";
+  /** 같은 효과를 다른 장면에서 쓸 때 화면 낭독용 뜻을 바꾼다 (예: 변론 게임의 이의 인정). */
+  label?: string;
+}) {
   const id = useId().replace(/:/g, "");
   const overruled = variant === "overruled";
   const sustained = variant === "sustained";
@@ -68,7 +74,7 @@ export function Burst({ text, width = 170, variant = "objection" }: { text: stri
       width={width}
       height={(width * 160) / 260}
       role="img"
-      aria-label={inadmissible ? `${text} 진술 보완 요청` : dismissed ? `${text} 맞고소 기각 또는 각하` : sustained ? `${text} 원고 항소 인용` : overruled ? `${text} 항소 기각` : text}
+      aria-label={label ? `${text} ${label}` : inadmissible ? `${text} 진술 보완 요청` : dismissed ? `${text} 맞고소 기각 또는 각하` : sustained ? `${text} 원고 항소 인용` : overruled ? `${text} 항소 기각` : text}
     >
       <defs>
         <linearGradient id={`${id}-red`} x1="0" y1="0" x2="0" y2="1">

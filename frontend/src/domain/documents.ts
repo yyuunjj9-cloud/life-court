@@ -41,4 +41,6 @@ export interface CountersuitDoc {
   accepted: boolean;
   rulingLabel: string;
   rulingNote: string;
+  /** 혼자 변론 게임 기록. 건너뛰었으면 없다. */
+  objections?: { hits: number; total: number };
 }

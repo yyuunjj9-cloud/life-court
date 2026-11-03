@@ -124,8 +124,17 @@ export const api = {
   fileAppeal: (seq: number, ownerToken: string) =>
     request<{ appeal: AppealVerdict }>(`/api/cases/${seq}/appeal`, { method: "POST", headers: { "X-Owner-Token": ownerToken } }),
 
-  fileCountersuit: (seq: number, ownerToken: string) =>
-    request<{ countersuit: CountersuitDoc }>(`/api/cases/${seq}/countersuit`, { method: "POST", headers: { "X-Owner-Token": ownerToken } }),
+  /** 혼자 변론 게임의 궤변 3개 — 조회만 하므로 맞고소가 접수되지 않는다. */
+  countersuitBrief: (seq: number, ownerToken: string) =>
+    request<{ lines: string[]; done?: true }>(`/api/cases/${seq}/countersuit/brief`, { headers: { "X-Owner-Token": ownerToken } }),
+
+  /** hits는 혼자 변론에서 막은 궤변 수 — 건너뛰면 생략한다. */
+  fileCountersuit: (seq: number, ownerToken: string, hits?: number) =>
+    request<{ countersuit: CountersuitDoc }>(`/api/cases/${seq}/countersuit`, {
+      method: "POST",
+      headers: { "X-Owner-Token": ownerToken },
+      body: JSON.stringify(hits === undefined ? {} : { hits }),
+    }),
 
   createDemandLetter: (input: CaseInput) =>
     request<{ demand: DemandLetterDoc }>("/api/documents/demand", {
