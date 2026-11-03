@@ -35,10 +35,20 @@ test('blocking more objections never makes a countersuit succeed, and the same p
     if (results[0].accepted !== results[3].accepted) changed++;
   }
   assert.ok(changed > 0, 'the score should change some outcomes');
-  for (const row of COUNTER_ACCEPT_CHANCE) assert.ok(row[0] > row[1]);
+  for (const row of COUNTER_ACCEPT_CHANCE.slice(0, 3)) assert.ok(row[0] > row[1]);
   for (let hits = 1; hits <= 3; hits++) {
     assert.ok(COUNTER_ACCEPT_CHANCE[hits][0] < COUNTER_ACCEPT_CHANCE[hits - 1][0]);
     assert.ok(COUNTER_ACCEPT_CHANCE[hits][1] < COUNTER_ACCEPT_CHANCE[hits - 1][1]);
+  }
+});
+
+test('blocking all three objections always dismisses the countersuit', () => {
+  for (const { input, verdict } of cases) {
+    for (const tone of ['lenient', 'fair', 'strict']) {
+      const doc = generateCountersuit({ ...input, tone }, verdict, COUNTER_ROUNDS);
+      assert.equal(doc.accepted, false);
+      assert.deepEqual(doc.objections, { hits: COUNTER_ROUNDS, total: COUNTER_ROUNDS });
+    }
   }
 });
 

@@ -3,8 +3,11 @@
  * 화면과 분리해 두어야 판정 기준을 테스트로 고정할 수 있다.
  */
 
-/** 라운드별 판정 창(ms) — 갈수록 짧아진다. */
-export const ROUND_WINDOWS_MS = [1000, 800, 600] as const;
+/**
+ * 라운드별 판정 창(ms) — 갈수록 짧아진다. 평균 반응 속도(약 0.25초)와 터치 지연을
+ * 감안해 3라운드도 집중하면 막을 수 있게 하되, 다 막는 '완벽 변론'은 쉽지 않게 둔다.
+ */
+export const ROUND_WINDOWS_MS = [700, 500, 350] as const;
 /** 글자당 표시 간격과 문장 하나의 최대 표시 시간 — 긴 문장도 기다림이 길어지지 않게 한다. */
 export const CHAR_MS = 40;
 export const TYPE_MAX_MS = 2200;

@@ -16,7 +16,7 @@ const cases = corpus.flatMap(([caseType, story], n) => [1, 3, 5].map((severity) 
 }));
 
 test('a press is early before the red tail, a hit inside the window, and a miss after it', () => {
-  assert.deepEqual(game.ROUND_WINDOWS_MS, [1000, 800, 600]);
+  assert.deepEqual(game.ROUND_WINDOWS_MS, [700, 500, 350]);
   const redAt = game.typingDuration('피맞고소인은 과잉 고소죄를 범했습니다');
   for (const [round, windowMs] of game.ROUND_WINDOWS_MS.entries()) {
     assert.equal(game.judgePress(redAt - 1, redAt, windowMs), 'early', `round ${round + 1}`);
@@ -50,7 +50,9 @@ test('the game opens on round one and the document shows the play record only wh
   assert.match(markup, /aria-label="이의 인용 0회"/);
   const { input, verdict } = cases[0];
   const played = renderToStaticMarkup(React.createElement(CountersuitDocView, { doc: generateCountersuit(input, verdict, 2), date: '2026. 11. 3.' }));
-  assert.match(played.replace(/<!-- -->/g, ''), /이의 제기 3회 중 2회 인용/);
+  assert.match(played.replace(/<!-- -->/g, ''), /이의 제기 3회 중 2회 인용<\/p>/);
+  const perfect = renderToStaticMarkup(React.createElement(CountersuitDocView, { doc: generateCountersuit(input, verdict, 3), date: '2026. 11. 3.' }));
+  assert.match(perfect.replace(/<!-- -->/g, ''), /이의 제기 3회 중 3회 인용 — 완벽 변론/);
   const skipped = renderToStaticMarkup(React.createElement(CountersuitDocView, { doc: generateCountersuit(input, verdict), date: '2026. 11. 3.' }));
   assert.doesNotMatch(skipped, /변 론 기 록/);
 });

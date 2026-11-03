@@ -61,7 +61,13 @@ export default function CountersuitPage() {
         </div>
         <div className="pad">
           {countersuit.objections && (
-            <p className="csg-outcome">{countersuit.accepted ? "억울한 쪽이 음료를 사게 되었습니다" : "적반하장 진압 완료"}</p>
+            <p className="csg-outcome">
+              {countersuit.accepted
+                ? "억울한 쪽이 음료를 사게 되었습니다"
+                : countersuit.objections.hits === countersuit.objections.total
+                  ? "완벽 변론! 적반하장 진압 완료"
+                  : "적반하장 진압 완료"}
+            </p>
           )}
           <CountersuitDocView doc={countersuit} date={formatKoreanDate(new Date())} />
           <p className="court-notice">재판부 공지: 다음 개정부터 피고 본인 출석이 허용될 예정입니다.</p>
@@ -124,12 +130,12 @@ export default function CountersuitPage() {
         <p className="hero-s">
           피고 측이 오히려 맞고소장을 냈습니다.
           <br />
-          궤변이 빨개지면 이의를 제기하세요.
+          피고의 궤변 3개를 막아 내세요.
         </p>
         <ul className="csg-rules">
-          <li>궤변 3개가 차례로 나옵니다.</li>
-          <li>끝부분이 빨개지는 순간 ‘이의 있음!’을 누르세요.</li>
-          <li>너무 빨리 누르면 기각됩니다. 많이 막을수록 맞고소가 기각되기 쉽습니다.</li>
+          <li>문장 끝이 빨개지고 버튼이 번쩍이면 ‘이의 있음!’을 누르세요.</li>
+          <li>빨개지기 전에 누르면 그 라운드는 실패입니다. 갈수록 누를 시간이 짧아집니다.</li>
+          <li>3번 다 막으면 완벽 변론으로 무조건 이깁니다. 덜 막으면 결과는 운에 맡깁니다.</li>
         </ul>
         <div className="grow" />
         <div className="stack">

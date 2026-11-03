@@ -133,8 +133,9 @@ function ObjectionRound({ line, windowMs, onResult, onNext }: {
         {!outcome && <p className="csg-hint">{red ? "지금!" : "끝부분이 빨개지면 이의를 제기하세요"}</p>}
       </div>
       <div className="grow" />
+      {/* 문장을 다 읽지 않아도 버튼이 번쩍이면 누를 때임을 알 수 있다 */}
       <button
-        className="btn csg-press"
+        className={red && !outcome ? "btn csg-press ready" : "btn csg-press"}
         type="button"
         disabled={outcome !== null}
         onPointerDown={(event) => {
