@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Burst } from "@/components/Burst";
 import { fetchBoard, type BoardData } from "@/lib/api";
 import { useCaseStore } from "@/store/case-store";
@@ -12,6 +12,9 @@ const SAMPLE = {
   crime: "약속 지각죄",
   order: "피고인은 지각 1회당 음료 1잔의 벌칙에 서면 동의할 것.",
 };
+
+/** 전광판 속도(px/s) — 내용 길이와 무관하게 일정해야 긴 죄목이 몰려도 읽을 수 있다. */
+const BOARD_SPEED = 60;
 
 /* 01 랜딩 — 어두운 법정 */
 export default function LandingPage() {
@@ -35,6 +38,18 @@ export default function LandingPage() {
       alive = false;
     };
   }, []);
+
+  // 글꼴 로딩으로 폭이 바뀌어도 속도가 유지되도록 ResizeObserver로 한 바퀴 시간을 잰다.
+  const boardGroup = useRef<HTMLDivElement>(null);
+  const [boardDuration, setBoardDuration] = useState<number | null>(null);
+  const [boardHeld, setBoardHeld] = useState(false);
+  useEffect(() => {
+    const group = boardGroup.current;
+    if (!group) return;
+    const observer = new ResizeObserver(() => setBoardDuration(group.offsetWidth / BOARD_SPEED));
+    observer.observe(group);
+    return () => observer.disconnect();
+  }, [board]);
 
   // 새 사건 접수: 이전 진행 상태를 완전히 초기화하고 시작한다.
   const startNew = () => {
@@ -98,10 +113,19 @@ export default function LandingPage() {
               금일 심리 {board.todayCount}건 · 누적 {board.totalCount}건
               {board.topCrime ? ` · 최다 죄목 ${board.topCrime}` : ""}
             </div>
-            <div className="board-ticker">
-              <div className="board-track">
+            <div
+              className="board-ticker"
+              onPointerDown={() => setBoardHeld(true)}
+              onPointerUp={() => setBoardHeld(false)}
+              onPointerCancel={() => setBoardHeld(false)}
+              onPointerLeave={() => setBoardHeld(false)}
+            >
+              <div
+                className={boardHeld ? "board-track held" : "board-track"}
+                style={boardDuration ? { animationDuration: `${boardDuration}s` } : undefined}
+              >
                 {[0, 1].map((copy) => (
-                  <div className="board-group" key={copy} aria-hidden={copy === 1}>
+                  <div className="board-group" key={copy} ref={copy === 0 ? boardGroup : undefined} aria-hidden={copy === 1}>
                     {board.recent.map((e) => (
                       <span className="board-item" key={`${copy}-${e.caseNo}`}>
                         {e.caseNo} <b>{e.crime}</b> — {e.result}

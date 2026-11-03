@@ -20,3 +20,12 @@ test('the simulated countersuit says so, and the expansion teaser stays after th
   assert.ok(source('app/countersuit/page.tsx').includes(teaser));
   for (const page of ['app/page.tsx', 'app/invite/page.tsx']) assert.ok(!source(page).includes(teaser));
 });
+
+test('the board ticker keeps a readable speed and can be stopped', () => {
+  const page = source('app/page.tsx');
+  assert.match(page, /const BOARD_SPEED = 60;/);
+  assert.match(page, /group\.offsetWidth \/ BOARD_SPEED/);
+  assert.match(css, /\.board-track\.held \{\s*animation-play-state: paused;/);
+  const reduced = css.match(/@media \(prefers-reduced-motion: reduce\) \{[\s\S]*?^\}/m)?.[0];
+  assert.match(reduced, /\.board-track \{[\s\S]*?animation: none;/);
+});

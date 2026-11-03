@@ -439,12 +439,24 @@ p.sub {
 .board-ticker {
   overflow: hidden;
   padding: 7px 0;
+  /* 길게 눌러 멈출 때 글자 선택이나 메뉴가 뜨지 않도록 */
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 .board-track {
   display: inline-flex;
   white-space: nowrap;
   will-change: transform;
-  animation: board-scroll 28s linear infinite;
+  /* 실제 시간은 내용 폭에 맞춰 page.tsx가 덮어쓴다 */
+  animation: board-scroll 44s linear infinite;
+}
+.board-track.held {
+  animation-play-state: paused;
+}
+@media (hover: hover) {
+  .board-ticker:hover .board-track {
+    animation-play-state: paused;
+  }
 }
 .board-group {
   display: inline-flex;
@@ -1476,6 +1488,20 @@ p.sub {
 @media (prefers-reduced-motion: reduce) {
   .objection, .verdict-flash .burst-wrap { animation: none; }
   .verdict-flash { animation: flashout .15s ease 1.1s both; }
+  /* 전광판은 흐르지 않고 최신 사건 한 건만 고정해서 보여준다 */
+  .board-track {
+    display: block;
+    white-space: normal;
+    animation: none;
+  }
+  .board-group {
+    display: block;
+    padding: 0 10px;
+  }
+  .board-group[aria-hidden="true"],
+  .board-item:not(:first-child) {
+    display: none;
+  }
 }
 
 /* ============================================================
