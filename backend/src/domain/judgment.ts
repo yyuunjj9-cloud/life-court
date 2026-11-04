@@ -1911,6 +1911,32 @@ export interface StoryAnalysis {
   candidates: readonly { scenario: CaseScenario; score: number }[];
 }
 
+const STORY_PERSON = /친구|동료|팀장|부장|과장|차장|대리|선배|후배|엄마|아빠|어머니|아버지|동생|언니|오빠|형|누나|남친|여친|남자친구|여자친구|애인|룸메|상사|팀원|윗집|옆집|남편|아내|와이프|사람|걔|쟤|그분|직원|가족|썸남|썸녀/;
+// 상대가 나에게 보인 반응. 내가 한 일을 상대가 탓하는 사연을 알아본다.
+const OTHER_REACTION = /화났|화를냈|화냈|화내|삐졌|삐짐|답답해|서운해|짜증냈|짜증을냈|뭐라고했|뭐라했|혼났|혼냈|놀라셨|놀랐대|놀랐어|싫어해|글로쓰라|하지말래|하지말라/;
+const SELF_BLAME = /마음이무거|마음이안좋|미안|죄송|민망|잘못했|잘못한|제잘못|내잘못|실수로|잘못눌|깜빡|반성|수습|사과해야|어떡하|어떻게하죠|제가너무|내가너무/;
+const STILL_COMPLAINING = /억울|짜증나|짜증난|화나요|화가나|서운|싫어요|싫다|왜이래|왜그래|ㅡㅡ|어이없|킹받|빡치|빡쳐|도대체|맨날|매번|자꾸|계속|또/;
+
+/**
+ * 상대의 잘못을 고소하는 사연이 아닌 경우를 문장 모양으로 알아본다(docs/plan-accuracy.md 4단계).
+ * 내가 한 일, 오해였거나 결국 괜찮았던 일, 사람 탓이 아닌 일, 칭찬은 구체 죄명을 붙이지 않는다.
+ * 특정 표현이 아니라 문장 구조를 보도록 시험지로 확인했다. 정상 고소에 걸리지 않는지는 회귀 예문이 지킨다.
+ */
+function notAComplaint(text: string): "self" | "turned-fine" | "nobody" | "praise" | null {
+  if (/^(어제|오늘|아까|방금|이번에|요즘)?(제가|내가)/.test(text) && (SELF_BLAME.test(text) || OTHER_REACTION.test(text))) return "self";
+  if (/(나|저)때문에/.test(text) && OTHER_REACTION.test(text)) return "self";
+  if (/(제가|내가)/.test(text) && /(미안해|미안했|죄송해|죄송했|잘못했|마음이무거)/.test(text) && !/사과(도|를)?안|사과도없/.test(text)) return "self";
+  if (/줄알았(는데|더니)|오해였|착각이었|착각했/.test(text) && !/역시|또|결국안|결국못|이번에도|오늘도/.test(text)) return "turned-fine";
+  if (/(던|었던|았던)거(래요|였|더라|라고)/.test(text) && !/일부러|또|역시/.test(text)) return "turned-fine";
+  // 주어가 생략돼도 누가 망가뜨린 이야기(고장 내 놓고, 깨뜨려 놓고)는 사람 탓이다.
+  if (!STORY_PERSON.test(text) && /고장|지연|미세먼지|날씨|비가|눈이|물가|버그|오류|업데이트|배터리가|정전|품절|휴무/.test(text)
+    && !/놓고|깨뜨|망가뜨|고장내|고장을내|변상|물어/.test(text)) return "nobody";
+  if (/(안|않|없)(주셔서|줘서|해서|어서|아서|으셔서)?다행/.test(text)) return "turned-fine";
+  if (/고마|감사|감동|덕분|다행|편했|편하게|즐거웠|재밌었|좋았|기뻤|뿌듯|최고|잘갖다|딱갚|제자리에|해주셨|주셨어요|줘서편|챙겨줬|양보해|기다려줬|양해를구/.test(text)
+    && !STILL_COMPLAINING.test(text)) return "praise";
+  return null;
+}
+
 export function selectScenario(story: string, caseType: CaseType): CaseScenario {
   return analyzeStory(story, caseType).pick;
 }
@@ -1935,6 +1961,7 @@ export function analyzeStory(story: string, caseType: CaseType): StoryAnalysis {
     },
     keywords: [],
   });
+  if (notAComplaint(text)) return { pick: fallback(), decidedBy: "guard", candidates: [] };
   // A denial/quoted accusation is not evidence that the alleged act occurred.
   // Keep disputed accounts general rather than reversing who did what.
   if (/늦지않|지각하지않|읽씹하지않|업무연락.{0,6}하지않았|뜻이아니라|오해를받/.test(text)) return { pick: fallback(), decidedBy: "guard", candidates: [] };
