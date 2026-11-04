@@ -5,7 +5,7 @@
  */
 
 import { MORE_SCENARIOS } from "./scenarios-more";
-import { similarScenarios } from "./similarity";
+import { KEYWORD_PROTECT_SCORE, MIN_SCENARIO_SHARE, NOT_A_COMPLAINT_SHARE, similarScenarios } from "./similarity";
 
 export type CaseType = "work" | "relationship" | "meal" | "messenger" | "money" | "romance" | "daily";
 export type Relationship = "self" | "colleague" | "friend" | "family" | "lover" | "neighbor" | "boss" | "anonymous";
@@ -2081,16 +2081,28 @@ export function analyzeStory(story: string, caseType: CaseType): StoryAnalysis {
   })).sort((a, b) => b.score - a.score);
   const candidates = ranked.filter((r) => r.score >= 3).slice(0, 3)
     .map((r) => ({ scenario: withFrequency(r.scenario), score: r.score }));
+  // 키워드와 예시 사연 유사도를 함께 본다(docs/plan-accuracy.md).
   const similar = similarScenarios(story);
-  const nearest = similar.confident ? similar.ranked[0] : undefined;
+  const byLabel = (label: string | null | undefined) => (label ? all.find((scenario) => scenario.name === label) : undefined);
+  const top = similar.ranked[0];
+  const mostlyNotComplaint = similar.notAComplaintShare >= NOT_A_COMPLAINT_SHARE;
   if (ranked[0].score >= 3 && ranked[0].score - ranked[1].score >= 0.5) {
-    // 키워드가 맞아도 예시 중 '고소할 일이 아닌 문장'에 가장 가까우면 일반 분쟁으로 둔다.
-    if (nearest && nearest.label === null) return { pick: fallback(), decidedBy: "similarity", candidates };
+    // 키워드가 약하게만 맞았을 때(짧은 단어 하나 등)만 예시 유사도가 판단을 바꾼다.
+    const weakKeyword = ranked[0].score < KEYWORD_PROTECT_SCORE;
+    // 비슷한 예시 대부분이 '고소할 일이 아닌 문장'이면 일반 분쟁으로 둔다.
+    if (weakKeyword && mostlyNotComplaint) return { pick: fallback(), decidedBy: "similarity", candidates };
+    // 예시 사연이 다른 사건을 확신하면 그쪽을 따른다. 단어 하나가 사건을 가로채는 경우를 줄인다.
+    const other = weakKeyword && similar.confident && top.share >= MIN_SCENARIO_SHARE && top.label !== ranked[0].scenario.name ? byLabel(top.label) : undefined;
+    if (other) return { pick: withFrequency(other), decidedBy: "similarity", candidates };
     return { pick: withFrequency(ranked[0].scenario), decidedBy: "score", candidates };
   }
   // 키워드로 정하지 못한 사연은 예시 사연과 가장 비슷한 사건을 고른다(비슷한 정도가 기준 이상일 때만).
-  const similarScenario = nearest?.label ? all.find((scenario) => scenario.name === nearest.label) : undefined;
-  if (similarScenario) return { pick: withFrequency(similarScenario), decidedBy: "similarity", candidates };
+  if (!mostlyNotComplaint) {
+    const confidentPick = similar.confident ? byLabel(top.label) : undefined;
+    const firstScenario = similar.similarEnough ? similar.ranked.find((vote) => vote.label && vote.share >= MIN_SCENARIO_SHARE) : undefined;
+    const similarScenario = confidentPick ?? byLabel(firstScenario?.label);
+    if (similarScenario) return { pick: withFrequency(similarScenario), decidedBy: "similarity", candidates };
+  }
 
   // Unknown or ambiguous input must stay faithful to the supplied story.
   return { pick: fallback(), decidedBy: "fallback", candidates };

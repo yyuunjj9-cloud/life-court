@@ -6,10 +6,16 @@ import { NOT_A_COMPLAINT_EXAMPLES, SCENARIO_EXAMPLES } from "./scenario-examples
  * 사건별로 표를 던진다. 외부 서비스 없이 계산만 하므로 같은 사연은 늘 같은 결과가 나온다.
  */
 
-/** 기준값은 조정용 시험지에서 오답률이 가장 낮은 값으로 정했다. 바꾸면 시험지로 다시 잰다. */
+/** 기준값은 개발용 시험지로 정하고 새 봉인 시험지로 한 번 확인했다(docs/plan-accuracy.md). 바꾸면 다시 잰다. */
 const NEIGHBORS = 15;
-const MIN_SIMILARITY = 0.16;
+const MIN_SIMILARITY = 0.13;
 const MIN_VOTE_MARGIN = 0.2;
+/** 사건을 고르려면 이웃 표 중 이만큼은 그 사건 몫이어야 한다. */
+export const MIN_SCENARIO_SHARE = 0.2;
+/** 이웃 표의 이만큼이 '고소할 일이 아닌 문장'이면 키워드가 맞아도 일반 분쟁으로 둔다. */
+export const NOT_A_COMPLAINT_SHARE = 0.7;
+/** 키워드 점수가 이 이상이면 예시 유사도가 사건을 바꾸지 못한다. 분명한 고소 사연을 지킨다. */
+export const KEYWORD_PROTECT_SCORE = 5;
 
 type Vector = Map<string, number>;
 interface Example { label: string | null; vector: Vector }
@@ -62,6 +68,8 @@ export interface SimilarityVote {
   /** 사건 이름. null이면 '고소할 일이 아닌 문장'에 가장 가깝다. */
   label: string | null;
   score: number;
+  /** 전체 표 중 이 후보의 몫(0~1). */
+  share: number;
 }
 
 export interface SimilarityResult {
@@ -69,6 +77,10 @@ export interface SimilarityResult {
   ranked: readonly SimilarityVote[];
   /** 1등이 기준을 넘어 믿을 만한지. */
   confident: boolean;
+  /** 가장 비슷한 예시의 유사도가 기준 이상인지. */
+  similarEnough: boolean;
+  /** '고소할 일이 아닌 문장' 표의 몫. */
+  notAComplaintShare: number;
 }
 
 export function similarScenarios(story: string): SimilarityResult {
@@ -80,8 +92,14 @@ export function similarScenarios(story: string): SimilarityResult {
     .slice(0, NEIGHBORS);
   const votes = new Map<string | null, number>();
   for (const { label, c } of nearest) votes.set(label, (votes.get(label) ?? 0) + c);
-  const ranked = [...votes.entries()].map(([label, score]) => ({ label, score })).sort((a, b) => b.score - a.score);
+  const total = [...votes.values()].reduce((sum, v) => sum + v, 0) || 1;
+  const ranked = [...votes.entries()].map(([label, score]) => ({ label, score, share: score / total })).sort((a, b) => b.score - a.score);
   const best = nearest[0]?.c ?? 0;
   const margin = (ranked[0]?.score ?? 0) - (ranked[1]?.score ?? 0);
-  return { ranked, confident: best >= MIN_SIMILARITY && margin >= MIN_VOTE_MARGIN };
+  return {
+    ranked,
+    confident: best >= MIN_SIMILARITY && margin >= MIN_VOTE_MARGIN,
+    similarEnough: best >= MIN_SIMILARITY,
+    notAComplaintShare: ranked.find((vote) => vote.label === null)?.share ?? 0,
+  };
 }
