@@ -79,17 +79,24 @@ test('the countersuit game reads lines without filing, then stores one result fo
   }
   const first = await brief(ownerToken);
   assert.equal(first.headers.get('cache-control'), 'no-store');
-  const { lines, done } = await first.json();
+  const { lines, rounds, needed, done } = await first.json();
   assert.equal(lines.length, 3);
+  assert.equal(rounds.length, 3);
+  assert.ok(rounds.every(r => r.options.length === 3 && Number.isInteger(r.answer)));
+  assert.ok(needed === 2 || needed === 3);
   assert.equal(done, undefined);
   // 문장만 읽고 떠나면 맞고소가 접수되지 않는다.
   assert.equal((await (await brief(ownerToken)).json()).done, undefined);
   const owner = { 'X-Owner-Token': ownerToken };
-  for (const hits of [4, -1, 1.5, '1', null, true]) {
-    assert.equal((await post(`/api/cases/${seq}/countersuit`, { hits }, owner)).status, 400, `hits ${hits}`);
+  for (const body of [{ hits: 4 }, { hits: -1 }, { hits: 1.5 }, { hits: '1' }, { hits: null }, { hits: true },
+    { picks: [0, 1] }, { picks: [0, 1, 3] }, { picks: [0, 1, '2'] }, { picks: 'abc' }, { picks: [0, 0, 0], hits: 1 }]) {
+    assert.equal((await post(`/api/cases/${seq}/countersuit`, body, owner)).status, 400, JSON.stringify(body));
   }
-  assert.equal((await post(`/api/cases/${seq}/countersuit`, { hits: 2 }, { 'X-Owner-Token': shareToken })).status, 403);
-  const plays = await Promise.all(Array.from({ length: 10 }, (_, n) => post(`/api/cases/${seq}/countersuit`, { hits: n % 4 }, owner)));
+  assert.equal((await post(`/api/cases/${seq}/countersuit`, { picks: [0, 0, 0] }, { 'X-Owner-Token': shareToken })).status, 403);
+  // 맞힌 수는 서버가 고른 카드로 다시 계산한다 — 모두 맞히면 기각되고 결정적 반박이 남는다.
+  const right = rounds.map(r => r.answer);
+  const plays = await Promise.all(Array.from({ length: 10 }, (_, n) =>
+    post(`/api/cases/${seq}/countersuit`, n === 0 ? { picks: right } : { picks: rounds.map(r => (r.answer + 1) % 3) }, owner)));
   assert.ok(plays.every(r => r.status === 200));
   const docs = await Promise.all(plays.map(r => r.json()));
   for (const doc of docs) assert.deepEqual(doc, docs[0]);

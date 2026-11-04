@@ -18,10 +18,12 @@ import {
 import { generateAppeal, generateSupreme } from "./domain/judgment";
 import {
   COUNTER_ROUNDS,
+  counterNeeded,
   generateComplaint,
+  generateCounterRounds,
   generateCountersuit,
-  generateCountersuitBrief,
   generateDemandLetter,
+  scorePicks,
   type FilingKind,
 } from "./domain/documents";
 import { renderDefenseResponse, RESPONSE_OPTION_IDS } from "./domain/response";
@@ -396,11 +398,19 @@ app.get("/api/cases/:seq/countersuit/brief", async (req, res) => {
     return;
   }
   res.set("Cache-Control", "no-store");
-  res.json({ lines: generateCountersuitBrief(rec.input, rec.verdict), ...(rec.countersuit ? { done: true } : {}) });
+  const rounds = generateCounterRounds(rec.input, rec.verdict);
+  res.json({
+    rounds,
+    needed: counterNeeded(rec.verdict),
+    // 배포 중 남아 있을 예전 화면용 — 궤변 문장만.
+    lines: rounds.map((r) => r.claim),
+    ...(rec.countersuit ? { done: true } : {}),
+  });
 });
 
 /**
- * 피고 측 맞고소장 생성 — hits는 혼자 변론에서 막은 궤변 수(0~3), 건너뛰면 생략한다.
+ * 피고 측 맞고소장 생성 — picks는 반박 카드 게임에서 고른 카드 위치 3개(0~2)이며, 맞힌 수는 서버가 다시 계산한다.
+ * 예전 화면의 hits(0~3)도 받는다. 건너뛰면 둘 다 생략한다.
  * 사건당 한 번만 저장하고, 늦은 요청은 먼저 저장된 문서를 돌려받는다.
  */
 app.post("/api/cases/:seq/countersuit", async (req, res) => {
@@ -414,16 +424,21 @@ app.post("/api/cases/:seq/countersuit", async (req, res) => {
     res.status(403).json({ error: "invalid owner token" });
     return;
   }
-  const hits = ((req.body ?? {}) as Record<string, unknown>).hits;
-  if (hits !== undefined && !(Number.isInteger(hits) && (hits as number) >= 0 && (hits as number) <= COUNTER_ROUNDS)) {
-    res.status(400).json({ error: "invalid hits" });
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const { hits, picks } = body;
+  const validHits = hits === undefined || (Number.isInteger(hits) && (hits as number) >= 0 && (hits as number) <= COUNTER_ROUNDS);
+  const validPicks = picks === undefined
+    || (Array.isArray(picks) && picks.length === COUNTER_ROUNDS && picks.every((p) => Number.isInteger(p) && p >= 0 && p <= 2));
+  if (!validHits || !validPicks || (hits !== undefined && picks !== undefined)) {
+    res.status(400).json({ error: "invalid play" });
     return;
   }
   if (rec.countersuit) {
     res.json({ countersuit: rec.countersuit });
     return;
   }
-  const countersuit = generateCountersuit(rec.input, rec.verdict, hits as number | undefined);
+  const scored = picks === undefined ? null : scorePicks(rec.input, rec.verdict, picks as number[]);
+  const countersuit = generateCountersuit(rec.input, rec.verdict, scored ? scored.hits : (hits as number | undefined), scored?.highlight);
   if (await storage.setCountersuit(seq, countersuit)) {
     res.json({ countersuit });
     return;

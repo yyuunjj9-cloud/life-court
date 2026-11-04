@@ -11,6 +11,7 @@ import {
   mulberry32,
   pick,
   pickScenarioOrder,
+  SCENARIOS,
   selectScenario,
   type CaseInput,
   type Verdict,
@@ -55,8 +56,8 @@ export interface CountersuitDoc {
   accepted: boolean;
   rulingLabel: string;
   rulingNote: string;
-  /** 혼자 변론 게임 기록. 건너뛰었으면 없다. */
-  objections?: { hits: number; total: number };
+  /** 반박 카드 게임 기록. 건너뛰었으면 없다. highlight는 처음 맞힌 반박 문장이다. */
+  objections?: { hits: number; total: number; highlight?: string };
 }
 
 /* ---------- 고소장 / 고발장 ---------- */
@@ -162,20 +163,56 @@ const COUNTER_PENALTIES = [
   "피맞고소인(원고)은 맞고소인이 추천하는 영상 하나를 끝까지 보고 감상을 전할 것을 명한다.",
 ] as const;
 
-/** 혼자 변론 게임의 라운드 수 — 원고가 막아야 할 궤변의 개수. */
+/** 맞고소 죄목마다 원고가 낼 수 있는 맞는 반박 — 반박 카드 게임의 정답 카드. */
+const COUNTER_CRIME_REBUTTALS: Record<(typeof COUNTER_CRIMES)[number], string> = {
+  "과잉 고소죄": "사소한 일을 사소할 때 바로잡으려 한 것이므로 과잉이 아니라 예방이다.",
+  "사소한 일 법정 소환죄": "생활법원은 바로 그 사소한 일을 다루려고 문을 연 곳이다.",
+  "지나친 정의감 발동죄": "정의감이 지나치다고 하려면 먼저 상대의 행동이 지나치지 않았어야 한다.",
+  "판결문 단체방 유포 모의죄": "판결문은 아직 원고의 휴대폰 안에 있으며, 모의만으로는 처벌할 수 없다.",
+  "괘씸죄의 괘씸죄": "괘씸함을 느낀 데에는 원인이 있었고, 그 원인을 만든 쪽은 따로 있다.",
+  "원고 코스프레죄": "원고석에 앉은 사실은 사건번호가 증명하며, 의상은 평소 차림이었다.",
+  "선택적 기억 편집죄": "사연은 일어난 순서대로 적었으며, 빠진 장면이 있다면 피고 측이 제출하면 된다.",
+  "본인 지분 은폐죄": "원고의 지분이 있었다면 피고 측이 그 자리에서 바로 말했을 것이다.",
+  "사건 과장 각색죄": "과장할 생각이었다면 심각성을 5로 골랐을 것이다.",
+  "재판 중독죄": "이번이 처음 접수한 사건이며, 중독을 입증할 기록이 제출되지 않았다.",
+  "합의 거부 상습죄": "합의 제안이 먼저 온 적이 없으므로 거부할 기회도 없었다.",
+  "판결문 프사 등록 모의죄": "프로필 사진은 여전히 그대로이며, 모의의 증거가 없다.",
+};
+
+/** 맞고소 사유마다 맞는 반박. */
+const COUNTER_CLOSER_REBUTTALS: Record<(typeof COUNTER_FACT_CLOSERS)[number], string> = {
+  "이는 생활 분쟁의 원만한 해결 관행에 정면으로 반하는 것이다.": "원만한 해결을 먼저 깬 행동이 있었기에 법원을 찾은 것이다.",
+  "맞고소인은 이로 인해 상당한 정신적 당혹감을 호소하고 있다.": "당혹감은 사연 속에서 원고가 먼저 겪었다.",
+  "법정은 장난감이 아니라는 점을 피맞고소인에게 상기시킬 필요가 있다.": "그래서 장난이 아니라 진지하게 사건번호를 받아 왔다.",
+  "피맞고소인 역시 유사 행위를 한 전력이 있다는 자료가 맞고소장에 첨부되었다.": "첨부된 자료에는 날짜도 출처도 없어 증거로 볼 수 없다.",
+  "맞고소인은 '먼저 법대로 하자고 한 것은 저쪽'이라는 진술을 유지하고 있다.": "누가 먼저 말했든, 먼저 불편을 준 행동은 사연에 적혀 있다.",
+  "양측의 진술을 종합하면 쌍방 모두 성인군자는 아닌 것으로 보인다.": "성인군자가 아니어도 억울할 수는 있다.",
+};
+
+/** 반박 카드 게임의 라운드 수. */
 export const COUNTER_ROUNDS = 3;
 
+/** 반박 카드 한 라운드 — answer는 options 안의 맞는 반박 위치다. */
+export interface CounterRound {
+  claim: string;
+  options: string[];
+  answer: number;
+}
+
 /**
- * 이의 제기 성공 횟수(0~3)별 맞고소 인용 확률 — [원심 무죄·훈방, 그 외].
- * 건너뛰면 1회로 치므로 1회 행이 게임 이전의 확률과 같아야 한다.
- * 3회 모두 막으면 '완벽 변론'으로 반드시 기각한다 — 다 막고도 지면 납득하기 어렵다.
+ * 건너뛰었을 때의 맞고소 인용 확률 — [원심 무죄·훈방, 그 외]. 게임 이전과 같다.
+ * 게임을 하면 확률이 아니라 맞힌 반박 수로 정한다(counterNeeded).
  */
-export const COUNTER_ACCEPT_CHANCE = [
-  [0.8, 0.25],
-  [0.7, 0.15],
-  [0.55, 0.08],
-  [0, 0],
-] as const;
+export const SKIP_ACCEPT_CHANCE = [0.7, 0.15] as const;
+
+function wasLenient(verdict: Verdict): boolean {
+  return verdict.result === "무죄" || verdict.result === "훈방 조치";
+}
+
+/** 맞고소를 기각시키려면 맞혀야 하는 반박 수 — 원심이 가벼웠으면 피고 기세가 등등해 모두 맞혀야 한다. */
+export function counterNeeded(verdict: Verdict): number {
+  return wasLenient(verdict) ? COUNTER_ROUNDS : COUNTER_ROUNDS - 1;
+}
 
 /** 인용 판단 → 죄목 → 사유 순서를 바꾸면 같은 사건의 맞고소 결과가 예전과 달라진다. */
 function drawCountersuit(input: CaseInput, verdict: Verdict) {
@@ -186,32 +223,65 @@ function drawCountersuit(input: CaseInput, verdict: Verdict) {
   return { rand, roll, crime, closer };
 }
 
-/** 혼자 변론 게임에서 원고가 막을 궤변 — 맞고소장과 같은 죄목·사유를 쓴다. */
-export function generateCountersuitBrief(input: CaseInput, verdict: Verdict): string[] {
+/**
+ * 반박 카드 3라운드 — 맞고소장과 같은 궤변(사건 항변·맞고소 죄목·사유)에 맞는 반박 1장과 엇나간 반박 2장.
+ * 엇나간 카드는 다른 사건의 판시라 들어맞지 않는 것이 웃음 포인트다. 같은 사건은 같은 카드를 받는다.
+ */
+export function generateCounterRounds(input: CaseInput, verdict: Verdict): CounterRound[] {
   const { crime, closer } = drawCountersuit(input, verdict);
+  const scenario = selectScenario(input.story, input.caseType);
+  const rand = mulberry32(hashSeed(`rebuttal|${verdict.caseNo}|${input.story}`));
+  const otherRulings = Object.values(SCENARIOS).flat().map((s) => s.defense.rejection).filter((r) => r !== scenario.defense.rejection);
+  const counterRebuttals = [...Object.values(COUNTER_CRIME_REBUTTALS), ...Object.values(COUNTER_CLOSER_REBUTTALS)];
+  const round = (claim: string, correct: string, decoyPool: readonly string[]): CounterRound => {
+    const decoys: string[] = [];
+    while (decoys.length < 2) {
+      const d = pick(rand, decoyPool);
+      if (d !== correct && !decoys.includes(d)) decoys.push(d);
+    }
+    const options = [correct, ...decoys];
+    for (let i = options.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [options[i], options[j]] = [options[j], options[i]];
+    }
+    return { claim, options, answer: options.indexOf(correct) };
+  };
   return [
-    selectScenario(input.story, input.caseType).defense.claim,
+    round(scenario.defense.claim, scenario.defense.rejection, otherRulings),
     // 맞고소 죄목은 모두 '죄'로 끝나 받침이 없다.
-    `피맞고소인은 ${crime}를 범했습니다`,
-    closer,
+    round(`피맞고소인은 ${crime}를 범했습니다`, COUNTER_CRIME_REBUTTALS[crime], [...counterRebuttals, ...otherRulings]),
+    round(closer, COUNTER_CLOSER_REBUTTALS[closer], [...counterRebuttals, ...otherRulings]),
   ];
 }
 
+/** 예전 화면과의 호환용 — 궤변 문장만. */
+export function generateCountersuitBrief(input: CaseInput, verdict: Verdict): string[] {
+  return generateCounterRounds(input, verdict).map((r) => r.claim);
+}
+
+/** 고른 카드로 맞힌 수와 결정적 반박(처음 맞힌 반박)을 계산한다 — 서버가 다시 계산해 조작을 막는다. */
+export function scorePicks(input: CaseInput, verdict: Verdict, picks: number[]): { hits: number; highlight: string | null } {
+  const rounds = generateCounterRounds(input, verdict);
+  const correct = rounds.filter((r, i) => picks[i] === r.answer);
+  return { hits: correct.length, highlight: correct[0]?.options[correct[0].answer] ?? null };
+}
+
 /**
- * 원심에서 가벼운 처분이 나왔을수록, 원고가 이의를 적게 막았을수록 맞고소가 인용되기 쉽다.
- * hits가 없으면(건너뛰기·구형 화면) 1회로 보고 변론 기록은 남기지 않는다.
+ * 게임을 했으면 맞힌 반박 수가 counterNeeded 이상일 때 기각, 아니면 인용이다.
+ * hits가 없으면(건너뛰기) 게임 이전과 같은 확률로 정하고 변론 기록은 남기지 않는다.
  */
-export function generateCountersuit(input: CaseInput, verdict: Verdict, hits?: number): CountersuitDoc {
+export function generateCountersuit(input: CaseInput, verdict: Verdict, hits?: number, highlight?: string | null): CountersuitDoc {
   const { rand, roll, crime, closer } = drawCountersuit(input, verdict);
-  const wasLenient = verdict.result === "무죄" || verdict.result === "훈방 조치";
-  const accepted = roll < COUNTER_ACCEPT_CHANCE[hits ?? 1][wasLenient ? 0 : 1];
+  const accepted = hits === undefined
+    ? roll < SKIP_ACCEPT_CHANCE[wasLenient(verdict) ? 0 : 1]
+    : hits < counterNeeded(verdict);
 
   const base = {
     counterComplainant: verdict.defendant,
     counterRespondent: "원고 (당신)",
     crime,
     facts: `피맞고소인은 "${excerptOf(input.story)}" 정도의 일로 맞고소인을 생활법원에 세웠는바, ${closer}`,
-    ...(hits === undefined ? {} : { objections: { hits, total: COUNTER_ROUNDS } }),
+    ...(hits === undefined ? {} : { objections: { hits, total: COUNTER_ROUNDS, ...(highlight ? { highlight } : {}) } }),
   };
 
   if (accepted) {
