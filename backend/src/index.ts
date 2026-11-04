@@ -30,6 +30,7 @@ import { renderDefenseResponse, RESPONSE_OPTION_IDS } from "./domain/response";
 import { createStorage } from "./storage";
 import { checkStory } from "./domain/moderation";
 import { IDEA_MAX, IDEA_MIN, NICKNAME_MAX, nicknameIssue, validAdminToken } from "./domain/ideas";
+import { JURY_VOTES, validVoter, type JuryVote } from "./domain/jury";
 
 const CASE_TYPES: CaseType[] = ["work", "relationship", "meal", "messenger", "money", "romance", "daily"];
 const RELATIONSHIPS: Relationship[] = ["self", "colleague", "friend", "family", "lover", "neighbor", "boss", "anonymous"];
@@ -332,6 +333,70 @@ app.post("/api/cases/:seq/response", async (req, res) => {
     return;
   }
   res.status(201).json({ responseDoc: renderDefenseResponse(option) });
+});
+
+/* ---------- 생활 배심원단 ---------- */
+
+/** 한 접속지에서 10분에 30표까지 — 여러 사건에 투표하는 것은 허용하되 대량 투표는 막는다. */
+const JURY_WINDOW_MS = 10 * 60 * 1000;
+const JURY_PER_WINDOW = 30;
+const juryPosts = new Map<string, number[]>();
+
+function allowJuryVote(client: string): boolean {
+  const now = Date.now();
+  const recent = (juryPosts.get(client) ?? []).filter((t) => now - t < JURY_WINDOW_MS);
+  if (recent.length >= JURY_PER_WINDOW) return false;
+  recent.push(now);
+  juryPosts.set(client, recent);
+  return true;
+}
+
+/**
+ * 배심원 평결 조회 — 공유 토큰(t)과 이 기기의 투표자 표시(voter)로 보면 내 표도 함께,
+ * 접수자 토큰(X-Owner-Token)으로 보면 집계만 돌려준다.
+ */
+app.get("/api/cases/:seq/jury", async (req, res) => {
+  const seq = Number(req.params.seq);
+  const rec = await storage.get(seq);
+  if (!rec) {
+    res.status(404).json({ error: "case not found" });
+    return;
+  }
+  const owner = validToken(req.get("X-Owner-Token"), rec.ownerToken);
+  if (!owner && !validToken(req.query.t, rec.shareToken)) {
+    res.status(403).json({ error: "invalid token" });
+    return;
+  }
+  res.set("Cache-Control", "no-store");
+  const voter = !owner && validVoter(req.query.voter) ? req.query.voter : undefined;
+  res.json(await storage.juryTally(seq, voter));
+});
+
+/** 배심원 투표 — 공유 링크를 받은 사람이 유·무죄 중 하나를 고른다. 같은 기기는 사건당 한 표. */
+app.post("/api/cases/:seq/jury", async (req, res) => {
+  const seq = Number(req.params.seq);
+  const rec = await storage.get(seq);
+  if (!rec) {
+    res.status(404).json({ error: "case not found" });
+    return;
+  }
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  if (!validToken(body.t, rec.shareToken)) {
+    res.status(403).json({ error: "invalid share token" });
+    return;
+  }
+  if (!validVoter(body.voter) || !JURY_VOTES.includes(body.vote as JuryVote)) {
+    res.status(400).json({ error: "invalid vote" });
+    return;
+  }
+  res.set("Cache-Control", "no-store");
+  const client = (req.get("x-forwarded-for") ?? req.ip ?? "").split(",")[0].trim();
+  if (!allowJuryVote(client)) {
+    res.status(429).json({ error: "too many votes" });
+    return;
+  }
+  const added = await storage.addJuryVote(seq, body.voter, body.vote as JuryVote);
+  res.status(added ? 201 : 409).json(await storage.juryTally(seq, body.voter));
 });
 
 /** 항소심 판결 생성 */

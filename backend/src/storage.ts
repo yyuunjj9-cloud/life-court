@@ -9,6 +9,7 @@ import type { AppealVerdict, CaseInput, SupremeVerdict, Verdict } from "./domain
 import type { ComplaintDoc, CountersuitDoc, FilingKind } from "./domain/documents";
 import type { DefenseResponse } from "./domain/response";
 import type { Idea, IdeaStatus } from "./domain/ideas";
+import type { JuryTally, JuryVote } from "./domain/jury";
 
 export interface CaseRecord {
   seq: number;
@@ -49,6 +50,7 @@ export interface UsageStats {
   countersuits: { total: number; played: number; skipped: number; averageHits: number | null; perfect: number };
   responses: { total: number; declined: number };
   ideas: { pending: number; approved: number; private: number };
+  jury: { votes: number; cases: number };
 }
 
 export interface CaseStorage {
@@ -74,6 +76,9 @@ export interface CaseStorage {
   /** 비공개 아이디어는 공개 상태로 바꿀 수 없다. 바꿨으면 true. */
   reviewIdea(id: number, status: "approved" | "rejected"): Promise<boolean>;
   usageStats(): Promise<UsageStats>;
+  /** 배심원 투표 — 같은 사건에 같은 투표자는 한 번만. 새로 들어갔으면 true. */
+  addJuryVote(seq: number, voter: string, vote: JuryVote): Promise<boolean>;
+  juryTally(seq: number, voter?: string): Promise<JuryTally>;
   /** DB를 실제로 조회해 살아있는지 확인한다 (keep-alive가 Supabase 활동으로 집계되도록). */
   health(): Promise<boolean>;
 }
@@ -182,6 +187,22 @@ export class MemoryStorage implements CaseStorage {
       },
       responses: { total: all.filter((r) => r.response).length, declined: all.filter((r) => r.response?.option === "decline").length },
       ideas: { pending: count("pending"), approved: count("approved"), private: count("private") },
+      jury: { votes: this.jury.size, cases: new Set([...this.jury.keys()].map((k) => k.split("|")[0])).size },
+    };
+  }
+  private jury = new Map<string, JuryVote>();
+  async addJuryVote(seq: number, voter: string, vote: JuryVote) {
+    const key = `${seq}|${voter}`;
+    if (this.jury.has(key)) return false;
+    this.jury.set(key, vote);
+    return true;
+  }
+  async juryTally(seq: number, voter?: string): Promise<JuryTally> {
+    const votes = [...this.jury].filter(([k]) => k.startsWith(`${seq}|`)).map(([, v]) => v);
+    return {
+      guilty: votes.filter((v) => v === "guilty").length,
+      notGuilty: votes.filter((v) => v === "not_guilty").length,
+      mine: voter ? this.jury.get(`${seq}|${voter}`) ?? null : null,
     };
   }
 }
@@ -212,6 +233,12 @@ export class PgStorage implements CaseStorage {
         created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
         reviewed_at TIMESTAMPTZ)`);
       await client.query(`ALTER TABLE ideas ADD COLUMN IF NOT EXISTS nickname TEXT`);
+      await client.query(`CREATE TABLE IF NOT EXISTS jury_votes (
+        seq INTEGER NOT NULL,
+        voter TEXT NOT NULL,
+        vote TEXT NOT NULL CHECK (vote IN ('guilty', 'not_guilty')),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        PRIMARY KEY (seq, voter))`);
       await client.query("COMMIT");
     } catch (error) {
       await client.query("ROLLBACK");
@@ -369,7 +396,7 @@ export class PgStorage implements CaseStorage {
   }
   async usageStats(): Promise<UsageStats> {
     await this.ready();
-    const [c, i] = await Promise.all([
+    const [c, i, j] = await Promise.all([
       this.pool.query(`SELECT
           COUNT(*)::int AS total,
           COUNT(*) FILTER (WHERE created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Seoul') AT TIME ZONE 'Asia/Seoul')::int AS today,
@@ -386,8 +413,10 @@ export class PgStorage implements CaseStorage {
           COUNT(*) FILTER (WHERE response->>'option' = 'decline')::int AS declined
         FROM cases`),
       this.pool.query<{ status: IdeaStatus; n: number }>(`SELECT status, COUNT(*)::int AS n FROM ideas GROUP BY status`),
+      this.pool.query<{ votes: number; cases: number }>(`SELECT COUNT(*)::int AS votes, COUNT(DISTINCT seq)::int AS cases FROM jury_votes`),
     ]);
     const s = c.rows[0];
+    const jury = j.rows[0];
     const idea = (status: IdeaStatus) => i.rows.find((r) => r.status === status)?.n ?? 0;
     return {
       cases: { total: s.total, today: s.today, week: s.week },
@@ -402,7 +431,26 @@ export class PgStorage implements CaseStorage {
       },
       responses: { total: s.responses, declined: s.declined },
       ideas: { pending: idea("pending"), approved: idea("approved"), private: idea("private") },
+      jury: { votes: jury.votes, cases: jury.cases },
     };
+  }
+  async addJuryVote(seq: number, voter: string, vote: JuryVote) {
+    await this.ready();
+    const r = await this.pool.query(
+      `INSERT INTO jury_votes (seq, voter, vote) VALUES ($1, $2, $3) ON CONFLICT (seq, voter) DO NOTHING`,
+      [seq, voter, vote]);
+    return r.rowCount === 1;
+  }
+  async juryTally(seq: number, voter?: string): Promise<JuryTally> {
+    await this.ready();
+    const r = await this.pool.query<{ guilty: number; not_guilty: number; mine: JuryVote | null }>(
+      `SELECT COUNT(*) FILTER (WHERE vote = 'guilty')::int AS guilty,
+              COUNT(*) FILTER (WHERE vote = 'not_guilty')::int AS not_guilty,
+              MAX(vote) FILTER (WHERE voter = $2::text) AS mine
+         FROM jury_votes WHERE seq = $1`,
+      [seq, voter ?? null]);
+    const row = r.rows[0];
+    return { guilty: row.guilty, notGuilty: row.not_guilty, mine: voter ? row.mine ?? null : null };
   }
   async reviewIdea(id: number, status: "approved" | "rejected") {
     await this.ready();

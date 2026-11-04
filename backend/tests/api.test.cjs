@@ -164,6 +164,35 @@ test('memo-board ideas stay hidden until the operator approves, and private ones
   for (let n = 0; n < 6; n++) burst.push((await post('/api/ideas', { text: `아이디어 ${n}번`, public: false }, from('10.0.0.3'))).status);
   assert.deepEqual(burst, [201, 201, 201, 201, 201, 429]);
 });
+test('jurors vote once per device through the share link, and the owner only reads the tally', async () => {
+  const { seq, shareToken, ownerToken, verdict } = await (await post('/api/cases', data)).json();
+  const voter = (n) => n.toString(16).padStart(32, '0');
+  const jury = (q = '', headers = {}) => fetch(`${base}/api/cases/${seq}/jury${q}`, { headers });
+  assert.equal((await jury()).status, 403);
+  assert.equal((await jury(`?t=${ownerToken}`)).status, 403);
+  assert.deepEqual(await (await jury(`?t=${shareToken}&voter=${voter(1)}`)).json(), { guilty: 0, notGuilty: 0, mine: null });
+  for (const body of [{ t: shareToken, voter: 'short', vote: 'guilty' }, { t: shareToken, voter: voter(1), vote: 'maybe' }]) {
+    assert.equal((await post(`/api/cases/${seq}/jury`, body)).status, 400);
+  }
+  assert.equal((await post(`/api/cases/${seq}/jury`, { t: ownerToken, voter: voter(1), vote: 'guilty' })).status, 403);
+  // 같은 기기가 동시에 여러 번 눌러도 한 표만 들어간다.
+  const same = await Promise.all(Array.from({ length: 5 }, () => post(`/api/cases/${seq}/jury`, { t: shareToken, voter: voter(1), vote: 'guilty' }, { 'X-Forwarded-For': '10.2.0.1' })));
+  assert.deepEqual(same.map(r => r.status).sort(), [201, 409, 409, 409, 409]);
+  await post(`/api/cases/${seq}/jury`, { t: shareToken, voter: voter(2), vote: 'not_guilty' }, { 'X-Forwarded-For': '10.2.0.2' });
+  await post(`/api/cases/${seq}/jury`, { t: shareToken, voter: voter(3), vote: 'guilty' }, { 'X-Forwarded-For': '10.2.0.3' });
+  // 다른 표로 바꿀 수 없다.
+  const again = await post(`/api/cases/${seq}/jury`, { t: shareToken, voter: voter(2), vote: 'guilty' }, { 'X-Forwarded-For': '10.2.0.2' });
+  assert.equal(again.status, 409);
+  assert.deepEqual(await again.json(), { guilty: 2, notGuilty: 1, mine: 'not_guilty' });
+  assert.deepEqual(await (await jury('', { 'X-Owner-Token': ownerToken })).json(), { guilty: 2, notGuilty: 1, mine: null });
+  // 배심원 평결은 판결을 바꾸지 않는다.
+  assert.deepEqual((await (await fetch(`${base}/api/cases/${seq}?t=${shareToken}`)).json()).verdict, verdict);
+  // 한 접속지에서 너무 많이 투표하면 잠시 막는다.
+  const flood = [];
+  for (let n = 10; n < 42; n++) flood.push((await post(`/api/cases/${seq}/jury`, { t: shareToken, voter: voter(n), vote: 'guilty' }, { 'X-Forwarded-For': '10.2.9.9' })).status);
+  assert.equal(flood.filter(s => s === 429).length, 2);
+});
+
 test('usage stats are numbers only and need the operator key', async () => {
   assert.equal((await fetch(`${base}/api/admin/stats`)).status, 403);
   assert.equal((await fetch(`${base}/api/admin/stats`, { headers: { 'X-Admin-Token': 'bc'.repeat(24) } })).status, 403);
@@ -176,6 +205,7 @@ test('usage stats are numbers only and need the operator key', async () => {
   assert.ok(stats.countersuits.played >= 1 && stats.countersuits.perfect >= 1);
   assert.equal(stats.countersuits.skipped, stats.countersuits.total - stats.countersuits.played);
   assert.ok(stats.appeals.total >= stats.appeals.raised && stats.supremes.total >= stats.supremes.raised);
+  assert.ok(stats.jury.votes >= stats.jury.cases);
   // 사연 원문이나 토큰은 내보내지 않는다.
   const body = JSON.stringify(stats);
   assert.ok(!body.includes(data.story) && !body.includes(ownerToken));

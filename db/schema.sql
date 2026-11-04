@@ -32,6 +32,16 @@ CREATE TABLE IF NOT EXISTS case_counters (
   value INTEGER NOT NULL
 );
 
+-- 생활 배심원단 — 공유 링크를 받은 사람의 유·무죄 투표. 판결을 바꾸지 않는 참고 의견이다.
+-- voter는 기기마다 만든 난수라 개인을 알아볼 수 없다. 같은 사건에 같은 기기는 한 표.
+CREATE TABLE IF NOT EXISTS jury_votes (
+  seq        INTEGER NOT NULL,
+  voter      TEXT NOT NULL,
+  vote       TEXT NOT NULL CHECK (vote IN ('guilty', 'not_guilty')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (seq, voter)
+);
+
 -- 안내 페이지 업데이트 메모판의 이용자 아이디어. 공개 요청(pending)은 운영자가
 -- 승인(approved)해야만 보이고, 비공개(private)는 운영자만 본다.
 CREATE TABLE IF NOT EXISTS ideas (

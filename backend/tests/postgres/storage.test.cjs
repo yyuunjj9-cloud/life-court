@@ -54,7 +54,8 @@ async function fixture(legacy = false) {
   const sql = legacy ? schemaSql
     .replace(/^\s*(response|share_token|owner_token|supreme)\s+[^\n]*\n/gm, '')
     .replace(/CREATE TABLE IF NOT EXISTS case_counters\s*\([\s\S]*?\);/g, '')
-    .replace(/CREATE TABLE IF NOT EXISTS ideas\s*\([\s\S]*?\);/g, '') : schemaSql;
+    .replace(/CREATE TABLE IF NOT EXISTS ideas\s*\([\s\S]*?\);/g, '')
+    .replace(/CREATE TABLE IF NOT EXISTS jury_votes\s*\([\s\S]*?\);/g, '') : schemaSql;
   await queryPool.query(sql);
   const openStore = () => { const pool = openPool(); return { pool, store: new PgStorage(pool) }; };
   return { queryPool, openStore };
@@ -165,6 +166,15 @@ test('three instances migrate a legacy schema concurrently while preserving exis
   const secret = await workers[0].store.addIdea('운영자에게만', 'private');
   assert.equal(await workers[0].store.reviewIdea(secret.id, 'approved'), false);
   assert.equal(await workers[0].store.countIdeas('private'), 1);
+  // 예전 스키마에도 배심원 투표 표가 만들어지고, 여러 연결에서 동시에 눌러도 한 표만 들어간다.
+  const voter = 'c'.repeat(32);
+  const votes = await Promise.all(Array.from({ length: 9 }, (_, n) => workers[n % 3].store.addJuryVote(90, voter, n % 2 ? 'guilty' : 'not_guilty')));
+  assert.equal(votes.filter(Boolean).length, 1);
+  await workers[1].store.addJuryVote(90, 'd'.repeat(32), 'guilty');
+  const tally = await workers[2].store.juryTally(90, voter);
+  assert.equal(tally.guilty + tally.notGuilty, 2);
+  assert.ok(tally.mine === 'guilty' || tally.mine === 'not_guilty');
+  assert.deepEqual((await workers[0].store.usageStats()).jury, { votes: 2, cases: 1 });
   assert.deepEqual((await Promise.all(workers.map(worker => worker.store.allocateSeq()))).sort((a, b) => a - b), [91, 92, 93]);
 });
 
