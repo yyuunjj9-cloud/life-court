@@ -100,6 +100,19 @@ test('the jury appears on shared verdicts and the owner screen, and says it does
   assert.match(source('app/glossary/page.tsx'), /term: "배심원 평결",\s*kind: "real"/);
 });
 
+test('the operator can always get back: back button, a menu, and a link on devices that hold the key', () => {
+  assert.match(source('components/TopBar.tsx'), /"\/ideas\/admin": "\/"/);
+  const admin = source('app/ideas/admin/page.tsx');
+  assert.match(admin, /className="admin-nav"/);
+  assert.match(admin, /운영자 열쇠 지우기/);
+  const notice = source('app/notice/page.tsx');
+  assert.match(notice, /lifecourt\.adminToken/);
+  assert.match(notice, /href="\/ideas\/admin"/);
+  // 운영자가 사연을 볼 수 있는 권한이 있으므로 '볼 수 없다'가 아니라 '열람하지 않는다'로 약속한다.
+  assert.match(notice, /필요한 경우가 아니면 사연을 열람하지 않습니다/);
+  assert.match(source('app/intake/story/page.tsx'), /가상의 예문입니다/);
+});
+
 test('phone auto dark modes cannot recolor the app', () => {
   assert.match(css, /:root \{[\s\S]*?color-scheme: only light;/);
   assert.match(source('app/layout.tsx'), /colorScheme: "only light"/);

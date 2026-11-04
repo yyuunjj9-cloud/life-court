@@ -5,13 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Burst } from "@/components/Burst";
 import { fetchBoard, type BoardData } from "@/lib/api";
 import { useCaseStore } from "@/store/case-store";
-
-/** 접수 전에 결과물을 맛보게 하는 예시 — 실제 판결 생성 결과와 같은지 테스트로 고정한다. */
-const SAMPLE = {
-  story: "친구가 약속에 40분 늦고는 사과도 없이 배고프다며 메뉴부터 골랐어요.",
-  crime: "약속 지각죄",
-  order: "피고인은 다음 약속에 원고보다 10분 먼저 도착해 인증 사진을 남길 것.",
-};
+import { landingSample } from "@/domain/samples";
 
 /** 전광판 속도(px/s) — 내용 길이와 무관하게 일정해야 긴 죄목이 몰려도 읽을 수 있다. */
 const BOARD_SPEED = 60;
@@ -25,6 +19,8 @@ export default function LandingPage() {
   const { savedDraftAt, resetCase, loadDraft, verdict, draft } = useCaseStore();
   // 버스트 탭 이스터에그 — key를 바꿔 등장 애니메이션을 다시 재생한다.
   const [slam, setSlam] = useState(0);
+  // 접수 전에 결과물을 맛보게 하는 판결 예시 — 하루에 한 번 바뀐다.
+  const [sample] = useState(() => landingSample());
 
   // 로고를 눌러 홈에 온 사용자가 진행 중이던 사건을 잃지 않도록 복귀 경로를 제공한다.
   const hasVerdict = Boolean(verdict);
@@ -116,9 +112,9 @@ export default function LandingPage() {
         <div className="grow" />
         <div className="sample-verdict">
           <span className="sv-tag">판결 예시</span>
-          <p className="sv-story">“{SAMPLE.story}”</p>
-          <p className="sv-crime">{SAMPLE.crime}</p>
-          <p className="sv-order">{SAMPLE.order}</p>
+          <p className="sv-story">“{sample.story}”</p>
+          <p className="sv-crime">{sample.crime}</p>
+          <p className="sv-order">{sample.order}</p>
         </div>
         <div className="grow" />
         <div className="board" aria-label="실시간 심리 현황">

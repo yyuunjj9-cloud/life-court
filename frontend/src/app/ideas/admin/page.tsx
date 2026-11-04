@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { ideasApi, type AdminIdea, type UsageStats } from "@/lib/api";
 
@@ -82,6 +83,10 @@ export default function IdeasAdminPage() {
         <div className="pad">
           <h1 className="tt">운영자 화면</h1>
           <p className="sub">운영자 열쇠가 담긴 주소로 들어와야 합니다.</p>
+          <div className="grow" />
+          <Link className="btn" href="/" style={{ textAlign: "center", textDecoration: "none" }}>
+            메인으로
+          </Link>
         </div>
       </div>
     );
@@ -89,10 +94,29 @@ export default function IdeasAdminPage() {
 
   const waiting = ideas?.filter((i) => i.status === "pending").length ?? 0;
 
+  // 공용 기기에서 쓴 뒤에는 이 기기의 열쇠를 지울 수 있다. 서버의 열쇠는 그대로다.
+  const forget = () => {
+    try {
+      window.localStorage.removeItem(TOKEN_KEY);
+    } catch {
+      /* 저장소를 쓸 수 없는 브라우저 */
+    }
+    setToken(null);
+  };
+
   return (
     <div className="scr">
       <div className="pad">
         <h1 className="tt">운영자 화면</h1>
+        <nav className="admin-nav" aria-label="운영자 메뉴">
+          <button type="button" onClick={() => token && load(token)}>
+            🔄 새로고침
+          </button>
+          <Link href="/">🏠 메인</Link>
+          <Link href="/notice">📌 안내·메모판</Link>
+          <Link href="/glossary">📖 용어 풀이</Link>
+        </nav>
+        <p className="admin-hint">이 기기에는 운영자 열쇠가 저장돼 있어, 안내사항 화면 아래의 &lsquo;운영자 화면&rsquo; 링크로 언제든 돌아올 수 있습니다.</p>
         {error && <p className="help err">{error}</p>}
         {stats && (
           <>
@@ -136,6 +160,10 @@ export default function IdeasAdminPage() {
           ))}
           {ideas?.length === 0 && <p className="sub">아직 붙은 메모가 없습니다.</p>}
         </div>
+        <div className="grow" />
+        <button className="btn line sm" type="button" style={{ marginTop: 22 }} onClick={forget}>
+          이 기기에서 운영자 열쇠 지우기
+        </button>
       </div>
     </div>
   );

@@ -1,24 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Steps } from "@/components/Steps";
 import { DraftSaveButton } from "@/components/DraftSaveButton";
 import { useCaseStore } from "@/store/case-store";
 import { api } from "@/lib/api";
 import type { ModerationIssue } from "@/domain/moderation";
 import { IntakeRejection } from "@/components/IntakeRejection";
+import { exampleDay, isExampleStory, pickExamples } from "@/domain/examples";
 
 const MIN = 10;
 const MAX = 300;
-
-/** 첫 방문자의 빈 화면 공포를 줄이는 예시 사연 — 탭하면 입력란에 채워진다. */
-const EXAMPLES = [
-  "팀장님이 회의 시작 2분 전에 자료 검토를 요청했어요. 심지어 본인은 회의에 늦게 들어왔습니다.",
-  "친구가 약속에 40분 늦고는 사과도 없이 배고프다며 메뉴부터 골랐어요.",
-  "룸메가 문을 쾅 닫고는 자기가 안 그랬고 바람이 그런 거라고 우깁니다.",
-  "단체방에서 내 말만 읽씹하면서 스토리는 꼬박꼬박 올라옵니다.",
-];
 
 /* 02 사건 접수 — 내용 입력 */
 export default function StoryPage() {
@@ -33,7 +26,16 @@ export default function StoryPage() {
 
   const len = draft.story.trim().length;
   const invalid = len < MIN || len > MAX;
-  const ownStory = len > 0 && !EXAMPLES.includes(draft.story);
+  const ownStory = len > 0 && !isExampleStory(draft.story);
+
+  // 첫 방문자의 빈 화면 공포를 줄이는 예시 — 하루에 한 번 바뀌고, 버튼으로 다른 묶음을 볼 수 있다.
+  const [day] = useState(exampleDay);
+  const [round, setRound] = useState(0);
+  const examples = useMemo(() => {
+    const picked = pickExamples(day, round);
+    // 골라 둔 예시가 다른 묶음으로 넘어가도 계속 보이게 둔다.
+    return isExampleStory(draft.story) && !picked.includes(draft.story) ? [...picked.slice(0, -1), draft.story] : picked;
+  }, [day, round, draft.story]);
 
   const next = async () => {
     if (checking) return;
@@ -85,7 +87,7 @@ export default function StoryPage() {
             직접 쓴 진술이 있으면 덮어쓰지 않도록 예시를 잠근다. */}
         <div className={ownStory ? "examples locked" : "examples"}>
           <p className="lbl">{ownStory ? "직접 쓴 진술로 심리합니다" : "이런 사건은 어떠신가요?"}</p>
-          {EXAMPLES.map((ex) => (
+          {examples.map((ex) => (
             <button
               className="example-chip"
               key={ex}
@@ -101,6 +103,12 @@ export default function StoryPage() {
               {ex}
             </button>
           ))}
+          <div className="examples-foot">
+            <span>예시는 실제 접수된 사연이 아닌 가상의 예문입니다.</span>
+            <button type="button" className="examples-more" disabled={ownStory} onClick={() => setRound((r) => r + 1)}>
+              🔄 다른 예시
+            </button>
+          </div>
         </div>
         <div className="grow" />
         <div className="stack">

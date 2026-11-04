@@ -1,11 +1,7 @@
+// Exercise source without generated build artifacts; also resolves the frontend '@/…' alias for sample checks.
+require('./register-source.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const ts = require('typescript');
-const fs = require('node:fs');
-// Exercise source without generated build artifacts or a runtime loader service.
-require.extensions['.ts'] = (module, filename) => module._compile(ts.transpileModule(
-  fs.readFileSync(filename, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } },
-).outputText, filename);
 const { selectScenario, generateVerdict, generateAppeal, generateSupreme, caseYear, formatCaseNo } = require('../src/domain/judgment.ts');
 const { generateComplaint, generateDemandLetter } = require('../src/domain/documents.ts');
 const input = (story, extra = {}) => ({ story, caseType: 'daily', relationship: 'friend', severity: 3, tone: 'fair', ...extra });
@@ -98,12 +94,39 @@ test('a verdict never treats the absent defendant\'s side as proven fact', () =>
   }
 });
 
-test('landing sample matches what the generator really produces for that story', () => {
-  const page = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../frontend/src/app/page.tsx'), 'utf8');
-  const field = name => page.match(new RegExp(`${name}: "([^"]+)"`))?.[1];
-  const verdict = generateVerdict(input(field('story'), { caseType: 'relationship' }), 42);
-  assert.equal(verdict.crime, field('crime'));
-  assert.ok(verdict.order.startsWith(field('order')));
+test('every landing sample matches what the generator really produces for that story', () => {
+  const { LANDING_SAMPLES, landingSample } = require('../../frontend/src/domain/samples.ts');
+  assert.ok(LANDING_SAMPLES.length >= 14);
+  for (const s of LANDING_SAMPLES) {
+    const verdict = generateVerdict(input(s.story, { caseType: s.caseType }), 42);
+    assert.equal(verdict.crime, s.crime, s.story);
+    assert.ok(verdict.order.startsWith(s.order), s.story);
+    // 카드 크기를 고정하므로 두 줄·한 줄 안에 들어갈 길이만 쓴다.
+    assert.ok(s.story.length <= 34 && s.order.length <= 40 && s.crime.length <= 13, s.story);
+  }
+  // 하루 동안은 같은 예시, 날이 바뀌면 다른 예시가 나올 수 있다.
+  assert.deepEqual(landingSample('2026-11-04'), landingSample('2026-11-04'));
+  const week = new Set(['01', '02', '03', '04', '05', '06', '07'].map((d) => landingSample(`2026-12-${d}`).story));
+  assert.ok(week.size >= 4);
+});
+
+test('story-page examples are fictional, varied by day, and each leads to a specific offense', () => {
+  const ex = require('../../frontend/src/domain/examples.ts');
+  assert.equal(ex.EXAMPLE_STORIES.length, 28);
+  for (const t of ['work', 'relationship', 'meal', 'messenger', 'money', 'romance', 'daily']) {
+    assert.equal(ex.EXAMPLE_STORIES.filter((e) => e.type === t).length, 4, t);
+  }
+  for (const { type, text } of ex.EXAMPLE_STORIES) {
+    assert.ok(selectScenario(text, type).keywords.length > 0, `example falls to a general dispute: ${text}`);
+    assert.ok(text.length <= 34, text);
+  }
+  const today = ex.pickExamples('2026-11-04');
+  assert.equal(today.length, ex.EXAMPLE_COUNT);
+  assert.deepEqual(ex.pickExamples('2026-11-04'), today);
+  const types = today.map((t) => ex.EXAMPLE_STORIES.find((e) => e.text === t).type);
+  assert.equal(new Set(types).size, today.length, 'one example per case type');
+  assert.notDeepEqual(ex.pickExamples('2026-11-04', 1), today);
+  assert.equal(ex.exampleDay(new Date('2026-11-03T15:00:00Z')), '2026-11-04');
 });
 
 test('case numbers carry the Korean year of filing instead of a fixed 2026', () => {

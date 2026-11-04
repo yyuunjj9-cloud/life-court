@@ -14,6 +14,7 @@ const BACK_MAP: Record<string, string> = {
   "/appeal": "/verdict",
   "/supreme": "/appeal",
   "/glossary": "/notice",
+  "/ideas/admin": "/",
   "/countersuit": "/verdict",
   "/save": "/verdict",
 };
