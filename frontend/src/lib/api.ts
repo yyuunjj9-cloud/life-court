@@ -12,6 +12,7 @@ import type { AppealVerdict, CaseInput, SupremeVerdict, Verdict } from "@/domain
 import type { ComplaintDoc, CountersuitDoc, DemandLetterDoc, FilingKind } from "@/domain/documents";
 import type { DefenseResponseDoc } from "@/domain/response";
 import type { ModerationIssue } from "@/domain/moderation";
+import type { CounterRound } from "@/domain/countersuit-game";
 
 export class ApiError extends Error {
   constructor(path: string, public status: number, public issue: ModerationIssue | null = null) {
@@ -128,16 +129,18 @@ export const api = {
   fileSupreme: (seq: number, ownerToken: string) =>
     request<{ supreme: SupremeVerdict }>(`/api/cases/${seq}/supreme`, { method: "POST", headers: { "X-Owner-Token": ownerToken } }),
 
-  /** 혼자 변론 게임의 궤변 3개 — 조회만 하므로 맞고소가 접수되지 않는다. */
+  /** 반박 카드 게임의 라운드와 기각에 필요한 정답 수 — 조회만 하므로 맞고소가 접수되지 않는다. */
   countersuitBrief: (seq: number, ownerToken: string) =>
-    request<{ lines: string[]; done?: true }>(`/api/cases/${seq}/countersuit/brief`, { headers: { "X-Owner-Token": ownerToken } }),
+    request<{ rounds: CounterRound[]; needed: number; done?: true }>(`/api/cases/${seq}/countersuit/brief`, {
+      headers: { "X-Owner-Token": ownerToken },
+    }),
 
-  /** hits는 혼자 변론에서 막은 궤변 수 — 건너뛰면 생략한다. */
-  fileCountersuit: (seq: number, ownerToken: string, hits?: number) =>
+  /** picks는 라운드마다 고른 카드 위치 — 맞힌 수는 서버가 계산한다. 건너뛰면 생략한다. */
+  fileCountersuit: (seq: number, ownerToken: string, picks?: number[]) =>
     request<{ countersuit: CountersuitDoc }>(`/api/cases/${seq}/countersuit`, {
       method: "POST",
       headers: { "X-Owner-Token": ownerToken },
-      body: JSON.stringify(hits === undefined ? {} : { hits }),
+      body: JSON.stringify(picks === undefined ? {} : { picks }),
     }),
 
   createDemandLetter: (input: CaseInput) =>

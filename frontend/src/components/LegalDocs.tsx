@@ -123,9 +123,10 @@ export function CountersuitDocView({ doc, date }: { doc: CountersuitDoc; date: s
         <div className="vsec">
           <p className="k">변 론 기 록</p>
           <p className="t">
-            이의 제기 {doc.objections.total}회 중 {doc.objections.hits}회 인용
+            반박 {doc.objections.total}회 중 {doc.objections.hits}회 적중
             {doc.objections.hits === doc.objections.total && " — 완벽 변론"}
           </p>
+          {doc.objections.highlight && <p className="t">결정적 반박: “{doc.objections.highlight}”</p>}
         </div>
       )}
       <div className="vfinal">

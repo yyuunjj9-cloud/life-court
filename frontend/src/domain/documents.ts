@@ -41,6 +41,6 @@ export interface CountersuitDoc {
   accepted: boolean;
   rulingLabel: string;
   rulingNote: string;
-  /** 혼자 변론 게임 기록. 건너뛰었으면 없다. */
-  objections?: { hits: number; total: number };
+  /** 반박 카드 게임 기록. 건너뛰었으면 없다. highlight는 처음 맞힌 반박 문장이다. */
+  objections?: { hits: number; total: number; highlight?: string };
 }

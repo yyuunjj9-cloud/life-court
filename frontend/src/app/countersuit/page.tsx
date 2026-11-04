@@ -7,20 +7,21 @@ import { Burst } from "@/components/Burst";
 import { CountersuitGame } from "@/components/CountersuitGame";
 import { CountersuitDocView } from "@/components/LegalDocs";
 import { formatKoreanDate } from "@/domain/date";
+import type { CounterRound } from "@/domain/countersuit-game";
 import { useCaseStore } from "@/store/case-store";
 
 /* 14 맞고소 — 피고의 역습. 들어오기만 해서는 접수되지 않고, 변론하거나 건너뛰어야 결과가 나온다. */
 export default function CountersuitPage() {
   const router = useRouter();
   const { caseSeq, countersuit, fileCountersuit, loadCountersuitBrief, hydrated } = useCaseStore();
-  const [lines, setLines] = useState<string[] | null>(null);
+  const [brief, setBrief] = useState<{ rounds: CounterRound[]; needed: number } | null>(null);
   const [stage, setStage] = useState<"intro" | "play" | "filing">("intro");
   // 접수 실패 시 같은 변론 결과로 다시 시도한다.
-  const [hits, setHits] = useState<number | undefined>(undefined);
+  const [picks, setPicks] = useState<number[] | undefined>(undefined);
   const [error, setError] = useState(false);
 
-  const file = (played?: number) => {
-    setHits(played);
+  const file = (played?: number[]) => {
+    setPicks(played);
     setStage("filing");
     setError(false);
     fileCountersuit(played).then((ok) => {
@@ -34,20 +35,20 @@ export default function CountersuitPage() {
       router.replace("/");
       return;
     }
-    if (countersuit || lines || stage !== "intro") return;
+    if (countersuit || brief || stage !== "intro") return;
     let alive = true;
-    loadCountersuitBrief().then((brief) => {
+    loadCountersuitBrief().then((loaded) => {
       if (!alive) return;
-      if (!brief) setError(true);
+      if (!loaded) setError(true);
       // 다른 탭에서 이미 결과가 나왔다면 게임 없이 저장된 결과를 받아온다.
-      else if (brief.done) file();
-      else setLines(brief.lines);
+      else if (loaded.done) file();
+      else setBrief({ rounds: loaded.rounds, needed: loaded.needed });
     });
     return () => {
       alive = false;
     };
     // file은 매 렌더 새로 만들어지지만 결과가 없을 때 한 번만 부르면 되므로 의존성에서 뺀다.
-  }, [caseSeq, countersuit, lines, stage, loadCountersuitBrief, router, hydrated]);
+  }, [caseSeq, countersuit, brief, stage, loadCountersuitBrief, router, hydrated]);
 
   if (caseSeq === null) return <div className="scr" />;
 
@@ -88,17 +89,17 @@ export default function CountersuitPage() {
     );
   }
 
-  if (stage === "play" && lines) {
+  if (stage === "play" && brief) {
     return (
       <div className="scr dark">
         <div className="pad">
-          <CountersuitGame lines={lines} onDone={(played) => file(played)} />
+          <CountersuitGame rounds={brief.rounds} needed={brief.needed} onDone={(played) => file(played)} />
         </div>
       </div>
     );
   }
 
-  if (stage === "filing" || !lines) {
+  if (stage === "filing" || !brief) {
     return (
       <div className="scr">
         <div className="pad">
@@ -109,7 +110,7 @@ export default function CountersuitPage() {
                 법원 서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.
               </p>
               {stage === "filing" && (
-                <button className="btn sm" type="button" style={{ marginTop: 16 }} onClick={() => file(hits)}>
+                <button className="btn sm" type="button" style={{ marginTop: 16 }} onClick={() => file(picks)}>
                   다시 시도
                 </button>
               )}
@@ -130,12 +131,16 @@ export default function CountersuitPage() {
         <p className="hero-s">
           피고 측이 오히려 맞고소장을 냈습니다.
           <br />
-          피고의 궤변 3개를 막아 내세요.
+          피고의 궤변 3개를 반박하세요.
         </p>
         <ul className="csg-rules">
-          <li>문장 끝이 빨개지고 버튼이 번쩍이면 ‘이의 있음!’을 누르세요.</li>
-          <li>빨개지기 전에 누르면 그 라운드는 실패입니다. 갈수록 누를 시간이 짧아집니다.</li>
-          <li>3번 다 막으면 완벽 변론으로 무조건 이깁니다. 덜 막으면 결과는 운에 맡깁니다.</li>
+          <li>궤변마다 반박 카드 3장이 나옵니다. 그 궤변에 들어맞는 반박을 고르세요.</li>
+          <li>맞힐 때마다 ‘재판부 마음’이 한 칸씩 찹니다.</li>
+          <li>
+            {brief.needed >= brief.rounds.length
+              ? `원심이 가벼웠던 터라 피고 기세가 등등합니다. ${brief.rounds.length}장을 모두 맞혀야 맞고소를 기각시킬 수 있습니다.`
+              : `${brief.needed}장 이상 맞히면 맞고소를 기각시킵니다. 모두 맞히면 완벽 변론입니다.`}
+          </li>
         </ul>
         <div className="grow" />
         <div className="stack">

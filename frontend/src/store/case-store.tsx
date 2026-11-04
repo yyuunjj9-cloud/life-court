@@ -20,6 +20,7 @@ import type {
 import type { ComplaintDoc, CountersuitDoc, DemandLetterDoc, FilingKind } from "@/domain/documents";
 import { api, ApiError } from "@/lib/api";
 import type { ModerationIssue } from "@/domain/moderation";
+import type { CounterRound } from "@/domain/countersuit-game";
 
 interface CaseDraft {
   story: string;
@@ -63,10 +64,10 @@ interface CaseStore extends CaseState {
   fileAppeal: () => Promise<boolean>;
   /** 대법원 상고심을 요청한다 — 항소심 뒤 원고가 원할 때만. */
   fileSupreme: () => Promise<boolean>;
-  /** 혼자 변론 게임의 궤변을 받아온다. 실패하면 null. */
-  loadCountersuitBrief: () => Promise<{ lines: string[]; done?: true } | null>;
-  /** 피고 측 맞고소장을 요청한다. hits는 혼자 변론에서 막은 궤변 수(건너뛰면 생략). */
-  fileCountersuit: (hits?: number) => Promise<boolean>;
+  /** 반박 카드 게임의 라운드를 받아온다. 실패하면 null. */
+  loadCountersuitBrief: () => Promise<{ rounds: CounterRound[]; needed: number; done?: true } | null>;
+  /** 피고 측 맞고소장을 요청한다. picks는 라운드마다 고른 카드 위치(건너뛰면 생략). */
+  fileCountersuit: (picks?: number[]) => Promise<boolean>;
   /** 내용증명을 생성한다(사건 접수 아님). */
   createDemand: () => Promise<boolean>;
   /** 새 사건 접수를 위해 초기화한다. */
@@ -240,12 +241,12 @@ export function CaseProvider({ children }: { children: ReactNode }) {
         }
       },
 
-      fileCountersuit: async (hits) => {
+      fileCountersuit: async (picks) => {
         if (state.caseSeq === null) return false;
         if (state.countersuit) return true;
         if (!state.ownerToken) return false;
         try {
-          const { countersuit } = await api.fileCountersuit(state.caseSeq, state.ownerToken, hits);
+          const { countersuit } = await api.fileCountersuit(state.caseSeq, state.ownerToken, picks);
           setState((s) => ({ ...s, countersuit }));
           return true;
         } catch {

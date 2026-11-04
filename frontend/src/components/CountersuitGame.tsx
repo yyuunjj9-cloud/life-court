@@ -1,149 +1,80 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Burst } from "@/components/Burst";
-import {
-  judgePress,
-  NEXT_ROUND_MS,
-  redTailStart,
-  ROUND_WINDOWS_MS,
-  typingDuration,
-  type PressResult,
-} from "@/domain/countersuit-game";
+import { countHits, reactionFor, type CounterRound } from "@/domain/countersuit-game";
 
-/** 맞고소 혼자 변론 — 궤변 끝부분이 빨개지는 순간 이의를 제기한다. 끝나면 막은 수를 넘긴다. */
-export function CountersuitGame({ lines, onDone }: { lines: string[]; onDone: (hits: number) => void }) {
+/**
+ * 맞고소 반박 카드 게임 — 궤변마다 맞는 반박 카드를 고른다.
+ * 위쪽 '재판부 마음' 게이지가 맞힐 때마다 차고, needed칸을 넘으면 맞고소가 기각된다.
+ */
+export function CountersuitGame({ rounds, needed, onDone }: {
+  rounds: CounterRound[];
+  needed: number;
+  onDone: (picks: number[]) => void;
+}) {
   const [round, setRound] = useState(0);
-  const [results, setResults] = useState<PressResult[]>([]);
-  const hits = results.filter((r) => r === "hit").length;
+  const [picks, setPicks] = useState<number[]>([]);
+  const current = rounds[round];
+  const picked = picks[round];
+  const answered = picked !== undefined;
+  const right = answered && picked === current.answer;
+  const hits = countHits(rounds, picks);
+  const last = round + 1 >= rounds.length;
+
+  const choose = (i: number) => {
+    if (answered) return;
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(30);
+    setPicks((prev) => [...prev.slice(0, round), i]);
+  };
 
   return (
     <div className="csg">
       <div className="csg-head">
         <span>
-          제{round + 1}라운드 <small>/ {lines.length}</small>
+          제{round + 1}라운드 <small>/ {rounds.length}</small>
         </span>
-        <span className="csg-score" role="img" aria-label={`이의 인용 ${hits}회`}>
-          {lines.map((_, i) => (
-            <i key={i} className={results[i] === "hit" ? "on" : results[i] ? "off" : undefined} />
+        <span className="csg-gauge" role="img" aria-label={`재판부 마음 ${hits}칸, 기각까지 ${needed}칸 필요`}>
+          <small>재판부 마음</small>
+          {rounds.map((_, i) => (
+            <i key={i} className={[i < hits ? "on" : "", i === needed - 1 ? "goal" : ""].join(" ").trim() || undefined} />
           ))}
         </span>
       </div>
-      <ObjectionRound
-        key={round}
-        line={lines[round]}
-        windowMs={ROUND_WINDOWS_MS[round] ?? ROUND_WINDOWS_MS[ROUND_WINDOWS_MS.length - 1]}
-        onResult={(result) => setResults((prev) => [...prev, result])}
-        onNext={() => {
-          if (round + 1 < lines.length) setRound(round + 1);
-          else onDone(hits);
-        }}
-      />
-    </div>
-  );
-}
-
-/** 한 라운드 — 라운드마다 key로 새로 만들어 시간과 판정을 처음부터 잰다. */
-function ObjectionRound({ line, windowMs, onResult, onNext }: {
-  line: string;
-  windowMs: number;
-  onResult: (result: PressResult) => void;
-  onNext: () => void;
-}) {
-  const [shown, setShown] = useState(0);
-  const [red, setRed] = useState(false);
-  const [outcome, setOutcome] = useState<PressResult | null>(null);
-  const startedAt = useRef(0);
-  const judged = useRef(false);
-  const timers = useRef<number[]>([]);
-  // 타이머가 처음 렌더의 함수를 붙잡아도 최신 콜백을 부르도록 한다.
-  const callbacks = useRef({ onResult, onNext });
-  useEffect(() => {
-    callbacks.current = { onResult, onNext };
-  });
-  const duration = typingDuration(line);
-  const tail = redTailStart(line);
-
-  const judge = (pressed: boolean) => {
-    if (judged.current) return;
-    judged.current = true;
-    timers.current.forEach((id) => window.clearTimeout(id));
-    if (pressed && typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(30);
-    const result = judgePress(pressed ? performance.now() - startedAt.current : null, duration, windowMs);
-    setShown(line.length);
-    setOutcome(result);
-    callbacks.current.onResult(result);
-    timers.current = [window.setTimeout(() => callbacks.current.onNext(), NEXT_ROUND_MS)];
-  };
-  const judgeRef = useRef(judge);
-  useEffect(() => {
-    judgeRef.current = judge;
-  });
-
-  useEffect(() => {
-    startedAt.current = performance.now();
-    const typer = window.setInterval(() => {
-      const elapsed = performance.now() - startedAt.current;
-      setShown(Math.min(line.length, Math.ceil((elapsed / duration) * line.length)));
-    }, 30);
-    timers.current = [
-      typer,
-      window.setTimeout(() => {
-        window.clearInterval(typer);
-        setShown(line.length);
-        setRed(true);
-      }, duration),
-      window.setTimeout(() => judgeRef.current(false), duration + windowMs),
-    ];
-    const onKey = (event: KeyboardEvent) => {
-      if ((event.code !== "Space" && event.key !== "Enter") || event.repeat) return;
-      event.preventDefault();
-      judgeRef.current(true);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      timers.current.forEach((id) => window.clearTimeout(id));
-    };
-  }, [line, duration, windowMs]);
-
-  return (
-    <div className={outcome === "hit" ? "csg-round shake" : "csg-round"}>
-      <p className="csg-speaker">맞고소인 측 진술</p>
-      <p className="csg-line">
-        {red || outcome ? (
+      <p className="csg-speaker">맞고소인 측 궤변</p>
+      <p className="csg-claim">“{current.claim}”</p>
+      <p className="csg-speaker">반박 카드를 고르세요</p>
+      <div className="csg-cards">
+        {current.options.map((option, i) => {
+          const state = !answered ? "" : i === current.answer ? " right" : i === picked ? " wrong" : " dim";
+          return (
+            <button key={i} type="button" className={`csg-card${state}`} disabled={answered} onClick={() => choose(i)}>
+              {option}
+            </button>
+          );
+        })}
+      </div>
+      <div className="csg-feedback" aria-live="polite">
+        {answered && (
           <>
-            {line.slice(0, tail)}
-            <span className={red ? "csg-red" : undefined}>{line.slice(tail)}</span>
-          </>
-        ) : (
-          <>
-            {line.slice(0, shown)}
-            {/* 아직 안 나온 글자도 자리를 차지해 카드 높이가 흔들리지 않는다 */}
-            <span className="csg-ghost" aria-hidden>
-              {line.slice(shown)}
-            </span>
+            <Burst
+              text={right ? "Sustained!" : "Overruled!"}
+              variant={right ? "sustained" : "overruled"}
+              width={124}
+              label={right ? "반박 인정" : "반박 기각"}
+            />
+            <p className="csg-reaction">{reactionFor(round, right)}</p>
           </>
         )}
-      </p>
-      <div className="csg-feedback" aria-live="polite">
-        {outcome === "hit" && <Burst text="Sustained!" variant="sustained" width={190} label="이의 인정" />}
-        {outcome === "early" && <Burst text="Overruled!" variant="overruled" width={190} label="이의 기각 — 너무 일렀습니다" />}
-        {outcome === "miss" && <p className="csg-miss">이의 없으면 넘어갑니다.</p>}
-        {!outcome && <p className="csg-hint">{red ? "지금!" : "끝부분이 빨개지면 이의를 제기하세요"}</p>}
       </div>
       <div className="grow" />
-      {/* 문장을 다 읽지 않아도 버튼이 번쩍이면 누를 때임을 알 수 있다 */}
       <button
-        className={red && !outcome ? "btn csg-press ready" : "btn csg-press"}
+        className="btn"
         type="button"
-        disabled={outcome !== null}
-        onPointerDown={(event) => {
-          event.preventDefault();
-          judge(true);
-        }}
+        disabled={!answered}
+        onClick={() => (last ? onDone(picks) : setRound(round + 1))}
       >
-        이의 있음!
+        {!answered ? "카드를 골라 주세요" : last ? "판결 듣기" : "다음 궤변"}
       </button>
     </div>
   );
