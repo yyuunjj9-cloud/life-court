@@ -10,8 +10,8 @@ import { NOT_A_COMPLAINT_EXAMPLES, SCENARIO_EXAMPLES } from "./scenario-examples
 const NEIGHBORS = 15;
 const MIN_SIMILARITY = 0.13;
 const MIN_VOTE_MARGIN = 0.2;
-/** 사건을 고르려면 이웃 표 중 이만큼은 그 사건 몫이어야 한다. */
-export const MIN_SCENARIO_SHARE = 0.2;
+/** 사건을 고르려면 이웃 표 중 이만큼은 그 사건 몫이어야 한다(예시를 15개로 늘린 뒤 0.2 → 0.4). */
+export const MIN_SCENARIO_SHARE = 0.4;
 /** 이웃 표의 이만큼이 '고소할 일이 아닌 문장'이면 키워드가 맞아도 일반 분쟁으로 둔다. */
 export const NOT_A_COMPLAINT_SHARE = 0.7;
 /** 키워드 점수가 이 이상이면 예시 유사도가 사건을 바꾸지 못한다. 분명한 고소 사연을 지킨다. */
@@ -81,6 +81,10 @@ export interface SimilarityResult {
   similarEnough: boolean;
   /** '고소할 일이 아닌 문장' 표의 몫. */
   notAComplaintShare: number;
+  /** 가장 비슷한 예시의 유사도(0~1). */
+  best: number;
+  /** 1등과 2등의 표 차이. */
+  margin: number;
 }
 
 export function similarScenarios(story: string): SimilarityResult {
@@ -101,5 +105,7 @@ export function similarScenarios(story: string): SimilarityResult {
     confident: best >= MIN_SIMILARITY && margin >= MIN_VOTE_MARGIN,
     similarEnough: best >= MIN_SIMILARITY,
     notAComplaintShare: ranked.find((vote) => vote.label === null)?.share ?? 0,
+    best,
+    margin,
   };
 }

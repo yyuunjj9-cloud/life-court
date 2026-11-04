@@ -1,5 +1,5 @@
 // 사건 분류 시험지 채점 — docs/plan-accuracy.md의 지표(오답률·적중률·보류율)를 계산한다.
-// 사용: node backend/scripts/eval-matching.cjs [dev|test|all|holdout|holdout2] [--wrong]
+// 사용: node backend/scripts/eval-matching.cjs [dev|test|all|holdout|holdout2|holdout3] [--wrong]
 // holdout은 봉인 시험지다. 결과 숫자만 보고, --wrong으로 문항을 열어 규칙을 맞추지 않는다.
 const path = require('node:path');
 require(path.join(__dirname, '../tests/register-source.cjs'));
@@ -8,6 +8,7 @@ const { selectScenario, GENERAL_CRIME } = require('../src/domain/judgment.ts');
 const EVAL_SET = require('../tests/eval/eval-set.cjs');
 const HOLDOUT = require('../tests/eval/holdout-set.cjs').map((item) => ({ ...item, split: 'holdout' }));
 const HOLDOUT2 = require('../tests/eval/holdout2-set.cjs').map((item) => ({ ...item, split: 'holdout2' }));
+const HOLDOUT3 = require('../tests/eval/holdout3-set.cjs').map((item) => ({ ...item, split: 'holdout3' }));
 
 // 반복 표현이 없는 사연은 사건명에서 '반복·상습'이 빠지므로 비교할 때 같은 이름으로 본다.
 const base = (name) => name.replace(/\s(?:반복|상습)(?=\s)/g, '');
@@ -25,7 +26,7 @@ function grade(item, pick = selectScenario) {
 }
 
 function score(split = 'all', pick = selectScenario) {
-  const items = (split === 'holdout' ? HOLDOUT : split === 'holdout2' ? HOLDOUT2 : EVAL_SET.filter((item) => split === 'all' || item.split === split)).map((item) => grade(item, pick));
+  const items = (split === 'holdout' ? HOLDOUT : split === 'holdout2' ? HOLDOUT2 : split === 'holdout3' ? HOLDOUT3 : EVAL_SET.filter((item) => split === 'all' || item.split === split)).map((item) => grade(item, pick));
   const specific = items.filter((item) => item.expected !== null);
   const count = (list, result) => list.filter((item) => item.result === result).length;
   const pct = (n, d) => (d ? Math.round((n / d) * 1000) / 10 : 0);
