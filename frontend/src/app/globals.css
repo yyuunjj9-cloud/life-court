@@ -228,10 +228,18 @@ html.inapp #app {
   background: linear-gradient(90deg, var(--gold-dim), var(--gold-bright));
   transition: width 0.3s linear;
 }
+/* 휴정 — 경고처럼 보이지 않게 차분한 나무색으로 알린다 */
 .conn-banner.fail {
-  background: #4a1512;
-  color: #f3d8d0;
-  border-bottom-color: var(--objection-red);
+  background: var(--wood);
+  color: var(--gold-soft);
+  border-bottom-color: var(--gold-dim);
+}
+/* 개정 — 기다린 끝에 문이 열렸음을 잠깐 알린다 */
+.conn-banner.opened {
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+  color: var(--wood-deep);
+  font-weight: 700;
+  padding: 8px 12px;
 }
 .conn-banner .cb-retry {
   margin-left: 10px;

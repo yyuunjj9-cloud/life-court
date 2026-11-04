@@ -113,6 +113,20 @@ test('the operator can always get back: back button, a menu, and a link on devic
   assert.match(source('app/intake/story/page.tsx'), /가상의 예문입니다/);
 });
 
+test('the server wake-up banner speaks in court terms: opening, open, and recess', () => {
+  const banner = source('components/WakeBanner.tsx');
+  assert.match(banner, /법정 문을 여는 중/);
+  assert.match(banner, /개정! 법정 문이 열렸습니다/);
+  assert.match(banner, /법정이 잠시 휴정 중입니다/);
+  // 곧바로 연결되면 띄우지 않고, 잠깐 보였다가 사라진다.
+  assert.match(banner, /OPENED_AFTER_MS = 3000/);
+  assert.match(banner, /OPENED_SHOW_MS = 2000/);
+  // 휴정 안내는 경고색 빨강을 쓰지 않는다.
+  const fail = css.match(/^\.conn-banner\.fail \{[\s\S]*?^\}/m)?.[0];
+  assert.doesNotMatch(fail, /objection-red|#4a1512/);
+  assert.match(source('app/glossary/page.tsx'), /term: "개정 · 휴정",\s*kind: "real"/);
+});
+
 test('phone auto dark modes cannot recolor the app', () => {
   assert.match(css, /:root \{[\s\S]*?color-scheme: only light;/);
   assert.match(source('app/layout.tsx'), /colorScheme: "only light"/);
