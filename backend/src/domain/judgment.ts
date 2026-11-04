@@ -4,6 +4,8 @@
  * 같은 입력이면 같은 판결이 나오도록 사연 텍스트를 시드로 사용한다.
  */
 
+import { MORE_SCENARIOS } from "./scenarios-more";
+
 export type CaseType = "work" | "relationship" | "meal" | "messenger" | "money" | "romance" | "daily";
 export type Relationship = "self" | "colleague" | "friend" | "family" | "lover" | "neighbor" | "boss" | "anonymous";
 export type Tone = "lenient" | "fair" | "strict";
@@ -144,7 +146,7 @@ export interface CaseScenario {
   keywords: readonly string[];
 }
 
-export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
+const BASE_SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
   work: [
     {
       name: "회의 직전 자료 요청 사건",
@@ -1761,6 +1763,17 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
   ],
 };
 
+/** 기본 시나리오 뒤에 확장 시나리오를 붙인다. 순서가 같아야 같은 사연이 같은 사건을 고른다. */
+export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
+  work: [...BASE_SCENARIOS.work, ...MORE_SCENARIOS.work],
+  relationship: [...BASE_SCENARIOS.relationship, ...MORE_SCENARIOS.relationship],
+  meal: [...BASE_SCENARIOS.meal, ...MORE_SCENARIOS.meal],
+  messenger: [...BASE_SCENARIOS.messenger, ...MORE_SCENARIOS.messenger],
+  money: [...BASE_SCENARIOS.money, ...MORE_SCENARIOS.money],
+  romance: [...BASE_SCENARIOS.romance, ...MORE_SCENARIOS.romance],
+  daily: [...BASE_SCENARIOS.daily, ...MORE_SCENARIOS.daily],
+};
+
 export const DEFENDANTS: Record<Relationship, readonly string[]> = {
   self: ["자백한 피고인 본인", "스스로 출석한 피고인"],
   colleague: ["익명의 동료", "옆자리의 그 사람"],
@@ -1889,7 +1902,21 @@ export const GENERAL_CRIME = "생활 배려 의무 소홀 혐의";
  * 근거가 부족하거나 동점이면 일반 분쟁으로 남긴다. 무관한 죄목은 추첨하지 않는다.
  * 판결문·고소장·내용증명이 모두 이 함수를 쓰므로 한 사건의 죄목이 문서 간에 일치한다.
  */
+export interface StoryAnalysis {
+  /** 최종 선택(일반 분쟁 포함). selectScenario와 같다. */
+  pick: CaseScenario;
+  /** 무엇으로 정했는지: 부정·주체 확인(guard), 확정 표현(anchor), 키워드 점수(score), 근거 부족(fallback). */
+  decidedBy: "guard" | "anchor" | "score" | "fallback";
+  /** 키워드 점수 상위 후보(최대 3개). 애매할 때 이용자에게 보여 줄 수 있다. */
+  candidates: readonly { scenario: CaseScenario; score: number }[];
+}
+
 export function selectScenario(story: string, caseType: CaseType): CaseScenario {
+  return analyzeStory(story, caseType).pick;
+}
+
+/** 사연을 읽어 사건을 고르고, 그 근거와 키워드 점수 상위 후보를 함께 돌려준다. */
+export function analyzeStory(story: string, caseType: CaseType): StoryAnalysis {
   const text = story.normalize("NFKC").toLowerCase().replace(/\s+/g, "");
   const withFrequency = (scenario: CaseScenario): CaseScenario =>
     /매번|상습|반복|여러번|계속|맨날|자꾸|항상/.test(text) ? scenario : {
@@ -1910,11 +1937,11 @@ export function selectScenario(story: string, caseType: CaseType): CaseScenario 
   });
   // A denial/quoted accusation is not evidence that the alleged act occurred.
   // Keep disputed accounts general rather than reversing who did what.
-  if (/늦지않|지각하지않|읽씹하지않|업무연락.{0,6}하지않았|뜻이아니라|오해를받/.test(text)) return fallback();
+  if (/늦지않|지각하지않|읽씹하지않|업무연락.{0,6}하지않았|뜻이아니라|오해를받/.test(text)) return { pick: fallback(), decidedBy: "guard", candidates: [] };
   // When the storyteller is the one blamed ("내가 늦었는데 화를 내요", "~했다고 혼냈어요"),
   // the act was not the other party's. Naming it as their offense reverses who did what.
   // Complaining ("내가 뭐라 했다고 화를 내요") is not the act itself, so it is left out.
-  if (/(내가|제가)(?!.{0,6}(뭐라|말했|말하|물어|싫다|따지|따졌|지적|부탁|얘기)).{0,24}(는데|더니|다고).{0,12}(화를?내|화냈|뭐라|혼냈|혼나|서운해|소문|난리)/.test(text)) return fallback();
+  if (/(내가|제가)(?!.{0,6}(뭐라|말했|말하|물어|싫다|따지|따졌|지적|부탁|얘기)).{0,24}(는데|더니|다고).{0,12}(화를?내|화냈|뭐라|혼냈|혼나|서운해|소문|난리)/.test(text)) return { pick: fallback(), decidedBy: "guard", candidates: [] };
   // These expressions require the act as well as its context, rather than
   // treating incidental words such as '새벽', '준비', or '대신' as an offense.
   const anchors: [RegExp, string][] = [
@@ -1944,7 +1971,7 @@ export function selectScenario(story: string, caseType: CaseType): CaseScenario 
   for (const [pattern, name] of anchors) {
     if (pattern.test(text)) {
       const found = all.find((scenario) => scenario.name === name);
-      if (found) return withFrequency(found);
+      if (found) return { pick: withFrequency(found), decidedBy: "anchor", candidates: [] };
     }
   }
   const broad = new Set(["새벽", "밤에", "준비", "대신", "무시", "계산", "회의", "자료", "직전", "나가", "나갔", "기다리", "기다렸", "늦게", "늦었", "늦는", "허락없이", "몰래", "지적", "불평", "별로", "시키", "시켰", "스포"]);
@@ -1967,10 +1994,14 @@ export function selectScenario(story: string, caseType: CaseType): CaseScenario 
       + (type === caseType && distinct.length ? 0.5 : 0);
     return { scenario, score };
   })).sort((a, b) => b.score - a.score);
-  if (ranked[0].score >= 3 && ranked[0].score - ranked[1].score >= 0.5) return withFrequency(ranked[0].scenario);
+  const candidates = ranked.filter((r) => r.score >= 3).slice(0, 3)
+    .map((r) => ({ scenario: withFrequency(r.scenario), score: r.score }));
+  if (ranked[0].score >= 3 && ranked[0].score - ranked[1].score >= 0.5) {
+    return { pick: withFrequency(ranked[0].scenario), decidedBy: "score", candidates };
+  }
 
   // Unknown or ambiguous input must stay faithful to the supplied story.
-  return fallback();
+  return { pick: fallback(), decidedBy: "fallback", candidates };
 }
 
 /** 주문 선택도 사연 해시로 결정해, 내용증명 요구사항과 판결 주문이 같은 문장이 되게 한다. */
