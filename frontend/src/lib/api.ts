@@ -288,6 +288,7 @@ export interface UsageStats {
   responses: { total: number; declined: number };
   ideas: { pending: number; approved: number; private: number };
   jury: { votes: number; cases: number };
+  confirmations?: { kept: number; alternative: number; general: number; none: number };
 }
 
 export const ideasApi = {

@@ -250,3 +250,20 @@ test('case confirmation offers candidates, and a filed choice is used only when 
   assert.equal(rejected.status, 422);
   assert.equal((await rejected.json()).code, 'CONTENT_REJECTED');
 });
+
+test('the operator sees how filings answered the case confirmation, as counts only', async () => {
+  const story = '친구가 우산 빌려 가서 안 돌려줘요';
+  const { pick, alternatives } = await (await post('/api/stories/scenario', { story, caseType: 'daily' })).json();
+  const filing = { story, caseType: 'daily', relationship: 'friend', severity: 3, tone: 'fair', filingKind: 'complaint' };
+  const stats = async () => (await (await fetch(`${base}/api/admin/stats`, { headers: { 'X-Admin-Token': ADMIN } })).json()).confirmations;
+  const before = await stats();
+  await post('/api/cases', { ...filing, scenario: pick.name });
+  await post('/api/cases', { ...filing, scenario: alternatives[0].name });
+  await post('/api/cases', { ...filing, scenario: 'general' });
+  await post('/api/cases', filing);
+  const after = await stats();
+  assert.deepEqual(
+    { kept: after.kept - before.kept, alternative: after.alternative - before.alternative, general: after.general - before.general, none: after.none - before.none },
+    { kept: 1, alternative: 1, general: 1, none: 1 },
+  );
+});

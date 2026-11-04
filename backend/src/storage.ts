@@ -51,6 +51,8 @@ export interface UsageStats {
   responses: { total: number; declined: number };
   ideas: { pending: number; approved: number; private: number };
   jury: { votes: number; cases: number };
+  /** 사건 확인 화면의 선택 종류별 접수 수(기능 도입 이후 사건만). */
+  confirmations: { kept: number; alternative: number; general: number; none: number };
 }
 
 export interface CaseStorage {
@@ -188,6 +190,12 @@ export class MemoryStorage implements CaseStorage {
       responses: { total: all.filter((r) => r.response).length, declined: all.filter((r) => r.response?.option === "decline").length },
       ideas: { pending: count("pending"), approved: count("approved"), private: count("private") },
       jury: { votes: this.jury.size, cases: new Set([...this.jury.keys()].map((k) => k.split("|")[0])).size },
+      confirmations: {
+        kept: all.filter((r) => r.input.confirm === "kept").length,
+        alternative: all.filter((r) => r.input.confirm === "alternative").length,
+        general: all.filter((r) => r.input.confirm === "general").length,
+        none: all.filter((r) => r.input.confirm === "none").length,
+      },
     };
   }
   private jury = new Map<string, JuryVote>();
@@ -224,7 +232,8 @@ export class PgStorage implements CaseStorage {
       await client.query("SELECT pg_advisory_xact_lock(hashtext(current_schema()), hashtext('lifecourt-storage-init'))");
       await client.query(`ALTER TABLE cases ADD COLUMN IF NOT EXISTS response JSONB,
         ADD COLUMN IF NOT EXISTS share_token TEXT, ADD COLUMN IF NOT EXISTS owner_token TEXT,
-        ADD COLUMN IF NOT EXISTS supreme JSONB`);
+        ADD COLUMN IF NOT EXISTS supreme JSONB,
+        ADD COLUMN IF NOT EXISTS scenario TEXT, ADD COLUMN IF NOT EXISTS confirm TEXT`);
       await client.query(`CREATE TABLE IF NOT EXISTS case_counters (id TEXT PRIMARY KEY, value INTEGER NOT NULL)`);
       await client.query(`CREATE TABLE IF NOT EXISTS ideas (
         id SERIAL PRIMARY KEY,
@@ -288,8 +297,8 @@ export class PgStorage implements CaseStorage {
 
   async create(rec: CaseRecord) {
     await this.pool.query(
-      `INSERT INTO cases (seq, case_no, story, case_type, relationship, severity, tone, filing_kind, verdict, complaint, share_token, owner_token)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+      `INSERT INTO cases (seq, case_no, story, case_type, relationship, severity, tone, filing_kind, verdict, complaint, share_token, owner_token, scenario, confirm)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
       [
         rec.seq,
         rec.verdict.caseNo,
@@ -303,6 +312,8 @@ export class PgStorage implements CaseStorage {
         JSON.stringify(rec.complaint),
         rec.shareToken,
         rec.ownerToken,
+        rec.input.scenario ?? null,
+        rec.input.confirm ?? null,
       ],
     );
   }
@@ -319,6 +330,9 @@ export class PgStorage implements CaseStorage {
         relationship: row.relationship,
         severity: row.severity,
         tone: row.tone,
+        // 확인 화면에서 고른 사건: 항소·맞고소도 같은 사건으로 이어지게 한다.
+        ...(row.scenario ? { scenario: row.scenario } : {}),
+        ...(row.confirm ? { confirm: row.confirm } : {}),
       },
       filingKind: row.filing_kind,
       verdict: row.verdict,
@@ -410,7 +424,11 @@ export class PgStorage implements CaseStorage {
           AVG((countersuit->'objections'->>'hits')::numeric) AS average_hits,
           COUNT(*) FILTER (WHERE (countersuit->'objections'->>'hits')::int = 3)::int AS perfect,
           COUNT(response)::int AS responses,
-          COUNT(*) FILTER (WHERE response->>'option' = 'decline')::int AS declined
+          COUNT(*) FILTER (WHERE response->>'option' = 'decline')::int AS declined,
+          COUNT(*) FILTER (WHERE confirm = 'kept')::int AS confirm_kept,
+          COUNT(*) FILTER (WHERE confirm = 'alternative')::int AS confirm_alternative,
+          COUNT(*) FILTER (WHERE confirm = 'general')::int AS confirm_general,
+          COUNT(*) FILTER (WHERE confirm = 'none')::int AS confirm_none
         FROM cases`),
       this.pool.query<{ status: IdeaStatus; n: number }>(`SELECT status, COUNT(*)::int AS n FROM ideas GROUP BY status`),
       this.pool.query<{ votes: number; cases: number }>(`SELECT COUNT(*)::int AS votes, COUNT(DISTINCT seq)::int AS cases FROM jury_votes`),
@@ -432,6 +450,7 @@ export class PgStorage implements CaseStorage {
       responses: { total: s.responses, declined: s.declined },
       ideas: { pending: idea("pending"), approved: idea("approved"), private: idea("private") },
       jury: { votes: jury.votes, cases: jury.cases },
+      confirmations: { kept: s.confirm_kept, alternative: s.confirm_alternative, general: s.confirm_general, none: s.confirm_none },
     };
   }
   async addJuryVote(seq: number, voter: string, vote: JuryVote) {

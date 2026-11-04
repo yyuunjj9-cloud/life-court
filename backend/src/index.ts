@@ -11,6 +11,7 @@ import {
   GENERAL_CRIME,
   SCENARIOS,
   scenarioChoices,
+  confirmationKind,
   type CaseInput,
   type CaseType,
   type Relationship,
@@ -287,7 +288,8 @@ app.post("/api/cases", async (req, res) => {
   const complaint = generateComplaint(input, verdict, filingKind as FilingKind);
   await storage.create({
     seq,
-    input,
+    // 확인 화면의 선택 종류만 함께 남긴다(사연 내용은 운영자 통계에 쓰지 않는다).
+    input: { ...input, confirm: confirmationKind(input) },
     filingKind: filingKind as FilingKind,
     verdict,
     complaint,

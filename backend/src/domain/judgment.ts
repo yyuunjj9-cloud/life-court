@@ -20,7 +20,12 @@ export interface CaseInput {
   tone: Tone;
   /** 이용자가 '사건 특정' 화면에서 고른 사건명. GENERAL_CHOICE면 일반 분쟁. 없으면 재판부가 고른 사건. */
   scenario?: string;
+  /** 저장할 때 서버가 적는 확인 결과의 종류(사연 내용 없이 통계용). */
+  confirm?: ConfirmKind;
 }
+
+/** 사건 확인 결과: 재판부 판단 그대로 / 다른 후보 / 해당 없음 / 확인 없이 접수. */
+export type ConfirmKind = "kept" | "alternative" | "general" | "none";
 
 export interface Verdict {
   caseNo: string;
@@ -2007,6 +2012,16 @@ export function scenarioChoices(story: string, caseType: CaseType): ScenarioChoi
  * 판결·고소장·내용증명이 쓰는 사건. 이용자가 고른 사건이 이 사연의 후보 안에 있을 때만 따르고,
  * 아니면 재판부가 고른 사건을 쓴다. 같은 사연과 같은 선택이면 같은 사건이 나온다.
  */
+/** 이용자가 재판부 판단을 그대로 받았는지, 다른 후보나 '해당 없음'을 골랐는지 분류한다. */
+export function confirmationKind(input: CaseInput): ConfirmKind {
+  if (!input.scenario) return "none";
+  const { pick, alternatives } = scenarioChoices(input.story, input.caseType);
+  const pickIsGeneral = pick.crime === GENERAL_CRIME;
+  if (input.scenario === GENERAL_CHOICE) return pickIsGeneral ? "kept" : "general";
+  if (input.scenario === pick.name) return "kept";
+  return alternatives.some((scenario) => scenario.name === input.scenario) ? "alternative" : "none";
+}
+
 export function scenarioForInput(input: CaseInput): CaseScenario {
   if (!input.scenario) return selectScenario(input.story, input.caseType);
   if (input.scenario === GENERAL_CHOICE) return generalScenario(input.caseType);

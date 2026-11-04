@@ -52,7 +52,7 @@ async function fixture(legacy = false) {
   };
   const queryPool = openPool();
   const sql = legacy ? schemaSql
-    .replace(/^\s*(response|share_token|owner_token|supreme)\s+[^\n]*\n/gm, '')
+    .replace(/^\s*(response|share_token|owner_token|supreme|scenario|confirm)\s+[^\n]*\n/gm, '')
     .replace(/CREATE TABLE IF NOT EXISTS case_counters\s*\([\s\S]*?\);/g, '')
     .replace(/CREATE TABLE IF NOT EXISTS ideas\s*\([\s\S]*?\);/g, '')
     .replace(/CREATE TABLE IF NOT EXISTS jury_votes\s*\([\s\S]*?\);/g, '') : schemaSql;
@@ -225,4 +225,20 @@ test('a Postgres supreme appeal needs an appeal first and is stored exactly once
     assert.deepEqual(stored.appeal, appeal);
     assert.deepEqual(stored.verdict, original.verdict);
   }
+});
+
+test('a confirmed case choice is stored with the case and counted without story text', async () => {
+  const { openStore } = await fixture(true);
+  const { store } = openStore(); await store.ready();
+  const choices = [{ scenario: '약속 지각 반복 사건', confirm: 'kept' }, { scenario: 'general', confirm: 'general' }, {}];
+  for (const extra of choices) {
+    const seq = await store.allocateSeq();
+    const rec = record(seq);
+    await store.create({ ...rec, input: { ...input, ...extra } });
+    const back = await store.get(seq);
+    // 항소·맞고소가 같은 사건으로 이어지도록 고른 사건을 그대로 돌려준다.
+    assert.equal(back.input.scenario, extra.scenario);
+    assert.equal(back.input.confirm, extra.confirm);
+  }
+  assert.deepEqual((await store.usageStats()).confirmations, { kept: 1, alternative: 0, general: 1, none: 0 });
 });
