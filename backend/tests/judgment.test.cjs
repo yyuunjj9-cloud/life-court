@@ -83,8 +83,8 @@ test('the same story and choices give the same first verdict under any case numb
 });
 
 test('dropping "habitual" from a crime name never leaves a stray space, and orders stay on topic', () => {
-  // '단답 상습죄'에서 '상습'만 지우면 '단답 죄'가 됐다.
-  assert.equal(selectScenario('친구가 제 긴 메시지에 ㅇㅇ 한 글자로만 답장했어요', 'messenger').crime, '단답죄');
+  // 예전 '단답 상습죄'에서 '상습'만 지우면 '단답 죄'가 됐다. 반복 표현이 없으면 '상습'만 빠진다.
+  assert.equal(selectScenario('친구가 제 긴 메시지에 ㅇㅇ 한 글자로만 답장했어요', 'messenger').crime, '대화 성의 횡령죄');
   for (const [caseType, story] of require('./scenario-corpus.cjs')) {
     const { crime, name } = selectScenario(story, caseType);
     assert.doesNotMatch(crime, /\s죄$|\s{2,}/, crime);
