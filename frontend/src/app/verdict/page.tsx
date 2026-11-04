@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Burst } from "@/components/Burst";
 import { JurySummary } from "@/components/JurySection";
 import { VerdictDoc } from "@/components/VerdictDoc";
+import { RAISE_BLOCK_NOTE, raiseBlock } from "@/domain/judgment";
 import { useCaseStore } from "@/store/case-store";
 
 /* 06 판결 결과 */
@@ -28,6 +29,8 @@ export default function VerdictPage() {
   }, [verdict]);
 
   if (!verdict) return <div className="scr" />;
+
+  const block = raiseBlock(verdict.result, verdict.crime);
 
   const appeal = async () => {
     if (pending) return;
@@ -61,9 +64,11 @@ export default function VerdictPage() {
         {caseSeq !== null && ownerToken && <JurySummary seq={caseSeq} ownerToken={ownerToken} result={verdict.result} />}
         {error && <div className="help err">법원 서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.</div>}
         <div className="grow" />
+        {block && <p className="raise-note">{RAISE_BLOCK_NOTE[block]}</p>}
         <div className="btn-row" style={{ marginTop: 14 }}>
-          <button className="btn dark sm" type="button" disabled={pending} onClick={appeal}>
-            {pending ? "항소 중..." : "항소하기"}
+          {/* 더 무거워질 수 없는 사건은 기각만 나오므로 항소를 받지 않고 이유를 먼저 알린다 */}
+          <button className="btn dark sm" type="button" disabled={pending || Boolean(block)} onClick={appeal}>
+            {block === "max" ? "이미 최고 처분" : block ? "항소 불가" : pending ? "항소 중..." : "항소하기"}
           </button>
           <Link className="btn sm" href="/save">
             판결문 저장

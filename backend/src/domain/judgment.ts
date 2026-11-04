@@ -2250,7 +2250,8 @@ const APPEAL_DISMISS_REASONS = [
 ];
 
 /** 원심 처분별 항소 인용 확률 — 이미 무거울수록 더 올리기 어렵다. 인덱스는 처분 사다리와 같다. */
-const APPEAL_SUSTAIN_CHANCE = [0.6, 0.55, 0.45, 0.3] as const;
+// 2026-11-04 각 10%p 올렸다 — 항소의 약 70%가 기각돼 '자꾸 진다'는 반응이 있었다.
+const APPEAL_SUSTAIN_CHANCE = [0.7, 0.65, 0.55, 0.4] as const;
 /** 상고 인용 확률 — 대법원은 항소심보다 더 신중하다. */
 const SUPREME_SUSTAIN_CHANCE = [0.4, 0.35, 0.3, 0.2] as const;
 

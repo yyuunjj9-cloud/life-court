@@ -224,6 +224,35 @@ test('a supreme appeal starts from the appeal result, never lightens it, and alw
   assert.ok(raised > 0);
 });
 
+test('the screen blocks an appeal exactly when the rules could only dismiss it, and open appeals win often enough', () => {
+  const front = require('../../frontend/src/domain/judgment.ts');
+  const { GENERAL_CRIME } = require('../src/domain/judgment.ts');
+  assert.equal(front.GENERAL_CRIME, GENERAL_CRIME);
+  let open = 0, raised = 0;
+  for (const [caseType, story] of require('./scenario-corpus.cjs')) {
+    for (const severity of [1, 2, 3, 4, 5]) {
+      for (const tone of ['lenient', 'fair', 'strict']) {
+        for (const seq of [42, 77, 130]) {
+          const data = input(story, { caseType, severity, tone });
+          const verdict = generateVerdict(data, seq);
+          const appeal = generateAppeal(data, verdict);
+          const block = front.raiseBlock(verdict.result, verdict.crime);
+          if (block) {
+            assert.equal(appeal.overturned, false, `${block}: ${story}`);
+          } else {
+            open++;
+            if (appeal.overturned) raised++;
+          }
+          const supremeBlock = front.raiseBlock(front.appealResult(verdict, appeal), verdict.crime);
+          if (supremeBlock) assert.equal(generateSupreme(data, verdict, appeal).overturned, false, story);
+        }
+      }
+    }
+  }
+  // 막히지 않은 항소는 절반 넘게 받아들여진다(2026-11-04 확률 10%p 상향).
+  assert.ok(raised / open > 0.5, `open appeals raised ${raised}/${open}`);
+});
+
 test('a supreme appeal reads an old-rule appeal that acquitted from its order', () => {
   const data = input('친구가 약속에 40분 늦고는 사과도 없이 메뉴부터 골랐어요', { caseType: 'relationship', severity: 4 });
   const verdict = { ...generateVerdict(data, 42), result: '유죄' };

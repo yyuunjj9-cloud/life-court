@@ -1108,6 +1108,20 @@ p.sub {
   color: var(--muted);
 }
 
+/* 항소·상고로 더 무거워질 수 없을 때의 안내 — 꾸짖지 않는 차분한 톤 */
+.raise-note {
+  margin-top: 12px;
+  padding: 10px 12px;
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.65;
+  text-align: center;
+  color: var(--ink-soft);
+  background: #fbf4e3;
+  border: 1px solid var(--paper-line);
+  border-radius: 3px;
+}
+
 /* ---------- 대법원 상고 안내 (항소심 화면) ---------- */
 .supreme-offer {
   margin-top: 14px;

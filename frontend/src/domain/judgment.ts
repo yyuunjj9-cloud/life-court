@@ -44,6 +44,34 @@ export interface SupremeVerdict extends AppealVerdict {
   finalResult: string;
 }
 
+/** 구체적 행위를 특정하지 못한 사연에 붙는 죄목 — 서버의 GENERAL_CRIME과 같아야 한다(테스트로 확인). */
+export const GENERAL_CRIME = "생활 배려 의무 소홀 혐의";
+
+/** 처분 사다리 — 가벼운 처분부터. */
+const LADDER = ["무죄", "훈방 조치", "조건부 유죄", "유죄", "괘씸죄 가중 유죄"];
+
+/**
+ * 원고의 항소·상고로 처분이 더 무거워질 수 없는 이유 — 서버 규칙(raiseCeiling)과 같다.
+ * max: 이미 가장 무거운 처분, general: 근거가 부족한 일반 분쟁이라 훈방 조치가 상한.
+ */
+export function raiseBlock(result: string, crime: string): "max" | "general" | null {
+  if (result === LADDER[LADDER.length - 1]) return "max";
+  if (crime === GENERAL_CRIME && LADDER.indexOf(result) >= LADDER.indexOf("훈방 조치")) return "general";
+  return null;
+}
+
+/** 항소심이 확정한 처분 — 예전 규칙의 항소(원심 파기 후 무죄)도 주문에 적힌 대로 읽는다. */
+export function appealResult(verdict: Verdict, appeal: AppealVerdict): string {
+  const raised = appeal.order.match(/^원심 파기\. (.+?)\.$/)?.[1];
+  return appeal.overturned && raised && LADDER.includes(raised) ? raised : verdict.result;
+}
+
+/** 더 올릴 수 없을 때 이용자에게 보여 줄 안내. */
+export const RAISE_BLOCK_NOTE: Record<"max" | "general", string> = {
+  max: "이미 가장 무거운 처분이라 더 올릴 수 없어요. 원고의 억울함은 이미 충분히 인정됐어요.",
+  general: "사연에서 상대의 구체적인 행동을 찾지 못해 훈방 조치보다 무겁게 올릴 수 없어요. 언제, 무엇을 했는지 구체적으로 적어 새로 접수해 보세요.",
+};
+
 export const CASE_TYPE_LABEL: Record<CaseType, string> = {
   work: "회사생활",
   relationship: "인간관계",

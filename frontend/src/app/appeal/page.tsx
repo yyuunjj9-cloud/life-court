@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { AppealDoc } from "@/components/VerdictDoc";
 import { Burst } from "@/components/Burst";
 import { formatKoreanDate } from "@/domain/date";
+import { appealResult, RAISE_BLOCK_NOTE, raiseBlock } from "@/domain/judgment";
 import { useCaseStore } from "@/store/case-store";
 
 /* 07 항소 결과 */
@@ -45,6 +46,8 @@ export default function AppealPage() {
     );
   }
 
+  const block = raiseBlock(appealResult(verdict, appeal), verdict.crime);
+
   return (
     <div className="scr">
       <div className="verdict-flash">
@@ -60,6 +63,9 @@ export default function AppealPage() {
             <Link className="btn dark sm" href="/supreme">
               상고심 판결문 보기 ({supreme.finalResult} 확정)
             </Link>
+          ) : block ? (
+            // 더 무거워질 수 없으면 상고해도 기각뿐이므로 이유와 방법을 알린다.
+            <p className="raise-note">{RAISE_BLOCK_NOTE[block]}</p>
           ) : (
             <>
               <p className="supreme-note">
