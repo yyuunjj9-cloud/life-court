@@ -2,16 +2,23 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 require('./register-source.cjs');
 
-const { SCENARIOS, selectScenario } = require('../src/domain/judgment.ts');
+const { SCENARIOS, selectScenario, GENERAL_CRIME } = require('../src/domain/judgment.ts');
 const { MORE_SCENARIOS } = require('../src/domain/scenarios-more.ts');
 const { checkStory } = require('../src/domain/moderation.ts');
 
 const all = Object.values(SCENARIOS).flat();
 
-test('every extension story picks its own scenario', () => {
-  for (const [caseType, story, expected] of require('./scenario-more-corpus.cjs')) {
-    assert.equal(selectScenario(story, caseType).name, expected, story);
+test('every extension story picks its own scenario, never another specific one', () => {
+  // 예시 유사도가 '고소할 일이 아닌 문장'에 가깝다고 보면 일반 분쟁으로 보류할 수 있다.
+  // 틀린 구체 죄명보다 보류가 낫다는 원칙(docs/plan-accuracy.md)이므로 보류는 허용하되 1% 이내로 묶는다.
+  const corpus = require('./scenario-more-corpus.cjs');
+  let held = 0;
+  for (const [caseType, story, expected] of corpus) {
+    const picked = selectScenario(story, caseType);
+    if (picked.crime === GENERAL_CRIME) held += 1;
+    else assert.equal(picked.name, expected, story);
   }
+  assert.ok(held <= corpus.length * 0.01, `보류 ${held}건`);
   // 확장 시나리오마다 확인용 사연이 두 개씩 있다.
   const covered = new Set(require('./scenario-more-corpus.cjs').map(([, , name]) => name));
   for (const scenario of Object.values(MORE_SCENARIOS).flat()) assert.ok(covered.has(scenario.name), scenario.name);

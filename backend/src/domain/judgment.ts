@@ -5,6 +5,7 @@
  */
 
 import { MORE_SCENARIOS } from "./scenarios-more";
+import { similarScenarios } from "./similarity";
 
 export type CaseType = "work" | "relationship" | "meal" | "messenger" | "money" | "romance" | "daily";
 export type Relationship = "self" | "colleague" | "friend" | "family" | "lover" | "neighbor" | "boss" | "anonymous";
@@ -1905,8 +1906,8 @@ export const GENERAL_CRIME = "생활 배려 의무 소홀 혐의";
 export interface StoryAnalysis {
   /** 최종 선택(일반 분쟁 포함). selectScenario와 같다. */
   pick: CaseScenario;
-  /** 무엇으로 정했는지: 부정·주체 확인(guard), 확정 표현(anchor), 키워드 점수(score), 근거 부족(fallback). */
-  decidedBy: "guard" | "anchor" | "score" | "fallback";
+  /** 무엇으로 정했는지: 부정·주체 확인(guard), 확정 표현(anchor), 키워드 점수(score), 예시 사연 유사도(similarity), 근거 부족(fallback). */
+  decidedBy: "guard" | "anchor" | "score" | "similarity" | "fallback";
   /** 키워드 점수 상위 후보(최대 3개). 애매할 때 이용자에게 보여 줄 수 있다. */
   candidates: readonly { scenario: CaseScenario; score: number }[];
 }
@@ -2023,9 +2024,16 @@ export function analyzeStory(story: string, caseType: CaseType): StoryAnalysis {
   })).sort((a, b) => b.score - a.score);
   const candidates = ranked.filter((r) => r.score >= 3).slice(0, 3)
     .map((r) => ({ scenario: withFrequency(r.scenario), score: r.score }));
+  const similar = similarScenarios(story);
+  const nearest = similar.confident ? similar.ranked[0] : undefined;
   if (ranked[0].score >= 3 && ranked[0].score - ranked[1].score >= 0.5) {
+    // 키워드가 맞아도 예시 중 '고소할 일이 아닌 문장'에 가장 가까우면 일반 분쟁으로 둔다.
+    if (nearest && nearest.label === null) return { pick: fallback(), decidedBy: "similarity", candidates };
     return { pick: withFrequency(ranked[0].scenario), decidedBy: "score", candidates };
   }
+  // 키워드로 정하지 못한 사연은 예시 사연과 가장 비슷한 사건을 고른다(비슷한 정도가 기준 이상일 때만).
+  const similarScenario = nearest?.label ? all.find((scenario) => scenario.name === nearest.label) : undefined;
+  if (similarScenario) return { pick: withFrequency(similarScenario), decidedBy: "similarity", candidates };
 
   // Unknown or ambiguous input must stay faithful to the supplied story.
   return { pick: fallback(), decidedBy: "fallback", candidates };
