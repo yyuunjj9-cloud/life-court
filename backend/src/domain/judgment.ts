@@ -770,7 +770,7 @@ const BASE_SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         claim: "한 입은 칼로리가 없다",
         rejection: "피고인의 한 입이 일반 성인의 세 입에 해당함이 계량 결과 확인되어 이를 배척한다.",
       },
-      keywords: ["한 입만", "한입만", "한 입 달라", "뺏어 먹", "내 걸 먹"],
+      keywords: ["한 입만", "한입만", "한 입 달라", "뺏어 먹", "내 걸 먹", "한 젓가락만", "한젓가락만", "한 젓가락", "젓가락만 대", "내 라면을", "라면 끓이면 꼭"],
     },
     {
       name: "메뉴 추천 전면 기각 사건",
@@ -887,7 +887,7 @@ const BASE_SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
         claim: "맛보기는 식사가 아니다",
         rejection: "그 맛보기가 그릇의 절반을 소거한 사실이 확인되어 이를 배척한다.",
       },
-      keywords: ["다이어트", "살 빼", "안 먹는다더니", "샐러드만 시키고"],
+      keywords: ["다이어트", "살 빼", "안 먹는다더니", "샐러드만 시키고", "배부르다더니", "배부르다고 하더니", "배부르다면서", "배불러 하더니", "배부르다며", "디저트 배"],
     },
     {
       name: "배달 메뉴 독단 사건",
@@ -1973,6 +1973,18 @@ function generalScenario(caseType: CaseType): CaseScenario {
   };
 }
 
+/** 사실상 같은 상황이라 하나로 합친 사건: 예전 이름 → 남은 사건. 예전 이름으로 고른 사건도 이어진다. */
+export const MERGED_SCENARIOS: Readonly<Record<string, string>> = {
+  "타인 질문 대리 답변 사건": "대답 가로채기 사건",
+  "친분 이용 보험 권유 사건": "지인 상품 강매 사건",
+  "휴대폰 사진첩 열람 사건": "휴대폰 무단 열람 사건",
+  "라면 한 젓가락 사건": "'한 입만' 상습 청구 사건",
+  "휴대폰 방전 사건": "휴대폰 전원 핑계 사건",
+  "심부름 연쇄 부탁 사건": "심부름 떠넘기기 사건",
+  "같이 먹기로 한 음식 단독 취식 사건": "나눠 먹기 약속 파기 사건",
+  "배부름 진술 번복 사건": "다이어트 위증 사건"
+};
+
 /** '사건 특정' 화면에서 '해당 없음'을 고른 값. */
 export const GENERAL_CHOICE = "general";
 
@@ -2025,8 +2037,9 @@ export function confirmationKind(input: CaseInput): ConfirmKind {
 export function scenarioForInput(input: CaseInput): CaseScenario {
   if (!input.scenario) return selectScenario(input.story, input.caseType);
   if (input.scenario === GENERAL_CHOICE) return generalScenario(input.caseType);
+  const wanted = MERGED_SCENARIOS[input.scenario] ?? input.scenario;
   const { pick, alternatives } = scenarioChoices(input.story, input.caseType);
-  return [pick, ...alternatives].find((scenario) => scenario.name === input.scenario) ?? pick;
+  return [pick, ...alternatives].find((scenario) => scenario.name === wanted) ?? pick;
 }
 
 /** 사연을 읽어 사건을 고르고, 그 근거와 키워드 점수 상위 후보를 함께 돌려준다. */

@@ -16,7 +16,8 @@ test('every extension story picks its own scenario, never another specific one',
   for (const [caseType, story, expected] of corpus) {
     const picked = selectScenario(story, caseType);
     if (picked.crime === GENERAL_CRIME) held += 1;
-    else assert.equal(picked.name, expected, story);
+    // 반복 표현이 없으면 사건명에서 '반복·상습'이 빠지므로 그 차이는 같은 사건으로 본다.
+    else assert.equal(picked.name.replace(/\s(?:반복|상습)(?=\s)/g, ''), expected.replace(/\s(?:반복|상습)(?=\s)/g, ''), story);
   }
   assert.ok(held <= corpus.length * 0.01, `보류 ${held}건`);
   // 확장 시나리오마다 확인용 사연이 두 개씩 있다.

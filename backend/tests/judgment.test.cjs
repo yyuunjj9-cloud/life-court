@@ -304,3 +304,15 @@ test("a confirmed choice changes the case only within the offered candidates, an
   // 선택하지 않으면 예전과 같다.
   assert.deepEqual(generateVerdict(data, 7), generateVerdict({ ...data }, 7));
 });
+
+test("merged scenarios: old names still lead to the surviving case", () => {
+  const { MERGED_SCENARIOS, SCENARIOS, scenarioForInput } = require("../src/domain/judgment.ts");
+  const names = new Set(Object.values(SCENARIOS).flat().map((s) => s.name));
+  for (const [from, to] of Object.entries(MERGED_SCENARIOS)) {
+    assert.ok(!names.has(from), `합쳐진 사건이 남아 있음: ${from}`);
+    assert.ok(names.has(to), `남길 사건이 없음: ${to}`);
+  }
+  // 합치기 전 이름으로 고른 접수(항소·맞고소 포함)도 남은 사건으로 이어진다.
+  const data = input("친구가 내가 받은 질문에 대신 답해 버려요", { caseType: "relationship", scenario: "타인 질문 대리 답변 사건" });
+  assert.equal(scenarioForInput(data).name, "대답 가로채기 사건");
+});

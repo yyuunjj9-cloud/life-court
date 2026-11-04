@@ -4,7 +4,7 @@
 const path = require('node:path');
 require(path.join(__dirname, '../tests/register-source.cjs'));
 
-const { selectScenario, GENERAL_CRIME } = require('../src/domain/judgment.ts');
+const { selectScenario, GENERAL_CRIME, MERGED_SCENARIOS } = require('../src/domain/judgment.ts');
 const EVAL_SET = require('../tests/eval/eval-set.cjs');
 const HOLDOUT = require('../tests/eval/holdout-set.cjs').map((item) => ({ ...item, split: 'holdout' }));
 const HOLDOUT2 = require('../tests/eval/holdout2-set.cjs').map((item) => ({ ...item, split: 'holdout2' }));
@@ -17,7 +17,7 @@ const base = (name) => name.replace(/\s(?:반복|상습)(?=\s)/g, '');
 function grade(item, pick = selectScenario) {
   const scenario = pick(item.story, item.caseType);
   const general = scenario.crime === GENERAL_CRIME;
-  const accepted = item.expected === null ? [] : [].concat(item.expected).map(base);
+  const accepted = item.expected === null ? [] : [].concat(item.expected).map((name) => base(MERGED_SCENARIOS[name] ?? name));
   let result;
   if (!accepted.length) result = general ? 'ok-general' : 'wrong';
   else if (general) result = 'miss';
