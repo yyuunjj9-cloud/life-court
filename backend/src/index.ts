@@ -8,7 +8,9 @@ import express from "express";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import {
   generateVerdict,
+  GENERAL_CRIME,
   SCENARIOS,
+  scenarioChoices,
   type CaseInput,
   type CaseType,
   type Relationship,
@@ -48,12 +50,15 @@ function parseCaseInput(body: unknown): CaseInput | null {
   if (!RELATIONSHIPS.includes(b.relationship as Relationship)) return null;
   if (!TONES.includes(b.tone as Tone)) return null;
   if (![1, 2, 3, 4, 5].includes(severity)) return null;
+  // 사건 특정 화면에서 고른 사건명. 후보 안에 있는지는 판결 생성 때 다시 확인한다(scenarioForInput).
+  const scenario = typeof b.scenario === "string" && b.scenario.length > 0 && b.scenario.length <= 40 ? b.scenario : undefined;
   return {
     story,
     caseType: b.caseType as CaseType,
     relationship: b.relationship as Relationship,
     severity: severity as Severity,
     tone: b.tone as Tone,
+    ...(scenario ? { scenario } : {}),
   };
 }
 
@@ -102,6 +107,24 @@ app.post("/api/stories/check", (req, res) => {
   }
   res.set("Cache-Control", "no-store");
   res.json({ issue: checkStory(story) });
+});
+/** 사건 특정: 재판부가 고른 사건과 다른 후보. 저장하지 않는다. */
+app.post("/api/stories/scenario", (req, res) => {
+  const story = typeof req.body?.story === "string" ? req.body.story.trim() : "";
+  const caseType = req.body?.caseType as CaseType;
+  if (story.length < 10 || story.length > 300 || !CASE_TYPES.includes(caseType)) {
+    res.status(400).json({ error: "invalid story" });
+    return;
+  }
+  res.set("Cache-Control", "no-store");
+  const issue = checkStory(story);
+  if (issue) {
+    res.status(422).json({ error: "content rejected", code: "CONTENT_REJECTED", issue });
+    return;
+  }
+  const { pick, alternatives } = scenarioChoices(story, caseType);
+  const brief = (s: { name: string; crime: string }) => ({ name: s.name, crime: s.crime });
+  res.json({ pick: { ...brief(pick), general: pick.crime === GENERAL_CRIME }, alternatives: alternatives.map(brief) });
 });
 app.use(["/api/cases", "/api/cases/preview", "/api/documents/demand"], (req, res, next) => {
   if (req.method !== "POST" || typeof req.body?.story !== "string") return next();

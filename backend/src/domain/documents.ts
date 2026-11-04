@@ -12,7 +12,7 @@ import {
   pick,
   pickScenarioOrder,
   SCENARIOS,
-  selectScenario,
+  scenarioForInput,
   type CaseInput,
   type Verdict,
 } from "./judgment";
@@ -106,7 +106,7 @@ const DEMAND_WARNINGS = [
 export function generateDemandLetter(input: CaseInput): DemandLetterDoc {
   const rand = mulberry32(hashSeed(`demand|${input.story}|${input.caseType}|${input.relationship}`));
   // 판결 생성기와 같은 선택 함수를 쓰므로, 재판 전환 시 판결문의 사건명·죄명·주문과 일치한다.
-  const scenario = selectScenario(input.story, input.caseType);
+  const scenario = scenarioForInput(input);
 
   return {
     title: `「${scenario.name}」 관련 시정 요구의 건`,
@@ -229,7 +229,7 @@ function drawCountersuit(input: CaseInput, verdict: Verdict) {
  */
 export function generateCounterRounds(input: CaseInput, verdict: Verdict): CounterRound[] {
   const { crime, closer } = drawCountersuit(input, verdict);
-  const scenario = selectScenario(input.story, input.caseType);
+  const scenario = scenarioForInput(input);
   const rand = mulberry32(hashSeed(`rebuttal|${verdict.caseNo}|${input.story}`));
   const otherRulings = Object.values(SCENARIOS).flat().map((s) => s.defense.rejection).filter((r) => r !== scenario.defense.rejection);
   const counterRebuttals = [...Object.values(COUNTER_CRIME_REBUTTALS), ...Object.values(COUNTER_CLOSER_REBUTTALS)];

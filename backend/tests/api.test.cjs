@@ -228,3 +228,25 @@ test('moderation rejects every generation path before assigning or storing a cas
   assert.deepEqual(await allowed.json(), { issue: null });
   assert.equal((await post('/api/stories/check', { story: '짧음' })).status, 400);
 });
+
+test('case confirmation offers candidates, and a filed choice is used only when it is one of them', async () => {
+  const story = '친구가 우산 빌려 가서 안 돌려줘요';
+  const res = await post('/api/stories/scenario', { story, caseType: 'daily' });
+  assert.equal(res.status, 200);
+  const { pick, alternatives } = await res.json();
+  assert.equal(pick.general, false);
+  assert.ok(alternatives.length >= 1 && alternatives.length <= 2);
+  assert.ok(alternatives.every((alt) => alt.name !== pick.name && alt.crime.endsWith('혐의') === false));
+  const base = { story, caseType: 'daily', relationship: 'friend', severity: 3, tone: 'fair', filingKind: 'complaint' };
+  // 고른 후보는 판결 죄명이 되고, 후보가 아닌 사건명은 무시된다.
+  const chosen = await (await post('/api/cases', { ...base, scenario: alternatives[0].name })).json();
+  assert.equal(chosen.verdict.crime, alternatives[0].crime);
+  const forged = await (await post('/api/cases', { ...base, scenario: '휴일 업무 연락 사건' })).json();
+  assert.equal(forged.verdict.crime, pick.crime);
+  const general = await (await post('/api/cases', { ...base, scenario: 'general' })).json();
+  assert.equal(general.verdict.crime, '생활 배려 의무 소홀 혐의');
+  // 금칙어는 후보를 보여 주기 전에도 거절한다.
+  const rejected = await post('/api/stories/scenario', { story: '친구가 씨발이라고 하며 화를 냈어요', caseType: 'daily' });
+  assert.equal(rejected.status, 422);
+  assert.equal((await rejected.json()).code, 'CONTENT_REJECTED');
+});

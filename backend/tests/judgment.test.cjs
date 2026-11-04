@@ -285,3 +285,22 @@ test('an appeal judges a stored general-dispute verdict by its stored crime, not
     assert.match(appeal.orderNote, /근거가 부족하다/);
   }
 });
+
+test("a confirmed choice changes the case only within the offered candidates, and is repeatable", () => {
+  const { scenarioChoices, scenarioForInput, GENERAL_CHOICE, GENERAL_CRIME } = require("../src/domain/judgment.ts");
+  const story = "비 오는 날 가져간 내 우산이 아직도 걔 집에 있음";
+  const { pick, alternatives } = scenarioChoices(story, "daily");
+  assert.ok(alternatives.length <= (pick.crime === GENERAL_CRIME ? 3 : 2));
+  assert.equal(new Set([pick, ...alternatives].map((s) => s.name)).size, alternatives.length + 1);
+  const data = input(story, { caseType: "daily" });
+  for (const alt of alternatives) {
+    assert.equal(scenarioForInput({ ...data, scenario: alt.name }).name, alt.name);
+    // 같은 사연과 같은 선택이면 같은 판결이다.
+    assert.deepEqual(generateVerdict({ ...data, scenario: alt.name }, 7), generateVerdict({ ...data, scenario: alt.name }, 7));
+  }
+  assert.equal(scenarioForInput({ ...data, scenario: "없는 사건" }).name, pick.name);
+  assert.equal(scenarioForInput({ ...data, scenario: GENERAL_CHOICE }).crime, GENERAL_CRIME);
+  assert.equal(generateVerdict({ ...data, scenario: GENERAL_CHOICE }, 7).crime, GENERAL_CRIME);
+  // 선택하지 않으면 예전과 같다.
+  assert.deepEqual(generateVerdict(data, 7), generateVerdict({ ...data }, 7));
+});

@@ -18,6 +18,8 @@ export interface CaseInput {
   relationship: Relationship;
   severity: Severity;
   tone: Tone;
+  /** 이용자가 '사건 특정' 화면에서 고른 사건명. GENERAL_CHOICE면 일반 분쟁. 없으면 재판부가 고른 사건. */
+  scenario?: string;
 }
 
 export interface Verdict {
@@ -1942,17 +1944,19 @@ export function selectScenario(story: string, caseType: CaseType): CaseScenario 
   return analyzeStory(story, caseType).pick;
 }
 
-/** 사연을 읽어 사건을 고르고, 그 근거와 키워드 점수 상위 후보를 함께 돌려준다. */
-export function analyzeStory(story: string, caseType: CaseType): StoryAnalysis {
-  const text = story.normalize("NFKC").toLowerCase().replace(/\s+/g, "");
-  const withFrequency = (scenario: CaseScenario): CaseScenario =>
-    /매번|상습|반복|여러번|계속|맨날|자꾸|항상/.test(text) ? scenario : {
-      ...scenario,
-      name: scenario.name.replace(/\s(?:반복|상습)(?=\s)/g, ""),
-      // '단답 상습죄'처럼 '상습'이 죄 바로 앞에 있으면 남는 띄어쓰기까지 지워 '단답죄'로 만든다.
-      crime: scenario.crime.replace(/상습적?\s*/g, "").replace(/\s+죄$/, "죄"),
-    };
-  const fallback = (): CaseScenario => ({
+/** 사연에 반복 표현이 없으면 사건명의 '반복·상습'과 죄명의 '상습'을 뺀다. */
+function adjustFrequency(scenario: CaseScenario, text: string): CaseScenario {
+  return /매번|상습|반복|여러번|계속|맨날|자꾸|항상/.test(text) ? scenario : {
+    ...scenario,
+    name: scenario.name.replace(/\s(?:반복|상습)(?=\s)/g, ""),
+    // '단답 상습죄'처럼 '상습'이 죄 바로 앞에 있으면 남는 띄어쓰기까지 지워 '단답죄'로 만든다.
+    crime: scenario.crime.replace(/상습적?\s*/g, "").replace(/\s+죄$/, "죄"),
+  };
+}
+
+/** 구체적 행위를 특정하지 못한 사연의 사건. */
+function generalScenario(caseType: CaseType): CaseScenario {
+  return {
     name: `${CASE_TYPE_LABEL[caseType]} 분쟁 사건`,
     crime: GENERAL_CRIME,
     orders: ["쌍방은 제출된 사연의 사실관계를 확인하고, 불편을 일으킨 행동과 재발 방지 방법을 구체적으로 협의할 것."],
@@ -1961,7 +1965,60 @@ export function analyzeStory(story: string, caseType: CaseType): StoryAnalysis {
       rejection: "제출된 사연만으로 구체적인 행위와 책임을 단정하기 어려워 추가 사실 확인이 필요하다.",
     },
     keywords: [],
-  });
+  };
+}
+
+/** '사건 특정' 화면에서 '해당 없음'을 고른 값. */
+export const GENERAL_CHOICE = "general";
+
+export interface ScenarioChoices {
+  /** 재판부가 고른 사건(일반 분쟁일 수 있다). */
+  pick: CaseScenario;
+  /** 다른 후보. 재판부가 사건을 골랐으면 최대 2개, 일반 분쟁이면 최대 3개. */
+  alternatives: readonly CaseScenario[];
+}
+
+/**
+ * 접수 직전 '사건 특정' 화면에 보여 줄 후보(docs/plan-accuracy.md 2단계).
+ * 키워드 점수 후보 다음에 예시 사연 유사도 순으로 채운다. 이용자는 이 안에서만 고를 수 있다.
+ */
+export function scenarioChoices(story: string, caseType: CaseType): ScenarioChoices {
+  const text = story.normalize("NFKC").toLowerCase().replace(/\s+/g, "");
+  const analysis = analyzeStory(story, caseType);
+  const general = analysis.pick.crime === GENERAL_CRIME;
+  const all = Object.values(SCENARIOS).flat();
+  const pool = [
+    ...analysis.candidates.map((c) => c.scenario),
+    ...similarScenarios(story).ranked.flatMap((vote) => {
+      const found = vote.label ? all.find((scenario) => scenario.name === vote.label) : undefined;
+      return found ? [adjustFrequency(found, text)] : [];
+    }),
+  ];
+  const alternatives: CaseScenario[] = [];
+  for (const scenario of pool) {
+    if (alternatives.length >= (general ? 3 : 2)) break;
+    if (scenario.name === analysis.pick.name || alternatives.some((s) => s.name === scenario.name)) continue;
+    alternatives.push(scenario);
+  }
+  return { pick: analysis.pick, alternatives };
+}
+
+/**
+ * 판결·고소장·내용증명이 쓰는 사건. 이용자가 고른 사건이 이 사연의 후보 안에 있을 때만 따르고,
+ * 아니면 재판부가 고른 사건을 쓴다. 같은 사연과 같은 선택이면 같은 사건이 나온다.
+ */
+export function scenarioForInput(input: CaseInput): CaseScenario {
+  if (!input.scenario) return selectScenario(input.story, input.caseType);
+  if (input.scenario === GENERAL_CHOICE) return generalScenario(input.caseType);
+  const { pick, alternatives } = scenarioChoices(input.story, input.caseType);
+  return [pick, ...alternatives].find((scenario) => scenario.name === input.scenario) ?? pick;
+}
+
+/** 사연을 읽어 사건을 고르고, 그 근거와 키워드 점수 상위 후보를 함께 돌려준다. */
+export function analyzeStory(story: string, caseType: CaseType): StoryAnalysis {
+  const text = story.normalize("NFKC").toLowerCase().replace(/\s+/g, "");
+  const withFrequency = (scenario: CaseScenario): CaseScenario => adjustFrequency(scenario, text);
+  const fallback = (): CaseScenario => generalScenario(caseType);
   if (notAComplaint(text)) return { pick: fallback(), decidedBy: "guard", candidates: [] };
   // A denial/quoted accusation is not evidence that the alleged act occurred.
   // Keep disputed accounts general rather than reversing who did what.
@@ -2270,7 +2327,7 @@ export function formatCaseNo(seq: number, year = caseYear()): string {
 
 export function generateVerdict(input: CaseInput, caseSeq: number): Verdict {
   const rand = mulberry32(hashSeed(`${input.story}|${input.caseType}|${input.relationship}|${input.severity}|${input.tone}`));
-  const scenario = selectScenario(input.story, input.caseType);
+  const scenario = scenarioForInput(input);
   const uncertain = scenario.keywords.length === 0;
   const score = uncertain ? Math.min(2, verdictScore(input.severity, input.tone, input.story))
     : verdictScore(input.severity, input.tone, input.story);
@@ -2342,7 +2399,7 @@ function raiseCeiling(verdict: Verdict): number {
 function raisedPenalty(rand: () => number, input: CaseInput, result: string): string {
   const tier = RESULTS.find((r) => r.result === result);
   if (!tier) return "";
-  return pickResultNote(rand, tier, scenarioType(selectScenario(input.story, input.caseType), input.caseType));
+  return pickResultNote(rand, tier, scenarioType(scenarioForInput(input), input.caseType));
 }
 
 export function generateAppeal(input: CaseInput, verdict: Verdict): AppealVerdict {
