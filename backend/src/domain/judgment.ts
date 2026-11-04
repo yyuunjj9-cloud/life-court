@@ -201,7 +201,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "회의 무한 연장 사건",
-      crime: "종료 시각 은닉죄",
+      crime: "회의 종료 시각 은닉죄",
       orders: [
         "피고인은 회의 시작 시 종료 시각을 선언하고 이를 준수할 것.",
         "피고인은 안건 없는 발언이 3분을 초과할 경우 스스로 발언권을 내려놓을 것.",
@@ -227,7 +227,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "결재 무한 보류 사건",
-      crime: "결재 서류 유치죄",
+      crime: "결재 서류 장기 억류죄",
       orders: [
         "피고인은 수신한 결재 요청을 영업일 기준 1일 이내에 승인 또는 반려로 확정할 것.",
         "피고인은 보류 시 그 사유와 예상 처리 시점을 요청자에게 고지할 것.",
@@ -292,7 +292,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "퇴근 눈치 유발 사건",
-      crime: "정시 퇴근 업무방해죄",
+      crime: "'벌써 가?' 업무방해죄",
       orders: [
         "피고인은 정시 퇴근자에게 눈빛·한숨 등 일체의 신호를 송출하지 말 것.",
         "피고인은 '벌써 가?'라는 발언을 하여서는 아니 된다.",
@@ -383,7 +383,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "인수인계 부실 사건",
-      crime: "업무 지식 은닉죄",
+      crime: "인수인계 지식 은닉죄",
       orders: [
         "피고인은 금주 내 인수인계 문서를 작성하여 후임자에게 전달할 것.",
         "피고인은 은닉한 업무 지식을 후임자의 질문 1건당 24시간 내 공개할 것.",
@@ -411,7 +411,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
   relationship: [
     {
       name: "약속 지각 반복 사건",
-      crime: "대기 시간 상습 횡령죄",
+      crime: "'거의 다 왔어' 위증죄",
       orders: [
         "피고인은 다음 약속에 10분 먼저 도착하여 성의를 증명할 것.",
         "피고인은 다음 약속에 원고보다 10분 먼저 도착해 인증 사진을 남길 것.",
@@ -450,7 +450,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "서운함 누적 사건",
-      crime: "배려 의무 해태죄",
+      crime: "배려 의무 위반죄",
       orders: [
         "피고인은 금주 내 원고에게 안부 연락 1회 이상을 자발적으로 시행할 것.",
         "피고인은 원고가 서운했던 지점 세 가지를 경청하고 복명복창할 것.",
@@ -515,7 +515,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "뒷담화 가담 사건",
-      crime: "부재자 평판 훼손 방조죄",
+      crime: "뒷담화 방조죄",
       orders: [
         "피고인은 부재자에 대한 평가 발언을 당사자 앞에서 할 수 있는 수위로 제한할 것.",
         "피고인은 뒷담화 유통 경로에서 자진 이탈할 것.",
@@ -528,7 +528,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "차용금 상환 지연 사건",
-      crime: "우정 담보 채무 불이행죄",
+      crime: "빌린 돈 소멸시효 주장죄",
       orders: [
         "피고인은 본 판결문 수령 즉시 차용금 전액을 상환할 것.",
         "피고인은 상환 전까지 신상 구매품의 SNS 게시를 자제할 것.",
@@ -554,7 +554,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "굴욕 사진 무단 게시 사건",
-      crime: "초상권 기습 침해죄",
+      crime: "굴욕 사진 초상권 침해죄",
       orders: [
         "피고인은 해당 게시물을 즉시 삭제하고 보정된 사진으로 대체할 것.",
         "피고인은 향후 게시 전 피사체의 사전 검열권을 보장할 것.",
@@ -619,7 +619,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "비교 발언 사건",
-      crime: "부당 비교 공시죄",
+      crime: "부당 비교 광고죄",
       orders: [
         "피고인은 원고를 제3자와 비교하는 발언을 하여서는 아니 된다.",
         "피고인은 비교 1건당 원고의 고유한 장점 2건을 병기할 것.",
@@ -658,7 +658,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "장소 독단 결정 사건",
-      crime: "약속 장소 관할 독점죄",
+      crime: "약속 장소 일방 지정죄",
       orders: [
         "피고인은 약속 장소를 쌍방 거리의 중간 지점에서 선정할 것.",
         "피고인은 자택 인근 고집 시 상대의 교통비를 부담할 것.",
@@ -712,7 +712,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "'아무거나' 진술 반복 사건",
-      crime: "메뉴 진술 상습 회피죄",
+      crime: "'아무거나' 진술 거부죄",
       orders: [
         "피고인은 향후 1주일간 '아무거나'라는 진술을 하여서는 아니 된다.",
         "피고인은 메뉴 질문에 반드시 구체적 후보 두 개 이상으로 답할 것.",
@@ -725,7 +725,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "음식 사진 선촬영 사건",
-      crime: "음식 냉각 방조죄",
+      crime: "식전 촬영 강제 대기죄",
       orders: [
         "피고인의 식전 촬영은 1식 1컷으로 제한한다.",
         "피고인은 촬영 중 음식이 식을 경우 동일 메뉴를 재주문하여 배상할 것.",
@@ -738,7 +738,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "식사 정산 지연 사건",
-      crime: "더치페이 채무 묵비죄",
+      crime: "'이따 보낼게' 미이행죄",
       orders: [
         "피고인은 본 판결문 수령 즉시 미정산 금액을 송금할 것.",
         "피고인은 향후 정산 요청 수신 후 24시간 내 송금을 완료할 것.",
@@ -790,7 +790,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "고기 집게 월권 사건",
-      crime: "불판 관할 월권죄",
+      crime: "고기 집게 월권죄",
       orders: [
         "피고인은 불판 담당자의 고기 굽기에 대한 훈수를 하여서는 아니 된다.",
         "피고인은 훈수 1회당 고기 1점의 우선 취식권을 불판 담당자에게 양도할 것.",
@@ -894,7 +894,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "선취식 사건",
-      crime: "수저 선제 발포죄",
+      crime: "식사 출발 신호 위반죄",
       orders: [
         "피고인은 전원의 음식이 도착할 때까지 수저 들기를 유보할 것.",
         "피고인은 부득이한 선취식 시 '먼저 먹을게'를 명시적으로 발화할 것.",
@@ -907,7 +907,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "메뉴 중복 금지 강요 사건",
-      crime: "주문 자유 침해죄",
+      crime: "메뉴 선택 자유 침해죄",
       orders: [
         "피고인은 타인의 동일 메뉴 주문을 저지하지 말 것.",
         "피고인은 '같은 거 시키지 마'라는 발언을 하여서는 아니 되며, 나눠 먹기는 합의 사항임을 유념할 것.",
@@ -974,7 +974,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "이모티콘 성의 논란 사건",
-      crime: "감정 표현 외주죄",
+      crime: "이모티콘 감정 대필죄",
       orders: [
         "피고인은 상황에 맞는 이모티콘을 선별하여 사용할 것.",
         "피고인은 같은 이모티콘 연속 3회 사용 시 문장으로 마음을 표현할 것.",
@@ -987,7 +987,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "읽씹 중 SNS 활동 사건",
-      crime: "읽씹 중 생존 노출죄",
+      crime: "읽씹 알리바이 붕괴죄",
       orders: [
         "피고인은 SNS 게시 전 미회신 메시지를 우선 처리할 것.",
         "피고인은 스토리 업로드와 동시에 원고의 메시지에 회신할 것.",
@@ -1013,7 +1013,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "안읽씹 장기 방치 사건",
-      crime: "메시지 미개봉 유기죄",
+      crime: "안읽씹 메시지 유기죄",
       orders: [
         "피고인은 숫자 1의 소멸 시한을 24시간으로 준수할 것.",
         "피고인은 메시지를 확인할 수 없는 사정이 있는 경우 상태메시지로 사전 공지할 것.",
@@ -1026,7 +1026,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "메시지 분할 연타 사건",
-      crime: "말풍선 분할 살포죄",
+      crime: "말풍선 쪼개기 남용죄",
       orders: [
         "피고인은 하나의 용건을 세 개 이하의 말풍선으로 완성할 것.",
         "피고인은 한 글자씩 끊어 보내는 연타 전송을 하여서는 아니 된다.",
@@ -1039,7 +1039,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "용건 지연 공개 사건",
-      crime: "용건 은닉죄",
+      crime: "'뭐해?' 용건 은닉죄",
       orders: [
         "피고인은 '뭐해?' 전송 시 후속 말풍선에 용건을 즉시 병기할 것.",
         "피고인은 용건 없는 '자니?'의 심야 전송을 하여서는 아니 된다.",
@@ -1052,7 +1052,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "공지 미확인 사건",
-      crime: "공지 열람 의무 해태죄",
+      crime: "공지 열람 의무 위반죄",
       orders: [
         "피고인은 단체방 입장 시 공지 및 직전 대화 10개를 우선 열람할 것.",
         "피고인은 이미 공지된 사항의 재질문 1회당 공지 요약 의무를 1회 부담한다.",
@@ -1065,7 +1065,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "무예고 통화 발신 사건",
-      crime: "무영장 통화 집행죄",
+      crime: "전화 불시 검문죄",
       orders: [
         "피고인은 통화 발신 전 '전화 가능?' 메시지로 사전 협의할 것.",
         "피고인은 메시지로 충분한 용건의 통화 발신을 하여서는 아니 된다.",
@@ -1117,7 +1117,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "상태메시지 저격 사건",
-      crime: "프로필 공시 비방죄",
+      crime: "상태메시지 우회 비방죄",
       orders: [
         "피고인은 특정인이 유추 가능한 상태메시지 게시를 하여서는 아니 된다.",
         "피고인은 불만 사항을 상태메시지가 아닌 당사자와의 대화로 직접 전달할 것.",
@@ -1130,7 +1130,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "대화 캡처 유출 사건",
-      crime: "대화 기록 무단 반출죄",
+      crime: "대화 캡처 무단 반출죄",
       orders: [
         "피고인은 사적 대화의 캡처 전파 전 대화 상대의 동의를 득할 것.",
         "피고인은 이미 유출된 캡처의 수신자 전원에게 삭제를 요청할 것.",
@@ -1143,7 +1143,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "투표 묵살 사건",
-      crime: "민주 절차 묵살죄",
+      crime: "단체방 투표 묵살죄",
       orders: [
         "피고인은 단체방 투표 생성 후 24시간 이내에 참여할 것.",
         "피고인은 투표 종료 후 결과에 대한 이의 제기를 하여서는 아니 된다.",
@@ -1156,7 +1156,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "음성메시지 강제 청취 사건",
-      crime: "음성 일방 송달죄",
+      crime: "음성메시지 청취 강요죄",
       orders: [
         "피고인은 30초를 초과하는 음성메시지에 텍스트 요약을 첨부할 것.",
         "피고인은 공공장소에서 청취 곤란한 음성메시지의 연속 전송을 자제할 것.",
@@ -1169,7 +1169,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "단체방 도배 사건",
-      crime: "단체방 대화 매몰죄",
+      crime: "단체방 화면 점령죄",
       orders: [
         "피고인의 동일 화제 연속 전송은 10개 이하로 제한한다.",
         "피고인은 도배로 매몰시킨 타인의 공지를 재게시할 것.",
@@ -1210,7 +1210,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "공용물품 독점 사건",
-      crime: "채널 주권 침탈죄",
+      crime: "리모컨 주권 침탈죄",
       orders: [
         "피고인은 리모컨 사용권을 요일제로 분할하는 합의안에 서명할 것.",
         "피고인은 채널 변경 전 반드시 시청 중인 자의 동의를 구할 것.",
@@ -1223,7 +1223,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "집안일 분담 회피 사건",
-      crime: "집안일 지분 미납죄",
+      crime: "집안일 분담금 체납죄",
       orders: [
         "피고인은 금주 내 공용공간을 원상 복구하고 그 결과를 사진으로 보고할 것.",
         "피고인은 집안일 분담표를 작성하여 냉장고에 게시할 것.",
@@ -1236,7 +1236,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "알람 연속 미루기 사건",
-      crime: "알람 집행 유예 남용죄",
+      crime: "알람 무한 집행유예죄",
       orders: [
         "피고인은 알람을 1회로 통일하고 두 번째 미루기부터는 기상할 것.",
         "피고인은 알람 미루기 1회당 아침 설거지 1회를 부담할 것.",
@@ -1262,7 +1262,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "물건 무단 사용 사건",
-      crime: "무단 사용대차죄",
+      crime: "남의 물건 무단 대출죄",
       orders: [
         "피고인은 무단 차용한 물품을 원위치에 반환하고 사용 사실을 보고할 것.",
         "피고인은 향후 차용 전 구두 허락을 득하고 반환 기한을 고지할 것.",
@@ -1288,7 +1288,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "소등 의무 해태 사건",
-      crime: "소등 의무 해태죄",
+      crime: "소등 의무 위반죄",
       orders: [
         "피고인은 공간 이탈 시 조명·에어컨 등 전원 차단을 이행할 것.",
         "피고인은 미소등 1회당 전기요금 잔소리 1회를 감수할 것.",
@@ -1301,7 +1301,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "냉장고 무단 취식 사건",
-      crime: "이름표 식품 침탈죄",
+      crime: "이름 쓴 음식 침탈죄",
       orders: [
         "피고인은 취식한 품목과 동일한 물품을 3일 이내에 보충할 것.",
         "피고인은 이름이 기재된 식품에 대한 접근을 하여서는 아니 된다.",
@@ -1340,7 +1340,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "이불 무단 점유 사건",
-      crime: "이불 영토 병합죄",
+      crime: "이불 강제 몰수죄",
       orders: [
         "피고인은 취침 중 점유한 이불의 절반을 즉시 반환할 것.",
         "피고인은 상습 점유 재발 시 개인 이불 체제 전환에 동의할 것.",
@@ -1353,7 +1353,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "택배 무단 개봉 사건",
-      crime: "택배 비밀 침해죄",
+      crime: "남의 택배 언박싱죄",
       orders: [
         "피고인은 수취인 명의가 본인이 아닌 택배의 개봉을 하여서는 아니 된다.",
         "피고인은 개봉 욕구 발생 시 수취인에게 도착 사실만 신속히 전파할 것.",
@@ -1431,7 +1431,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "충전 케이블 강탈 사건",
-      crime: "전력 공급망 탈취죄",
+      crime: "충전기 무단 탈취죄",
       orders: [
         "피고인은 충전 중인 기기의 케이블 탈취 전 잔여 배터리를 확인하고 양해를 구할 것.",
         "피고인은 개인용 충전 케이블을 1주일 내 구비할 것.",
@@ -1444,7 +1444,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "문 강타 사건",
-      crime: "문짝 시위죄",
+      crime: "문 쾅 닫기 시위죄",
       orders: [
         "피고인은 문 개폐 시 손잡이를 끝까지 잡아 소음을 차단할 것.",
         "피고인은 감정 표현의 수단으로 문을 사용하지 말 것.",
@@ -1511,7 +1511,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "대리 결제 대금 미상환 사건",
-      crime: "대납금 묵비 보유죄",
+      crime: "대납금 상환 잠수죄",
       orders: [
         "피고인은 원고가 대신 결제한 금액을 즉시 송금하고 그 사실을 고지할 것.",
         "피고인은 향후 원고의 선결제 시 당일 자정 전까지 정산을 완료할 것.",
@@ -1524,7 +1524,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "여행 경비 정산 지연 사건",
-      crime: "여행 추억 무상 취득죄",
+      crime: "여행 추억 무임승차죄",
       orders: [
         "피고인은 여행 종료 후 7일이 경과한 미정산 경비를 즉시 송금할 것.",
         "피고인은 추억 회상 전에 정산 완료가 선행되어야 함을 유념할 것.",
@@ -1563,7 +1563,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "원 단위 칼정산 사건",
-      crime: "단수 금액 추심죄",
+      crime: "원 단위 채권 추심죄",
       orders: [
         "피고인은 100원 미만의 단수 금액에 대한 청구를 자제할 것.",
         "피고인은 정산의 목적이 회수가 아니라 관계의 지속임을 유념할 것.",
@@ -1589,7 +1589,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "내기 채무 불이행 사건",
-      crime: "내기 판결 불복죄",
+      crime: "내기 결과 불복죄",
       orders: [
         "피고인은 내기에서 합의된 채무를 지체 없이 이행할 것.",
         "피고인은 패배 직후의 '한 판 더'가 채무 소멸 사유가 아님을 유념할 것.",
@@ -1602,7 +1602,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "배달비 분담 거부 사건",
-      crime: "결제 화면 묵비권 남용죄",
+      crime: "배달비 앞 묵비권 행사죄",
       orders: [
         "피고인은 공동 주문의 배달비를 균등 분담할 것.",
         "피고인은 메뉴만 고르고 결제 화면에서 침묵하는 행위를 하여서는 아니 된다.",
@@ -1630,7 +1630,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
   romance: [
     {
       name: "기념일 망각 사건",
-      crime: "기념일 기억 유기죄",
+      crime: "기념일 무단 망각죄",
       orders: [
         "피고인은 양가 생일 및 교제 관련 기념일 일체를 캘린더에 등록하고 알림을 이중으로 설정할 것.",
         "피고인은 망각한 기념일을 1주일 내 상응하는 성의로 소급 이행할 것.",
@@ -1656,7 +1656,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "선제 연락 부재 사건",
-      crime: "선연락 의무 불이행죄",
+      crime: "먼저 연락 의무 불이행죄",
       orders: [
         "피고인은 주 3회 이상 선제적 안부 연락을 발신할 것.",
         "피고인은 '연락 오면 바로 답한다'는 수신 전용 방침을 폐기할 것.",
@@ -1669,7 +1669,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "전 애인 소환 사건",
-      crime: "과거사 상습 증인 소환죄",
+      crime: "전 애인 증인 소환죄",
       orders: [
         "피고인은 대화 중 전 교제 상대를 비교 대상으로 소환하는 행위를 하여서는 아니 된다.",
         "피고인은 과거사 언급 1회당 현재에 대한 칭찬 2회를 병과하여 이행할 것.",
@@ -1682,7 +1682,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "데이트 중 휴대폰 몰입 사건",
-      crime: "데이트 주의 의무 위반죄",
+      crime: "데이트 집중 의무 위반죄",
       orders: [
         "피고인은 식사 및 대화 중 휴대폰을 화면이 바닥을 향하도록 거치할 것.",
         "피고인은 눈앞의 사람보다 화면 속 피드를 우선하는 행위를 하여서는 아니 된다.",
@@ -1708,7 +1708,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "간보기 사건",
-      crime: "관계 정의 상습 유보죄",
+      crime: "썸 관계 무기한 유보죄",
       orders: [
         "피고인은 2주 내 본건 관계의 정의를 명확한 문장으로 고지할 것.",
         "피고인은 호감의 표시와 회피의 신호를 교차 발신하는 행위를 하여서는 아니 된다.",
@@ -1734,7 +1734,7 @@ export const SCENARIOS: Record<CaseType, readonly CaseScenario[]> = {
     },
     {
       name: "변화 무인지 사건",
-      crime: "변화 미인지 과실죄",
+      crime: "변화 인지 의무 위반죄",
       orders: [
         "피고인은 만남 개시 후 3분 이내에 상대의 변화 유무를 1회 이상 점검할 것.",
         "피고인은 변화를 인지하지 못한 경우 추궁 전 자진 신고의 기회를 활용할 것.",
