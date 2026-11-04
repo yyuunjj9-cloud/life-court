@@ -1951,7 +1951,8 @@ export function selectScenario(story: string, caseType: CaseType): CaseScenario 
   // Two-letter words that name the misconduct itself, unlike topics such as '회식'.
   const distinctive = new Set(["잠수", "뒷담", "험담", "훈수", "파토", "도배", "단답", "재촉", "과시", "비밀"]);
   // '안'은 부정어일 때만 센다 — '안녕', '안부', '안에서'는 불만이 아니다.
-  const grievance = /안(해|했|하|줘|줬|주|와|왔|오|갚|읽|보|봐|봤|내|냈|끄|꺼|치|씻|돌려|사|샀|먹|일어나|나와|받|눌|누르|되|돼)|못|맨날|매번|계속|자꾸|혼자|나만|저만|나한테|강제|억지|싫|짜증|억울|태웠|뜯었|했는데|도대체/.test(text)
+  // 킹받·빡치 같은 구어 불만도 억울함으로 읽는다(앱이 쓰는 말이 아니라 알아듣기만 한다).
+  const grievance = /안(해|했|하|줘|줬|주|와|왔|오|갚|읽|보|봐|봤|내|냈|끄|꺼|치|씻|돌려|사|샀|먹|일어나|나와|받|눌|누르|되|돼)|못|맨날|매번|계속|자꾸|혼자|나만|저만|나한테|강제|억지|싫|짜증|억울|킹받|열받|빡치|빡쳐|빡쳤|어이없|태웠|뜯었|했는데|도대체/.test(text)
     && !/미안|죄송|고장|괜찮|떨어졌|제가|내가/.test(text);
   const ranked = Object.entries(SCENARIOS).flatMap(([type, scenarios]) => scenarios.map((scenario) => {
     const hits = scenario.keywords.map((word) => word.toLowerCase().replace(/\s+/g, ""))
