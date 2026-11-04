@@ -28,6 +28,8 @@ interface CaseDraft {
   relationship: Relationship | null;
   severity: Severity;
   tone: Tone;
+  /** 사건 특정 화면에서 확인한 사건명. 사연·유형이 바뀌면 다시 확인한다. */
+  scenario: string | null;
 }
 
 interface CaseState {
@@ -54,6 +56,7 @@ interface CaseStore extends CaseState {
   setRelationship: (relationship: Relationship) => void;
   setSeverity: (severity: Severity) => void;
   setTone: (tone: Tone) => void;
+  setScenario: (scenario: string) => void;
   /** 현재 초안을 localStorage에 임시저장한다. */
   saveDraft: () => void;
   /** 임시저장된 초안을 불러온다(새 사건으로 시작). 성공 여부 반환. */
@@ -80,6 +83,7 @@ const DRAFT_INIT: CaseDraft = {
   relationship: null,
   severity: 3,
   tone: "fair",
+  scenario: null,
 };
 
 const STATE_INIT: CaseState = {
@@ -124,6 +128,7 @@ function draftToInput(draft: CaseDraft): CaseInput | null {
     relationship: draft.relationship,
     severity: draft.severity,
     tone: draft.tone,
+    ...(draft.scenario ? { scenario: draft.scenario } : {}),
   };
 }
 
@@ -162,11 +167,13 @@ export function CaseProvider({ children }: { children: ReactNode }) {
       hydrated,
       intakeIssue,
       savedDraftAt,
-      setStory: (story) => patchDraft({ story }),
-      setCaseType: (caseType) => patchDraft({ caseType }),
+      // 사연이나 유형이 바뀌면 후보도 달라지므로 사건 확인을 다시 받는다.
+      setStory: (story) => patchDraft({ story, scenario: null }),
+      setCaseType: (caseType) => patchDraft({ caseType, scenario: null }),
       setRelationship: (relationship) => patchDraft({ relationship }),
       setSeverity: (severity) => patchDraft({ severity }),
       setTone: (tone) => patchDraft({ tone }),
+      setScenario: (scenario) => patchDraft({ scenario }),
 
       saveDraft: () => {
         const saved: SavedDraft = { draft: state.draft, savedAt: Date.now() };

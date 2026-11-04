@@ -118,7 +118,7 @@ export default function TypePage() {
               type="button"
               style={{ flex: 2 }}
               disabled={!ready}
-              onClick={() => router.push("/intake/tone")}
+              onClick={() => router.push("/intake/scenario")}
             >
               다음
             </button>

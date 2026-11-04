@@ -15,7 +15,12 @@ export interface CaseInput {
   relationship: Relationship;
   severity: Severity;
   tone: Tone;
+  /** '사건 특정' 화면에서 고른 사건명. GENERAL_CHOICE면 일반 분쟁. 없으면 재판부가 고른 사건. */
+  scenario?: string;
 }
+
+/** '사건 특정' 화면의 '해당 없음' 값(backend와 같다). */
+export const GENERAL_CHOICE = "general";
 
 export interface Verdict {
   caseNo: string;

@@ -8,11 +8,16 @@
  * - 재시도 진행 상황을 구독할 수 있어 UI가 진행 바를 그릴 수 있다.
  */
 
-import type { AppealVerdict, CaseInput, SupremeVerdict, Verdict } from "@/domain/judgment";
+import type { AppealVerdict, CaseInput, CaseType, SupremeVerdict, Verdict } from "@/domain/judgment";
 import type { ComplaintDoc, CountersuitDoc, DemandLetterDoc, FilingKind } from "@/domain/documents";
 import type { DefenseResponseDoc } from "@/domain/response";
 import type { ModerationIssue } from "@/domain/moderation";
 import type { CounterRound } from "@/domain/countersuit-game";
+
+export interface ScenarioChoices {
+  pick: { name: string; crime: string; general: boolean };
+  alternatives: { name: string; crime: string }[];
+}
 
 export class ApiError extends Error {
   constructor(path: string, public status: number, public issue: ModerationIssue | null = null) {
@@ -115,6 +120,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   checkStory: (story: string) => request<{ issue: ModerationIssue | null }>("/api/stories/check", {
     method: "POST", body: JSON.stringify({ story }),
+  }),
+  /** 사건 특정: 재판부가 고른 사건과 다른 후보. 저장하지 않는다. */
+  scenarioChoices: (story: string, caseType: CaseType) => request<ScenarioChoices>("/api/stories/scenario", {
+    method: "POST", body: JSON.stringify({ story, caseType }),
   }),
   submitCase: (input: CaseInput, filingKind: FilingKind) =>
     request<{ seq: number; verdict: Verdict; complaint: ComplaintDoc; shareToken: string; ownerToken: string }>("/api/cases", {

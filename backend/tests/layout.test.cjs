@@ -153,3 +153,14 @@ test('the board keeps its place while loading so the landing does not jump', () 
   assert.match(scr, /overflow-x: hidden;/);
   assert.match(scr, /overflow-y: auto;/);
 });
+
+test('the case confirmation step keeps its height while loading and moves on with one tap', () => {
+  const page = source('app/intake/scenario/page.tsx');
+  const block = css.match(/^\.scn-pick \{[\s\S]*?^\}/m)?.[0] ?? '';
+  // 결과가 들어와도 버튼이 밀리지 않도록 자리를 미리 잡는다.
+  assert.match(block, /min-height:\s*\d+px/);
+  // 후보는 고르는 즉시 다음 단계로 넘어가 선택 표시로 화면이 바뀌지 않는다.
+  assert.doesNotMatch(page, /aria-pressed/);
+  assert.match(page, /<Steps current=\{3\} \/>/);
+  assert.match(source('app/intake/type/page.tsx'), /router\.push\("\/intake\/scenario"\)/);
+});

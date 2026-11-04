@@ -1917,6 +1917,47 @@ p.sub {
   color: var(--gold-bright);
 }
 
+/* 사건 특정 — 재판부가 본 사건 한 건. 응답 전에도 같은 높이를 잡아 버튼이 밀리지 않는다. */
+.scn-pick {
+  margin-top: 18px;
+  min-height: 112px;
+  border: 1px solid var(--gold-dim);
+  border-top: 3px double var(--wood);
+  background: #fbf4e3;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  border-radius: 2px;
+}
+.scn-kicker {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--gold-dim);
+  font-weight: 700;
+}
+.scn-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--ink);
+  word-break: keep-all;
+}
+.scn-crime {
+  font-size: 14px;
+  color: var(--wood-warm);
+  font-weight: 700;
+}
+.scn-wait {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  color: var(--muted);
+  word-break: keep-all;
+}
+
 /* 저장용 오프스크린 래퍼 — 숨김 역할만 한다 (캡처 대상 아님) */
 .capture-stage {
   position: fixed;

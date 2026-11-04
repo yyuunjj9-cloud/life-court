@@ -72,7 +72,7 @@ export default function TonePage() {
         <div className="grow" />
         <div className="stack">
           <div className="btn-row">
-            <button className="btn line" type="button" onClick={() => router.push("/intake/type")}>
+            <button className="btn line" type="button" onClick={() => router.push("/intake/scenario")}>
               이전
             </button>
             <button className="btn" type="button" style={{ flex: 2 }} onClick={submit}>
