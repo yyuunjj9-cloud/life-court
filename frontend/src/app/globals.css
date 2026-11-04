@@ -702,6 +702,67 @@ p.sub {
   text-align: center;
   color: var(--ink-soft);
 }
+/* ---------- 생활 배심원단 ---------- */
+.jury {
+  margin-top: 22px;
+  padding: 14px 14px 12px;
+  background: #fbf4e3;
+  border: 1px solid var(--paper-line);
+  border-radius: 3px;
+}
+.jury .lbl {
+  margin-bottom: 10px;
+}
+.jury-ask,
+.jury-mine,
+.jury-court {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--ink-soft);
+}
+.jury-ask {
+  margin-bottom: 10px;
+}
+.jury-headline {
+  margin: 4px 0 8px;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--ink);
+}
+/* 유죄(나무색)·무죄(초록) 비율 막대 — 경고색 빨강은 쓰지 않는다 */
+.jury-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--paper-line);
+  margin-bottom: 8px;
+}
+.jury-bar .g {
+  background: var(--wood);
+}
+.jury-bar .n {
+  background: #7fb293;
+}
+.jury-split {
+  margin-top: 6px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #8a5a2b;
+}
+.jury-note {
+  margin-top: 8px;
+  font-family: var(--sans);
+  font-size: 10.5px;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--muted);
+}
+
 /* ---------- 용어 풀이 ---------- */
 .glossary-link {
   display: block;

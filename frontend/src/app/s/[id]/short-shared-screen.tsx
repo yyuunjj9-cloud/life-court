@@ -6,6 +6,7 @@ import { VerdictDoc } from "@/components/VerdictDoc";
 import type { Verdict } from "@/domain/judgment";
 import { useCaseStore } from "@/store/case-store";
 import { DefenseSection } from "@/components/DefenseSection";
+import { JurySection } from "@/components/JurySection";
 import type { DefenseResponseDoc } from "@/domain/response";
 
 export interface SharedCase {
@@ -46,6 +47,7 @@ export function ShortSharedScreen({ shared }: { shared: SharedCase | null }) {
       <div className="pad">
         <p className="shared-label">📨 공유받은 판결문</p>
         <VerdictDoc verdict={verdict} />
+        {shared && <JurySection seq={shared.seq} token={shared.token} result={verdict.result} />}
         {shared && <DefenseSection key={`${shared.seq}-${shared.token}`} seq={shared.seq} token={shared.token} initial={shared.responseDoc} />}
         <div className="grow" />
         <div className="stack" style={{ marginTop: 14 }}>

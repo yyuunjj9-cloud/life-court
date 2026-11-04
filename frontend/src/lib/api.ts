@@ -224,6 +224,52 @@ export async function fetchIdeas(): Promise<PublicIdea[] | null> {
   return null;
 }
 
+/* ---------- 생활 배심원단 ---------- */
+
+export type JuryVote = "guilty" | "not_guilty";
+
+export interface JuryTally {
+  guilty: number;
+  notGuilty: number;
+  mine: JuryVote | null;
+}
+
+const VOTER_KEY = "lifecourt.voterId";
+let memoryVoter: string | null = null;
+
+/** 이 기기의 투표자 표시 — 개인을 알아볼 수 없는 난수다. 저장할 수 없으면 이번 방문 동안만 쓴다. */
+export function voterId(): string {
+  try {
+    const saved = window.localStorage.getItem(VOTER_KEY);
+    if (saved && /^[a-f0-9]{32}$/.test(saved)) return saved;
+  } catch {
+    /* 저장소를 쓸 수 없는 브라우저 */
+  }
+  if (!memoryVoter) {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    memoryVoter = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  try {
+    window.localStorage.setItem(VOTER_KEY, memoryVoter);
+  } catch {
+    /* 이번 방문 동안만 쓴다 */
+  }
+  return memoryVoter;
+}
+
+export const juryApi = {
+  /** 공유 링크로 볼 때 — 이 기기의 표도 함께 받는다. */
+  tally: (seq: number, token: string, voter: string) =>
+    request<JuryTally>(`/api/cases/${seq}/jury?t=${encodeURIComponent(token)}&voter=${voter}`),
+  /** 사건을 낸 사람이 볼 때 — 집계만. */
+  ownerTally: (seq: number, ownerToken: string) =>
+    request<JuryTally>(`/api/cases/${seq}/jury`, { headers: { "X-Owner-Token": ownerToken } }),
+  /** 이미 투표한 기기면 409가 나므로, 그때는 집계를 다시 읽는다. */
+  vote: (seq: number, token: string, voter: string, vote: JuryVote) =>
+    request<JuryTally>(`/api/cases/${seq}/jury`, { method: "POST", body: JSON.stringify({ t: token, voter, vote }) }),
+};
+
 /** 운영자 화면 이용 현황 — 숫자만 담는다. */
 export interface UsageStats {
   cases: { total: number; today: number; week: number };
@@ -232,6 +278,7 @@ export interface UsageStats {
   countersuits: { total: number; played: number; skipped: number; averageHits: number | null; perfect: number };
   responses: { total: number; declined: number };
   ideas: { pending: number; approved: number; private: number };
+  jury: { votes: number; cases: number };
 }
 
 export const ideasApi = {

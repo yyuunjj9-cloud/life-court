@@ -107,6 +107,7 @@ export default function IdeasAdminPage() {
                 note={`건너뜀 ${stats.countersuits.skipped} · 평균 ${stats.countersuits.averageHits ?? "-"}회 · 완벽 ${stats.countersuits.perfect}`}
               />
               <Stat label="피고 답변서" value={`${stats.responses.total}`} note={`응소 거부 ${stats.responses.declined}`} />
+              <Stat label="배심원 평결" value={`${stats.jury.votes}`} note={`평결 받은 사건 ${stats.jury.cases}`} />
               <Stat label="아이디어" value={`${stats.ideas.pending}`} note={`대기 · 공개 ${stats.ideas.approved} · 비공개 ${stats.ideas.private}`} />
             </div>
             <p className="admin-hint">접수 사건의 큰 숫자는 오늘 건수입니다. 피고 답변서가 3건 이상이면 실제 피고 참여 단계의 착수 조건이 채워집니다.</p>

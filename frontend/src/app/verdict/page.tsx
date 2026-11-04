@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Burst } from "@/components/Burst";
+import { JurySummary } from "@/components/JurySection";
 import { VerdictDoc } from "@/components/VerdictDoc";
 import { useCaseStore } from "@/store/case-store";
 
 /* 06 판결 결과 */
 export default function VerdictPage() {
   const router = useRouter();
-  const { verdict, fileAppeal, hydrated } = useCaseStore();
+  const { verdict, caseSeq, ownerToken, fileAppeal, hydrated } = useCaseStore();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
 
@@ -57,6 +58,7 @@ export default function VerdictPage() {
           </span>
           <span className="ca-arrow">›</span>
         </Link>
+        {caseSeq !== null && ownerToken && <JurySummary seq={caseSeq} ownerToken={ownerToken} result={verdict.result} />}
         {error && <div className="help err">법원 서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.</div>}
         <div className="grow" />
         <div className="btn-row" style={{ marginTop: 14 }}>

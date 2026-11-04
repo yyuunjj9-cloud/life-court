@@ -91,6 +91,15 @@ test('playful legal terms are disclosed as fictional and explained on the glossa
   assert.match(glossary, /법률 자문이 아닙니다/);
 });
 
+test('the jury appears on shared verdicts and the owner screen, and says it does not change the verdict', () => {
+  assert.match(source('app/s/[id]/short-shared-screen.tsx'), /<JurySection /);
+  assert.match(source('app/verdict/page.tsx'), /<JurySummary /);
+  const jury = source('components/JurySection.tsx');
+  assert.match(jury, /재판부 판결을 바꾸지 않는 참고 의견/);
+  assert.match(jury, /한 기기에서 한 번/);
+  assert.match(source('app/glossary/page.tsx'), /term: "배심원 평결",\s*kind: "real"/);
+});
+
 test('phone auto dark modes cannot recolor the app', () => {
   assert.match(css, /:root \{[\s\S]*?color-scheme: only light;/);
   assert.match(source('app/layout.tsx'), /colorScheme: "only light"/);

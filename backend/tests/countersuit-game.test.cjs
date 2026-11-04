@@ -33,6 +33,15 @@ test('the card game opens on round one with the claim, three cards and the judge
   assert.match(markup, /카드를 골라 주세요/);
 });
 
+test('the jury headline names unanimous, majority and tied verdicts', () => {
+  const { juryHeadline } = require('../../frontend/src/components/JurySection.tsx');
+  assert.equal(juryHeadline({ guilty: 0, notGuilty: 0 }), '아직 평결이 없습니다');
+  assert.equal(juryHeadline({ guilty: 7, notGuilty: 0 }), '만장일치 유죄 (7명)');
+  assert.equal(juryHeadline({ guilty: 0, notGuilty: 3 }), '만장일치 무죄 (3명)');
+  assert.equal(juryHeadline({ guilty: 5, notGuilty: 2 }), '다수 유죄 (유죄 5 : 무죄 2)');
+  assert.equal(juryHeadline({ guilty: 2, notGuilty: 2 }), '가부동수 (유죄 2 : 무죄 2)');
+});
+
 test('the countersuit document records the card play and its decisive rebuttal only when played', () => {
   const highlight = rounds[1].options[rounds[1].answer];
   const played = renderToStaticMarkup(React.createElement(CountersuitDocView, { doc: generateCountersuit(input, verdict, 2, highlight), date: '2026. 11. 4.' }));
