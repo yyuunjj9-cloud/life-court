@@ -82,6 +82,19 @@ test('the same story and choices give the same first verdict under any case numb
   assert.ok(orders.size > 1);
 });
 
+test('dropping "habitual" from a crime name never leaves a stray space, and orders stay on topic', () => {
+  // '단답 상습죄'에서 '상습'만 지우면 '단답 죄'가 됐다.
+  assert.equal(selectScenario('친구가 제 긴 메시지에 ㅇㅇ 한 글자로만 답장했어요', 'messenger').crime, '단답죄');
+  for (const [caseType, story] of require('./scenario-corpus.cjs')) {
+    const { crime, name } = selectScenario(story, caseType);
+    assert.doesNotMatch(crime, /\s죄$|\s{2,}/, crime);
+    assert.doesNotMatch(name, /\s{2,}/, name);
+  }
+  // 소음 사건의 주문이 야식 이야기로 새지 않는다.
+  const noise = selectScenario('윗집이 새벽마다 쿵쿵거려서 잠을 못 자요', 'daily');
+  assert.ok(noise.orders.every((order) => !/야식/.test(order)), noise.orders.join(' / '));
+});
+
 test('a verdict never treats the absent defendant\'s side as proven fact', () => {
   for (const [caseType, story] of require('./scenario-corpus.cjs')) {
     for (const severity of [1, 3, 5]) {
